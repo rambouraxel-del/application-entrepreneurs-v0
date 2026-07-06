@@ -27,17 +27,18 @@ Ce document regroupe les idées et pistes identifiées au fil du projet, non tra
 - Export des documents (PDF notamment).
 
 ## Trésorerie
-- Page dédiée (V0.7 sur la roadmap), actuellement non développée.
+- Page placeholder ajoutée à la navigation en V0.2 ; développement fonctionnel réel prévu en V0.7 sur la roadmap.
 - Synchronisation bancaire (hors périmètre tant qu'une vraie base de données n'existe pas).
 
 ## Produits / Services
-- Page dédiée (V0.8 sur la roadmap), actuellement non développée.
+- Page placeholder ajoutée à la navigation en V0.2 ; développement fonctionnel réel (vrai catalogue, création/modification) prévu en V0.8 sur la roadmap.
 - Gestion des stocks.
 
 ## Finance
-- Page dédiée (V0.9 sur la roadmap), actuellement non développée.
+- Page placeholder ajoutée à la navigation en V0.2 ; développement fonctionnel réel (bilan, compte de résultat, calculs) prévu en V0.9 sur la roadmap.
 
 ## Statistiques / Pilotage
+- Non ajouté à la sidebar en V0.2, décision explicite pour éviter une navigation trop chargée et pour clarifier d'abord la distinction entre Finance, Trésorerie et indicateurs de pilotage. À réévaluer plus tard.
 - Vrai système de statistiques avancées (le graphique actuel du tableau de bord est fictif et statique).
 - Indicateurs de performance personnalisables.
 
@@ -50,7 +51,7 @@ Ce document regroupe les idées et pistes identifiées au fil du projet, non tra
 - Panneau détaillé des notifications au clic sur la cloche.
 
 ## UX / UI
-- Suppression ou refonte de la page "Base de données" (son rôle doit être repensé — identifiée lors de la validation V0.1.1).
+- `pages/database.html` : retirée de la navigation principale en V0.2 (le fichier existe toujours, orpheline, non liée depuis aucune page). Décision définitive (suppression du fichier ou refonte en un autre usage) à prendre lors d'une phase ultérieure.
 - Travail futur sur l'identité visuelle et le logo (au-delà de l'affinage réalisé en V0.1.1).
 - Amélioration responsive plus poussée (tablette/mobile), au-delà des ajustements déjà en place.
 - Ajustements de design après retours utilisateurs réels.

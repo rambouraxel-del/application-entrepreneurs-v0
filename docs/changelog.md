@@ -112,3 +112,24 @@ Vérifications effectuées : liens/chemins valides, aucun identifiant dupliqué,
 - **Dépôt GitHub distant** : non créé à ce stade (`gh` non installé sur la machine, et aucune tentative de création automatique n'a été faite). Procédure manuelle documentée pour le chef de projet.
 
 Git/GitHub deviennent à partir de cette étape la méthode de suivi recommandée pour le projet, en remplacement des sauvegardes manuelles de dossier utilisées jusqu'ici.
+
+**V0.1.2 validée par le chef de projet.** Dépôt GitHub privé créé et `main` poussé avec le tag `v0.1.1` par le chef de projet lui-même.
+
+## V0.2 — Navigation et architecture générale
+Réalisée sur la branche dédiée `v0.2-navigation-architecture` (créée depuis `main`, non fusionnée à ce stade). Objectif : clarifier l'organisation de la navigation principale, sans développement fonctionnel :
+
+- **"Base de données" retirée de la sidebar principale** sur les 6 pages qui la contenaient (`dashboard.html`, `clients.html`, `agenda.html`, `facturation.html`, `database.html`, `settings.html`). Le fichier `pages/database.html` n'est pas supprimé : il conserve sa sidebar/topbar pour rester cohérent si on y accède directement, mais devient orpheline (plus aucune page ne pointe vers elle), à l'image du traitement déjà appliqué à `settings.html` depuis la V0.1.
+- **Trois nouveaux modules ajoutés à la sidebar**, dans l'ordre : Tableau de bord, Clients, Agenda, Facturation, **Trésorerie**, **Produits / Services**, **Finance** (7 liens au total).
+- **`pages/tresorerie.html`** créée : 4 cartes KPI (Solde disponible, Dépenses du mois, Recettes du mois, Échéances à venir) + bannière "Module en construction".
+- **`pages/produits-services.html`** créée : bouton fictif "Ajouter un produit" (`btn-wip`), tableau fictif de 4 produits/services (nom, type, prix, marge estimée, ventes) + bannière "Module en construction".
+- **`pages/finance.html`** créée : 4 cartes KPI (Chiffre d'affaires, Marge, Objectif mensuel, Résultat estimé), 3 zones fictives (Bilan prévisionnel, Compte de résultat, Objectifs financiers) + bannière "Module en construction".
+- **Nouveau composant CSS `.construction-banner`** (bordure en pointillés, icône, texte) réutilisé sur les 3 nouvelles pages ; **`.placeholder-grid`** ajouté pour la grille à 3 zones de la page Finance.
+- **Paramètres et notifications inchangés** : roue crantée et cloche toujours présentes en topbar sur toutes les pages, y compris les 3 nouvelles.
+- **Sélecteur de date** non étendu : reste réservé au tableau de bord, conformément à la décision de la V0.1.1.
+- **Statistiques / Pilotage** volontairement non ajouté à la sidebar — reste au backlog.
+- **`js/app.js`** : aucune modification (la délégation `.btn-wip` fonctionne automatiquement sur les nouvelles pages).
+- **Roadmap clarifiée** : une note dans `docs/roadmap-v0bis.md` précise que Trésorerie/Produits-Services/Finance ne sont que des portes d'entrée en V0.2 ; leur développement fonctionnel réel reste prévu en V0.7/V0.8/V0.9.
+
+Vérifications effectuées : tous les liens/chemins résolvent (aucun lien mort), les 9 pages avec sidebar (dashboard, clients, agenda, facturation, database, settings, tresorerie, produits-services, finance) affichent exactement 7 liens chacune, l'onglet actif est correct sur les 7 pages concernées et absent sur `database.html`/`settings.html` (cohérent avec leur statut hors navigation principale), aucun identifiant HTML dupliqué, CSS syntaxiquement valide (162 accolades ouvrantes/fermantes équilibrées), aucun ancien lien vers `database.html` restant.
+
+Commit créé sur la branche `v0.2-navigation-architecture` : `v0.2 - navigation et architecture générale`. Pas de merge dans `main`, pas de tag, pas de push — décision laissée à la revue humaine.

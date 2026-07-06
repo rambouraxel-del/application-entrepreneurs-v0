@@ -1,6 +1,6 @@
 # Application Entrepreneurs — V0
 
-> **Note de version — V0.1 / V0.1.1 / V0.1.2** : l'interface a fait l'objet d'une refonte graphique globale (V0.1 : sidebar sombre, tableau de bord modernisé, charte indigo/violet) puis de corrections ciblées sur le tableau de bord (V0.1.1). Le contenu, les pages, les données fictives et le fonctionnement décrits ci-dessous restent valables ; seul l'habillage visuel a changé. La V0.1.2 met en place le suivi Git/GitHub du projet, désormais la méthode de suivi recommandée (voir `docs/versioning.md`). Voir `docs/changelog.md` pour le détail de chaque étape.
+> **Note de version — V0.1 à V0.2** : l'interface a fait l'objet d'une refonte graphique globale (V0.1), de corrections ciblées sur le tableau de bord (V0.1.1), d'une structuration technique Git/GitHub (V0.1.2), puis d'une réorganisation de la navigation principale (V0.2, en cours sur la branche `v0.2-navigation-architecture`) : "Base de données" est sortie de la sidebar et trois nouvelles portes d'entrée (Trésorerie, Produits / Services, Finance) ont été ajoutées comme placeholders. Voir `docs/changelog.md` pour le détail de chaque étape et `docs/versioning.md` pour la méthode de suivi Git recommandée.
 
 ## Objectif du projet
 Cette application web vise à accompagner les entrepreneurs, indépendants et dirigeants de TPE dans le pilotage quotidien de leur activité, en centralisant les informations essentielles (clients, factures, agenda, trésorerie, indicateurs) au sein d'une interface simple et professionnelle — un véritable cockpit de pilotage.
@@ -12,7 +12,7 @@ La V0 est **uniquement un prototype visuel cliquable**, avec des données fictiv
 
 - **Page de connexion fictive** (`pages/login.html`) : nom provisoire "Cockpit Entrepreneur", champs e-mail et mot de passe fictifs (aucune vérification), bouton "Se connecter" fonctionnel qui redirige vers le tableau de bord, lien "Mot de passe oublié ?".
 - **Redirection automatique** : `index.html` redirige immédiatement vers la page de connexion.
-- **Navigation par onglets supérieurs** (façon intercalaires de classeur), présente sur les 6 pages principales : Tableau de bord, Clients, Agenda, Facturation, Base de données, Paramètres. L'onglet actif est toujours visuellement identifiable.
+- **Navigation par sidebar**, présente sur les 9 pages principales : Tableau de bord, Clients, Agenda, Facturation, Trésorerie, Produits / Services, Finance (7 liens de navigation), plus Base de données et Paramètres, accessibles hors sidebar (voir ci-dessous). Le lien actif est toujours visuellement identifiable.
 - **Tableau de bord enrichi** avec des données fictives réalistes :
   - 4 KPI principaux (CA du jour, CA du mois, objectif mensuel, trésorerie disponible) avec variations colorées (vert/rouge/neutre) ;
   - une priorité du jour ;
@@ -25,8 +25,11 @@ La V0 est **uniquement un prototype visuel cliquable**, avec des données fictiv
   - **Clients** : bouton "Ajouter un client", barre de recherche fictive, tableau de 4 clients fictifs avec statuts ;
   - **Agenda** : bouton "Ajouter un rendez-vous", liste de rendez-vous fictifs de la journée ;
   - **Facturation** : boutons "Créer une facture"/"Créer un devis", tableau de 5 documents fictifs avec statuts en badges (brouillon, envoyé, payé, en retard) ;
-  - **Base de données** : 6 cartes représentant les bases centrales de l'application, avec un nombre fictif d'éléments chacune ;
-  - **Paramètres** : 6 sections fictives, chacune avec un bouton "Modifier".
+  - **Trésorerie** *(nouveau, V0.2)* : 4 cartes fictives (solde disponible, dépenses/recettes du mois, échéances à venir), module en construction ;
+  - **Produits / Services** *(nouveau, V0.2)* : bouton "Ajouter un produit", tableau fictif de produits/services, module en construction ;
+  - **Finance** *(nouveau, V0.2)* : 4 cartes fictives (CA, marge, objectif, résultat estimé), zones "bilan prévisionnel"/"compte de résultat"/"objectifs financiers", module en construction ;
+  - **Paramètres** : 6 sections fictives, chacune avec un bouton "Modifier" — accessible uniquement via la roue crantée de la topbar, pas depuis la sidebar (accès transversal).
+  - **Base de données** : 6 cartes représentant les bases centrales de l'application ; depuis la V0.2, cette page n'est plus reliée depuis la navigation (elle reste dans les fichiers en attendant une décision de suppression ou de refonte, voir `docs/backlog.md`).
 - **Pop-up centralisé "Work in progress"** : tous les boutons non fonctionnels (11 au total) affichent ce message au clic. Il se ferme via le bouton "Fermer", un clic en dehors de la fenêtre, ou la touche Échap.
 - **Harmonisation visuelle générale** : boutons, cartes, tableaux, badges, espacements et couleurs cohérents sur l'ensemble du prototype.
 - **Tests de navigation** réalisés sur le parcours complet (voir `docs/changelog.md`, étape 9) : aucun problème bloquant identifié.
@@ -39,7 +42,7 @@ Toutes les données affichées (clients, montants, rendez-vous, alertes, etc.) s
 2. Vérifier que vous êtes redirigé automatiquement vers la page de connexion.
 3. Cliquer sur "Se connecter" (les champs peuvent rester vides).
 4. Vous arrivez sur le tableau de bord.
-5. Utiliser les onglets en haut de la page pour naviguer entre Tableau de bord, Clients, Agenda, Facturation, Base de données et Paramètres.
+5. Utiliser la sidebar pour naviguer entre Tableau de bord, Clients, Agenda, Facturation, Trésorerie, Produits / Services et Finance. Paramètres reste accessible via la roue crantée de la topbar.
 6. Cliquer sur n'importe quel bouton fictif (ex. "Ajouter un client", "Créer une facture", "Modifier") pour voir apparaître le pop-up "Work in progress".
 7. Fermer ce pop-up avec le bouton "Fermer", en cliquant en dehors de la fenêtre, ou avec la touche Échap.
 

@@ -8,8 +8,8 @@ Cette roadmap présente les phases prévues après la V0 initiale (livrée à l'
 |---|---|---|
 | V0.1 | Refonte graphique globale (sidebar, tableau de bord modernisé, charte indigo/violet) | Validée |
 | V0.1.1 | Corrections ciblées du tableau de bord (agenda, to-do, alertes, sélecteur de date) | Validée |
-| V0.1.2 | Structuration technique : Git, GitHub, roadmap, backlog, versioning | En cours |
-| V0.2 | Navigation et architecture générale | À venir |
+| V0.1.2 | Structuration technique : Git, GitHub, roadmap, backlog, versioning | Validée |
+| V0.2 | Navigation et architecture générale | En cours |
 | V0.3 | Tableau de bord : interactions et finalisation | À venir |
 | V0.4 | Page Clients / fiche client / CRM | À venir |
 | V0.5 | Page Agenda | À venir |
@@ -24,3 +24,11 @@ Cette roadmap présente les phases prévues après la V0 initiale (livrée à l'
 - Chaque phase validée fait l'objet d'un commit clair et, si elle marque une étape importante, d'un tag Git (voir `docs/versioning.md`).
 - L'ordre des phases V0.4 à V0.9 pourra être réévalué selon les priorités du chef de projet — cette roadmap n'est pas un engagement contractuel, mais un fil conducteur.
 - Les idées qui ne rentrent pas dans la phase en cours sont conservées dans `docs/backlog.md` plutôt que d'être perdues ou traitées hors périmètre.
+
+## Précision importante — V0.2 vs V0.7 / V0.8 / V0.9
+
+La V0.2 ajoute Trésorerie, Produits / Services et Finance dans la navigation principale, sous forme de **pages placeholder** (portes d'entrée visuelles cohérentes avec la charte V0.1.1, sans logique métier). Cela ne signifie pas que ces modules sont fonctionnels dès la V0.2.
+
+Les phases V0.7 (Trésorerie), V0.8 (Produits / Services) et V0.9 (Finance) restent celles dédiées à leur **développement fonctionnel réel** (calculs, données réelles, création/modification, etc.). La V0.2 pose uniquement la structure de navigation ; ces phases ultérieures y ajouteront la logique métier.
+
+Le module **Statistiques / Pilotage** n'est volontairement pas ajouté à la sidebar en V0.2 (voir `docs/backlog.md`) : il sera étudié plus tard, une fois la distinction entre Finance, Trésorerie et indicateurs de pilotage plus claire.

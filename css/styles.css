@@ -932,6 +932,61 @@ svg {
     gap: 12px;
 }
 
+/* Pages placeholder de modules (V0.2 : Trésorerie, Produits/Services, Finance) */
+
+.placeholder-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.placeholder-card h2 {
+    text-transform: none;
+    letter-spacing: normal;
+    font-size: 14px;
+    color: var(--color-text);
+    font-weight: 600;
+}
+
+.construction-banner {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 24px;
+    padding: 16px 20px;
+    border: 1px dashed var(--color-border-strong);
+    border-radius: var(--radius-card);
+    background-color: var(--color-neutral-bg);
+}
+
+.construction-banner-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+    flex-shrink: 0;
+}
+
+.construction-banner-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.construction-banner p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+}
+
+.construction-banner strong {
+    color: var(--color-text);
+}
+
 /* Pop-up "Work in progress" */
 
 .wip-overlay {
@@ -985,7 +1040,8 @@ svg {
         grid-template-columns: repeat(2, 1fr);
     }
 
-    .database-grid {
+    .database-grid,
+    .placeholder-grid {
         grid-template-columns: repeat(2, 1fr);
     }
 
@@ -1039,7 +1095,8 @@ svg {
 
     .dashboard-kpis,
     .dashboard-favorites,
-    .database-grid {
+    .database-grid,
+    .placeholder-grid {
         grid-template-columns: 1fr;
     }
 
