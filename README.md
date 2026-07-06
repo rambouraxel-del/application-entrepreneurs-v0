@@ -1,6 +1,6 @@
 # Application Entrepreneurs — V0
 
-> **Note de version — V0.1** : l'interface a fait l'objet d'une refonte graphique globale (sidebar sombre, tableau de bord modernisé, nouvelle charte de couleurs indigo/violet) inspirée d'une maquette de référence. Le contenu, les pages, les données fictives et le fonctionnement décrits ci-dessous restent valables ; seul l'habillage visuel a changé. Voir `docs/changelog.md` (section "V0.1 — Refonte graphique globale") pour le détail.
+> **Note de version — V0.1 / V0.1.1 / V0.1.2** : l'interface a fait l'objet d'une refonte graphique globale (V0.1 : sidebar sombre, tableau de bord modernisé, charte indigo/violet) puis de corrections ciblées sur le tableau de bord (V0.1.1). Le contenu, les pages, les données fictives et le fonctionnement décrits ci-dessous restent valables ; seul l'habillage visuel a changé. La V0.1.2 met en place le suivi Git/GitHub du projet, désormais la méthode de suivi recommandée (voir `docs/versioning.md`). Voir `docs/changelog.md` pour le détail de chaque étape.
 
 ## Objectif du projet
 Cette application web vise à accompagner les entrepreneurs, indépendants et dirigeants de TPE dans le pilotage quotidien de leur activité, en centralisant les informations essentielles (clients, factures, agenda, trésorerie, indicateurs) au sein d'une interface simple et professionnelle — un véritable cockpit de pilotage.
@@ -91,6 +91,13 @@ Ces pistes sont identifiées pour information uniquement. Elles n'ont pas été 
 ## Pour aller plus loin
 
 - `PROJECT_INDEX.md` — organisation complète du projet.
-- `docs/changelog.md` — détail de chaque étape de développement (0 à 10).
+- `docs/changelog.md` — détail de chaque étape de développement, de la V0 initiale à la V0.1.2.
 - `docs/decisions.md` — décisions techniques et de conception prises pendant le développement.
+- `docs/roadmap-v0bis.md` — phases prévues après la V0 (V0.1 à V1).
+- `docs/backlog.md` — idées et pistes non traitées immédiatement, classées par thème.
+- `docs/versioning.md` — règles de suivi des versions avec Git (commits, tags, branches).
 - Les README de chaque dossier (`css/`, `js/`, `pages/`, `components/`, `assets/`, `docs/`) — rôle précis de chaque emplacement.
+
+## Suivi du projet
+
+Le projet est désormais versionné avec Git (dépôt local à la racine de `Application-Entrepreneurs-V0/`). Voir `docs/versioning.md` pour la convention de nommage des versions et `docs/roadmap-v0bis.md` pour les prochaines phases.

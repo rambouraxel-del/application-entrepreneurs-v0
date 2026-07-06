@@ -96,3 +96,19 @@ Passe corrective sur `pages/dashboard.html` et `css/styles.css` uniquement, pour
 - **`js/app.js`** : aucune modification.
 
 Vérifications effectuées : liens/chemins valides, aucun identifiant dupliqué, CSS syntaxiquement valide (155 accolades ouvrantes/fermantes équilibrées), 19 éléments `btn-wip` correctement répartis (dashboard passe de 3 à 4 avec l'ajout du sélecteur de date). Test visuel réel dans Chrome tenté mais bloqué par la politique de navigation de l'extension (accès `file://` et `localhost` tous deux refusés) — un serveur HTTP local de secours (PowerShell, `http://localhost:8834/`) a été mis en place pour permettre au chef de projet de vérifier lui-même le rendu sans workaround supplémentaire côté agent.
+
+**V0.1.1 validée par le chef de projet.** Points restants non bloquants, reportés au backlog (`docs/backlog.md`) : suppression/refonte de la page Base de données, harmonisation du sélecteur de date sur toutes les pages, amélioration plus poussée du widget Agenda, évolution fonctionnelle des modules, travail futur sur l'identité/logo.
+
+## V0.1.2 — Structuration technique et documentation projet
+Étape purement technique et documentaire, sans aucune modification du prototype (HTML/CSS/JS inchangés) :
+
+- **Initialisation d'un dépôt Git local** à la racine de `Application-Entrepreneurs-V0/` (le projet n'était pas versionné jusque-là). Identité configurée localement au dépôt : Axel Rambour / rambour.axel@gmail.com.
+- **Premier commit** (`v0.1.1 - refonte graphique stabilisée`) figeant l'état validé de la V0.1.1, puis **tag `v0.1.1`** sur ce commit.
+- **`.gitignore`** créé : exclut les dossiers de sauvegarde (`backup-*/`), les fichiers système, les fichiers temporaires, les futurs fichiers d'environnement et dépendances.
+- **`docs/roadmap-v0bis.md`** créé : phases V0.1 à V1, avec leur statut (validée / en cours / à venir).
+- **`docs/backlog.md`** créé : idées et pistes non traitées, classées par thème, reprenant notamment les points laissés en suspens à la validation de la V0.1.1.
+- **`docs/versioning.md`** créé : convention de nommage des versions (V0.x / V0.x.x), logique de commit/tag/branche, distinction version validée / en chantier.
+- **Second commit** (`v0.1.2 - structuration technique et documentation projet`) regroupant ces nouveaux documents et les mises à jour de `README.md`, `docs/changelog.md` et `docs/decisions.md`.
+- **Dépôt GitHub distant** : non créé à ce stade (`gh` non installé sur la machine, et aucune tentative de création automatique n'a été faite). Procédure manuelle documentée pour le chef de projet.
+
+Git/GitHub deviennent à partir de cette étape la méthode de suivi recommandée pour le projet, en remplacement des sauvegardes manuelles de dossier utilisées jusqu'ici.

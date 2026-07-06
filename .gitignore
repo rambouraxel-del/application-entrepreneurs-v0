@@ -1,0 +1,19 @@
+# Sauvegardes locales (voir docs/decisions.md)
+backup-*/
+
+# Fichiers systeme
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Fichiers temporaires / editeurs
+*.tmp
+*.bak
+*~
+
+# Environnements locaux (si utilises un jour)
+.env
+.env.local
+
+# Dependances (si introduites dans une version future)
+node_modules/
