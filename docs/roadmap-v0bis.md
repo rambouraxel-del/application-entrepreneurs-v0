@@ -9,8 +9,8 @@ Cette roadmap présente les phases prévues après la V0 initiale (livrée à l'
 | V0.1 | Refonte graphique globale (sidebar, tableau de bord modernisé, charte indigo/violet) | Validée |
 | V0.1.1 | Corrections ciblées du tableau de bord (agenda, to-do, alertes, sélecteur de date) | Validée |
 | V0.1.2 | Structuration technique : Git, GitHub, roadmap, backlog, versioning | Validée |
-| V0.2 | Navigation et architecture générale | En cours |
-| V0.3 | Tableau de bord : interactions et finalisation | À venir |
+| V0.2 | Navigation et architecture générale | Validée |
+| V0.3 | Tableau de bord : hub de navigation et interactions de base | En cours |
 | V0.4 | Page Clients / fiche client / CRM | À venir |
 | V0.5 | Page Agenda | À venir |
 | V0.6 | Page Facturation | À venir |

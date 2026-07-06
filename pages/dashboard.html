@@ -71,39 +71,42 @@
             </header>
 
             <main class="page-content">
+                <div class="dashboard-section-header">
+                    <a href="#" class="dashboard-block-link btn-wip">Personnaliser les indicateurs</a>
+                </div>
                 <section class="dashboard-kpis">
-                    <div class="dashboard-card kpi-card">
+                    <a href="finance.html" class="dashboard-card kpi-card kpi-card-link">
                         <div class="kpi-icon kpi-icon-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg></div>
                         <div class="kpi-card-body">
                             <h2>CA du jour</h2>
                             <p class="kpi-value">420 €</p>
                             <p class="kpi-variation status-positive">↗ +12 % vs hier</p>
                         </div>
-                    </div>
-                    <div class="dashboard-card kpi-card">
+                    </a>
+                    <a href="finance.html" class="dashboard-card kpi-card kpi-card-link">
                         <div class="kpi-icon kpi-icon-2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="16"></line></svg></div>
                         <div class="kpi-card-body">
                             <h2>CA du mois</h2>
                             <p class="kpi-value">8 750 €</p>
                             <p class="kpi-variation status-negative">↘ -8 % vs mois précédent</p>
                         </div>
-                    </div>
-                    <div class="dashboard-card kpi-card">
+                    </a>
+                    <a href="finance.html" class="dashboard-card kpi-card kpi-card-link">
                         <div class="kpi-icon kpi-icon-3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg></div>
                         <div class="kpi-card-body">
                             <h2>Objectif mensuel</h2>
                             <p class="kpi-value">72 %</p>
                             <p class="kpi-variation status-neutral">atteint</p>
                         </div>
-                    </div>
-                    <div class="dashboard-card kpi-card">
+                    </a>
+                    <a href="tresorerie.html" class="dashboard-card kpi-card kpi-card-link">
                         <div class="kpi-icon kpi-icon-4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4z"></path></svg></div>
                         <div class="kpi-card-body">
                             <h2>Trésorerie disponible</h2>
                             <p class="kpi-value">3 250 €</p>
                             <p class="kpi-variation status-neutral">stable</p>
                         </div>
-                    </div>
+                    </a>
                 </section>
 
                 <section class="dashboard-row dashboard-row-3">
@@ -127,17 +130,17 @@
                         <ul class="todo-list">
                             <li class="todo-item todo-priority">
                                 <span class="todo-checkbox"></span>
-                                <div class="todo-item-body">
+                                <a href="clients.html" class="todo-item-body todo-item-link">
                                     <p class="todo-item-title">Relancer le devis Martin</p>
                                     <span class="badge badge-danger">Priorité du jour</span>
-                                </div>
+                                </a>
                             </li>
                             <li class="todo-item">
                                 <span class="todo-checkbox"></span>
-                                <div class="todo-item-body">
+                                <a href="facturation.html" class="todo-item-body todo-item-link">
                                     <p class="todo-item-title">Préparer la facture n°001</p>
                                     <span class="badge badge-warning">Priorité 2</span>
-                                </div>
+                                </a>
                             </li>
                             <li class="todo-item">
                                 <span class="todo-checkbox"></span>
@@ -169,37 +172,45 @@
                             <a href="#" class="dashboard-block-link btn-wip">Voir toutes</a>
                         </div>
                         <ul class="alert-list">
-                            <li class="alert-item alert-critical">
-                                <span class="alert-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></span>
-                                <div class="alert-item-body">
-                                    <p class="alert-item-title">Facture en retard de paiement</p>
-                                    <p class="alert-item-subtext">Facture n°001 — 1 250 €</p>
-                                </div>
-                                <span class="alert-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></span>
+                            <li>
+                                <a href="facturation.html" class="alert-item alert-critical">
+                                    <span class="alert-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></span>
+                                    <div class="alert-item-body">
+                                        <p class="alert-item-title">Facture en retard de paiement</p>
+                                        <p class="alert-item-subtext">Facture n°001 — 1 250 €</p>
+                                    </div>
+                                    <span class="alert-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></span>
+                                </a>
                             </li>
-                            <li class="alert-item alert-warning">
-                                <span class="alert-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></span>
-                                <div class="alert-item-body">
-                                    <p class="alert-item-title">Stock faible</p>
-                                    <p class="alert-item-subtext">Un produit principal est presque épuisé</p>
-                                </div>
-                                <span class="alert-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></span>
+                            <li>
+                                <a href="produits-services.html" class="alert-item alert-warning">
+                                    <span class="alert-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></span>
+                                    <div class="alert-item-body">
+                                        <p class="alert-item-title">Stock faible</p>
+                                        <p class="alert-item-subtext">Un produit principal est presque épuisé</p>
+                                    </div>
+                                    <span class="alert-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></span>
+                                </a>
                             </li>
-                            <li class="alert-item alert-warning">
-                                <span class="alert-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></span>
-                                <div class="alert-item-body">
-                                    <p class="alert-item-title">Objectif mensuel en retard</p>
-                                    <p class="alert-item-subtext">72 % atteint, légèrement sous l'objectif</p>
-                                </div>
-                                <span class="alert-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></span>
+                            <li>
+                                <a href="finance.html" class="alert-item alert-warning">
+                                    <span class="alert-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></span>
+                                    <div class="alert-item-body">
+                                        <p class="alert-item-title">Objectif mensuel en retard</p>
+                                        <p class="alert-item-subtext">72 % atteint, légèrement sous l'objectif</p>
+                                    </div>
+                                    <span class="alert-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></span>
+                                </a>
                             </li>
-                            <li class="alert-item alert-info">
-                                <span class="alert-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></svg></span>
-                                <div class="alert-item-body">
-                                    <p class="alert-item-title">Rendez-vous important</p>
-                                    <p class="alert-item-subtext">Aujourd'hui à 16h30</p>
-                                </div>
-                                <span class="alert-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></span>
+                            <li>
+                                <a href="agenda.html" class="alert-item alert-info">
+                                    <span class="alert-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></svg></span>
+                                    <div class="alert-item-body">
+                                        <p class="alert-item-title">Rendez-vous important</p>
+                                        <p class="alert-item-subtext">Aujourd'hui à 16h30</p>
+                                    </div>
+                                    <span class="alert-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></span>
+                                </a>
                             </li>
                         </ul>
                     </div>
@@ -232,27 +243,27 @@
                 </div>
 
                 <section class="dashboard-favorites">
-                    <div class="dashboard-card kpi-card dashboard-card-favorite">
+                    <a href="clients.html" class="dashboard-card kpi-card dashboard-card-favorite kpi-card-link">
                         <div class="kpi-icon kpi-icon-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path><circle cx="10" cy="7" r="4"></circle></svg></div>
                         <div class="kpi-card-body">
                             <h2>Clients ce mois-ci</h2>
                             <p class="favorite-value">14</p>
                         </div>
-                    </div>
-                    <div class="dashboard-card kpi-card dashboard-card-favorite">
+                    </a>
+                    <a href="facturation.html" class="dashboard-card kpi-card dashboard-card-favorite kpi-card-link">
                         <div class="kpi-icon kpi-icon-2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg></div>
                         <div class="kpi-card-body">
                             <h2>Devis envoyés</h2>
                             <p class="favorite-value">6</p>
                         </div>
-                    </div>
-                    <div class="dashboard-card kpi-card dashboard-card-favorite">
+                    </a>
+                    <a href="tresorerie.html" class="dashboard-card kpi-card dashboard-card-favorite kpi-card-link">
                         <div class="kpi-icon kpi-icon-3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4z"></path></svg></div>
                         <div class="kpi-card-body">
                             <h2>Dépenses du mois</h2>
                             <p class="favorite-value">2 180 €</p>
                         </div>
-                    </div>
+                    </a>
                     <div class="dashboard-card kpi-card dashboard-card-favorite">
                         <div class="kpi-icon kpi-icon-4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></div>
                         <div class="kpi-card-body">

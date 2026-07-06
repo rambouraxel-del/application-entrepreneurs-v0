@@ -4,9 +4,12 @@ Ce document regroupe les idées et pistes identifiées au fil du projet, non tra
 
 ## Tableau de bord
 - Amélioration plus poussée du widget Agenda (identifiée lors de la validation V0.1.1).
-- Personnalisation réelle des indicateurs favoris / résumé mensuel.
+- Vrai système de personnalisation des KPI (bouton "Personnaliser les indicateurs" ajouté en Work in progress en V0.3).
 - Vrai graphique d'évolution du CA, basé sur des données réelles.
 - Priorité du jour réellement modifiable par l'utilisateur.
+- Vraie logique de tâches (création, modification, suppression) — "Ajouter une tâche" reste en Work in progress depuis la V0.1.1/V0.3.
+- Panneau "Voir toutes les alertes" agrégeant l'ensemble des alertes, si un tel besoin se confirme (pas de page cible aujourd'hui).
+- Si un module Fournisseurs voit le jour, revoir "Appeler le fournisseur Dupont" (non cliquable en V0.3, faute de destination).
 
 ## Navigation
 - Harmonisation du sélecteur de date sur toutes les pages (actuellement présent uniquement sur le tableau de bord, décision assumée en V0.1.1).

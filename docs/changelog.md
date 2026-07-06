@@ -133,3 +133,23 @@ Réalisée sur la branche dédiée `v0.2-navigation-architecture` (créée depui
 Vérifications effectuées : tous les liens/chemins résolvent (aucun lien mort), les 9 pages avec sidebar (dashboard, clients, agenda, facturation, database, settings, tresorerie, produits-services, finance) affichent exactement 7 liens chacune, l'onglet actif est correct sur les 7 pages concernées et absent sur `database.html`/`settings.html` (cohérent avec leur statut hors navigation principale), aucun identifiant HTML dupliqué, CSS syntaxiquement valide (162 accolades ouvrantes/fermantes équilibrées), aucun ancien lien vers `database.html` restant.
 
 Commit créé sur la branche `v0.2-navigation-architecture` : `v0.2 - navigation et architecture générale`. Pas de merge dans `main`, pas de tag, pas de push — décision laissée à la revue humaine.
+
+**V0.2 validée par le chef de projet.** Fusionnée dans `main` (fast-forward), taguée `v0.2`, poussée sur GitHub avec le tag.
+
+## V0.3 — Tableau de bord : hub de navigation et interactions de base
+Réalisée sur la branche dédiée `v0.3-dashboard-hub` (créée depuis `main`, non fusionnée à ce stade). Objectif : connecter le tableau de bord déjà existant aux modules posés en V0.2, sans nouvelle fonctionnalité métier. Seul `pages/dashboard.html` (contenu) et `css/styles.css` (styles additifs) ont été modifiés :
+
+- **4 KPI principaux rendus cliquables** : CA du jour → `finance.html`, CA du mois → `finance.html`, Objectif mensuel → `finance.html`, Trésorerie disponible → `tresorerie.html`.
+- **4 alertes importantes rendues cliquables** : Facture en retard → `facturation.html`, Stock faible → `produits-services.html`, Objectif mensuel en retard → `finance.html`, Rendez-vous important → `agenda.html`.
+- **3 cartes du résumé mensuel rendues cliquables** : Clients ce mois-ci → `clients.html`, Devis envoyés → `facturation.html`, Dépenses du mois → `tresorerie.html`. "Tâches terminées" reste non cliquable (aucun module Tâches dédié).
+- **2 tâches de la to-do list rendues cliquables** : "Relancer le devis Martin" (priorité du jour) → `clients.html`, "Préparer la facture n°001" → `facturation.html`. "Appeler le fournisseur Dupont" reste non cliquable (aucun module Fournisseurs), les 2 tâches déjà cochées restent non cliquables (actions passées).
+- **"Voir l'agenda"** vérifié : pointait déjà vers `agenda.html` depuis la V0.1.1, aucun changement nécessaire.
+- **Nouveau bouton "Personnaliser les indicateurs"** ajouté au-dessus de la grille des 4 KPI principaux, en Work in progress (`btn-wip`) — prépare l'idée sans développer la fonctionnalité.
+- **Indications visuelles de clic ajoutées**, additives uniquement (aucune modification des règles de base `.dashboard-card`, `.kpi-card`, `.alert-item`) : `.kpi-card-link` (chevron discret en survol via `::after`, légère ombre), `.alert-item` (assombrissement léger au survol), `.todo-item-link` (soulignement du titre au survol). Curseur pointer sur tous les éléments cliquables.
+- **Design V0.1.1 non modifié** : aucune structure, couleur, sidebar, topbar ou espacement changé — uniquement des classes additives et des balises `<div>`/`<li>` transformées en `<a>` sans changement de mise en page.
+- **"Base de données" non réintroduite** : vérifié, aucune mention ni lien vers `database.html` sur le tableau de bord.
+- **`js/app.js`** : aucune modification (les nouveaux liens réels ne nécessitent aucun JavaScript ; la délégation `.btn-wip` reste inchangée pour les éléments encore en Work in progress).
+
+Vérifications effectuées : tous les liens/chemins du projet résolvent (aucun lien mort, toutes pages confondues), CSS syntaxiquement valide (170 accolades équilibrées), balises HTML équilibrées sur `dashboard.html` (div, a, li, ul, section), aucun identifiant dupliqué, exactement 3 éléments `href="#"` restants sur le tableau de bord — tous portant `btn-wip` ("Personnaliser les indicateurs", "Ajouter une tâche", "Voir toutes") —, aucun des nouveaux liens réels ne porte la classe `btn-wip`.
+
+Commit créé sur la branche `v0.3-dashboard-hub` : `v0.3 - tableau de bord hub de navigation`. Pas de merge dans `main`, pas de tag, pas de push — décision laissée à la revue humaine.

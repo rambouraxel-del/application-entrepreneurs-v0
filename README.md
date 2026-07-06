@@ -1,6 +1,6 @@
 # Application Entrepreneurs — V0
 
-> **Note de version — V0.1 à V0.2** : l'interface a fait l'objet d'une refonte graphique globale (V0.1), de corrections ciblées sur le tableau de bord (V0.1.1), d'une structuration technique Git/GitHub (V0.1.2), puis d'une réorganisation de la navigation principale (V0.2, en cours sur la branche `v0.2-navigation-architecture`) : "Base de données" est sortie de la sidebar et trois nouvelles portes d'entrée (Trésorerie, Produits / Services, Finance) ont été ajoutées comme placeholders. Voir `docs/changelog.md` pour le détail de chaque étape et `docs/versioning.md` pour la méthode de suivi Git recommandée.
+> **Note de version — V0.1 à V0.3** : l'interface a fait l'objet d'une refonte graphique globale (V0.1), de corrections ciblées sur le tableau de bord (V0.1.1), d'une structuration technique Git/GitHub (V0.1.2), d'une réorganisation de la navigation principale (V0.2 : "Base de données" sortie de la sidebar, ajout de Trésorerie/Produits-Services/Finance), puis d'une connexion du tableau de bord à ces modules (V0.3, en cours sur la branche `v0.3-dashboard-hub`) : les KPI, certaines alertes et certaines tâches deviennent de vrais liens vers les pages correspondantes. Voir `docs/changelog.md` pour le détail de chaque étape et `docs/versioning.md` pour la méthode de suivi Git recommandée.
 
 ## Objectif du projet
 Cette application web vise à accompagner les entrepreneurs, indépendants et dirigeants de TPE dans le pilotage quotidien de leur activité, en centralisant les informations essentielles (clients, factures, agenda, trésorerie, indicateurs) au sein d'une interface simple et professionnelle — un véritable cockpit de pilotage.
@@ -21,6 +21,7 @@ La V0 est **uniquement un prototype visuel cliquable**, avec des données fictiv
   - des alertes importantes (avec niveaux de gravité rouge/orange/gris) ;
   - un bloc notifications fictif ;
   - 4 indicateurs favoris.
+  - **Depuis la V0.3**, le tableau de bord est un véritable hub de navigation : les 4 KPI principaux, les 4 alertes importantes, 3 des 4 indicateurs favoris et 2 tâches de la to-do list sont de vrais liens vers les pages de modules correspondantes (Finance, Trésorerie, Clients, Facturation, Produits / Services, Agenda). Les éléments sans destination existante (ex. "Ajouter une tâche", "Personnaliser les indicateurs") restent en Work in progress.
 - **Pages secondaires fictives** :
   - **Clients** : bouton "Ajouter un client", barre de recherche fictive, tableau de 4 clients fictifs avec statuts ;
   - **Agenda** : bouton "Ajouter un rendez-vous", liste de rendez-vous fictifs de la journée ;

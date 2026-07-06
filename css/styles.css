@@ -499,6 +499,46 @@ svg {
     color: var(--color-text-secondary);
 }
 
+/* Tableau de bord : hub de navigation (V0.3) */
+
+.dashboard-section-header {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 8px;
+}
+
+.kpi-card-link {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+    position: relative;
+}
+
+.kpi-card-link:hover {
+    box-shadow: var(--shadow-elevated);
+    border-color: var(--color-primary);
+}
+
+.kpi-card-link::after {
+    content: "";
+    position: absolute;
+    top: 20px;
+    right: 16px;
+    width: 7px;
+    height: 7px;
+    border-top: 2px solid var(--color-text-secondary);
+    border-right: 2px solid var(--color-text-secondary);
+    transform: rotate(45deg);
+    opacity: 0.3;
+    transition: opacity 0.15s ease, border-color 0.15s ease;
+}
+
+.kpi-card-link:hover::after {
+    opacity: 0.8;
+    border-color: var(--color-primary);
+}
+
 .dashboard-card-favorite {
     padding: 16px 20px;
 }
@@ -704,6 +744,17 @@ svg {
     font-weight: 400;
 }
 
+.todo-item-link {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+.todo-item-link .todo-item-title:hover {
+    color: var(--color-primary);
+    text-decoration: underline;
+}
+
 /* Alertes importantes (V0.1.1) */
 
 .alert-list {
@@ -721,6 +772,14 @@ svg {
     gap: 12px;
     padding: 12px;
     border-radius: 12px;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    transition: filter 0.15s ease;
+}
+
+.alert-item:hover {
+    filter: brightness(0.97);
 }
 
 .alert-icon {
