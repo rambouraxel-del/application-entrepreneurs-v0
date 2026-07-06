@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Clients — Cockpit Entrepreneur</title>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <div class="app-shell">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <span class="sidebar-logo">CE</span>
+                <span class="sidebar-brand-name">Cockpit Entrepreneur</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="sidebar-link">
+                    <span class="sidebar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg></span>
+                    <span>Tableau de bord</span>
+                </a>
+                <a href="clients.html" class="sidebar-link sidebar-link-active">
+                    <span class="sidebar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path><circle cx="10" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></span>
+                    <span>Clients</span>
+                </a>
+                <a href="agenda.html" class="sidebar-link">
+                    <span class="sidebar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></svg></span>
+                    <span>Agenda</span>
+                </a>
+                <a href="facturation.html" class="sidebar-link">
+                    <span class="sidebar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M9 13h6"></path><path d="M9 17h6"></path></svg></span>
+                    <span>Facturation</span>
+                </a>
+                <a href="database.html" class="sidebar-link">
+                    <span class="sidebar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"></ellipse><path d="M4 5v14c0 1.66 3.58 3 8 3s8-1.34 8-3V5"></path><path d="M4 12c0 1.66 3.58 3 8 3s8-1.34 8-3"></path></svg></span>
+                    <span>Base de données</span>
+                </a>
+            </nav>
+        </aside>
+
+        <div class="main">
+            <header class="topbar">
+                <div class="topbar-greeting">
+                    <h1>Clients</h1>
+                    <p class="page-subtitle">Retrouvez et gérez l'ensemble de vos clients.</p>
+                </div>
+                <div class="topbar-actions">
+                    <div class="topbar-search">
+                        <span class="topbar-search-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg></span>
+                        <input type="text" placeholder="Rechercher...">
+                    </div>
+                    <button type="button" class="topbar-icon-btn btn-wip" aria-label="Notifications">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                        <span class="topbar-badge">3</span>
+                    </button>
+                    <a href="settings.html" class="topbar-icon-btn" aria-label="Paramètres">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.32 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    </a>
+                </div>
+            </header>
+
+            <main class="page-content">
+                <div class="page-toolbar">
+                    <div class="search-bar page-toolbar-search">
+                        <span class="search-bar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg></span>
+                        <input type="text" placeholder="Rechercher un client...">
+                    </div>
+                    <button type="button" class="btn-primary btn-wip">Ajouter un client</button>
+                </div>
+
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Entreprise</th>
+                            <th>Téléphone</th>
+                            <th>E-mail</th>
+                            <th>Dernier contact</th>
+                            <th>Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Martin Dupont</td>
+                            <td>—</td>
+                            <td>01 23 45 67 89</td>
+                            <td>martin.dupont@example.com</td>
+                            <td>02/07/2026</td>
+                            <td><span class="badge badge-success">Actif</span></td>
+                        </tr>
+                        <tr>
+                            <td>Sophie Bernard</td>
+                            <td>—</td>
+                            <td>02 34 56 78 90</td>
+                            <td>sophie.bernard@example.com</td>
+                            <td>28/06/2026</td>
+                            <td><span class="badge badge-success">Actif</span></td>
+                        </tr>
+                        <tr>
+                            <td>Atelier Leroy</td>
+                            <td>Atelier Leroy</td>
+                            <td>03 45 67 89 01</td>
+                            <td>contact@atelierleroy.example.com</td>
+                            <td>15/06/2026</td>
+                            <td><span class="badge badge-warning">À relancer</span></td>
+                        </tr>
+                        <tr>
+                            <td>Boucherie Morel</td>
+                            <td>Boucherie Morel</td>
+                            <td>04 56 78 90 12</td>
+                            <td>contact@boucheriemorel.example.com</td>
+                            <td>01/06/2026</td>
+                            <td><span class="badge badge-neutral">Inactif</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </main>
+        </div>
+    </div>
+
+    <script src="../js/app.js"></script>
+</body>
+</html>
