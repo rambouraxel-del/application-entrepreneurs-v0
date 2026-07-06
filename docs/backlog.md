@@ -16,9 +16,11 @@ Ce document regroupe les idées et pistes identifiées au fil du projet, non tra
 - Réflexion sur une architecture à composants/templates pour éliminer la duplication de la sidebar et de la topbar entre les fichiers HTML.
 
 ## Clients / CRM
-- Création, modification et suppression réelles de clients.
-- Fiches clients détaillées.
-- Recherche et filtres fonctionnels sur la liste des clients.
+- Création, modification et suppression réelles de clients (bouton "Ajouter un client" toujours en Work in progress).
+- Fiche client complète, prévue en V0.4.2 : historique, rendez-vous, devis, factures, chiffre d'affaires client, notes, relances, remises/concessions, date de création réelle.
+- Statuts clients personnalisables (interface de gestion), prévu en V0.4.3 — la liste actuelle (Prospect, Client actif, À relancer, Inactif, Fidèle, Litige) reste une base par défaut, centralisée dans `js/app.js` (`CLIENT_STATUSES`) depuis la V0.4.1.
+- Tri et pagination de la liste clients (non traités en V0.4.1, qui se limite à la recherche, au filtre par statut et au compteur).
+- Fiche client réellement liée à un client précis (au-delà du simple affichage du nom déduit du paramètre `?client=` introduit en V0.4.1).
 
 ## Agenda
 - Vraie gestion des rendez-vous (création, modification, suppression).

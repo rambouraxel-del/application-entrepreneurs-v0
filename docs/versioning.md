@@ -6,7 +6,7 @@ Ce document explique simplement comment le projet suit ses versions avec Git. L'
 
 - **V0** : le prototype visuel cliquable initial (étapes 0 à 10, voir `docs/changelog.md`).
 - **V0.x** (ex. V0.1, V0.2...) : une phase majeure du projet, qui correspond en général à une entrée de la roadmap (`docs/roadmap-v0bis.md`) — une refonte graphique, l'ajout d'un module, etc.
-- **V0.x.x** (ex. V0.1.1, V0.1.2...) : une correction ou un ajustement ciblé à l'intérieur d'une phase majeure, qui ne change pas son périmètre global (correction visuelle, structuration technique, petit correctif).
+- **V0.x.x** (ex. V0.1.1, V0.1.2...) : une correction ou un ajustement ciblé à l'intérieur d'une phase majeure, qui ne change pas son périmètre global (correction visuelle, structuration technique, petit correctif). Ce même format est aussi utilisé quand une phase majeure est **découpée dès le départ en plusieurs sous-versions** (ex. V0.4.1, V0.4.2, V0.4.3 pour la V0.4 Clients/CRM) : chaque sous-version correspond alors à un sous-périmètre planifié à l'avance, pas à une correction a posteriori.
 - **V1** : la première version fonctionnelle stable, une fois que les modules principaux reposent sur de vraies fonctionnalités (données réelles, sauvegarde, authentification).
 
 ## Quand créer un commit

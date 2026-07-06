@@ -10,8 +10,10 @@ Cette roadmap présente les phases prévues après la V0 initiale (livrée à l'
 | V0.1.1 | Corrections ciblées du tableau de bord (agenda, to-do, alertes, sélecteur de date) | Validée |
 | V0.1.2 | Structuration technique : Git, GitHub, roadmap, backlog, versioning | Validée |
 | V0.2 | Navigation et architecture générale | Validée |
-| V0.3 | Tableau de bord : hub de navigation et interactions de base | En cours |
-| V0.4 | Page Clients / fiche client / CRM | À venir |
+| V0.3 | Tableau de bord : hub de navigation et interactions de base | Validée |
+| V0.4.1 | Liste clients CRM : recherche, filtre par statut, accès fiche client | En cours |
+| V0.4.2 | Fiche client complète, visuelle et ergonomique | À venir |
+| V0.4.3 | Statuts personnalisables + premières interactions CRM simples | À venir |
 | V0.5 | Page Agenda | À venir |
 | V0.6 | Page Facturation | À venir |
 | V0.7 | Page Trésorerie | À venir |
@@ -32,3 +34,7 @@ La V0.2 ajoute Trésorerie, Produits / Services et Finance dans la navigation pr
 Les phases V0.7 (Trésorerie), V0.8 (Produits / Services) et V0.9 (Finance) restent celles dédiées à leur **développement fonctionnel réel** (calculs, données réelles, création/modification, etc.). La V0.2 pose uniquement la structure de navigation ; ces phases ultérieures y ajouteront la logique métier.
 
 Le module **Statistiques / Pilotage** n'est volontairement pas ajouté à la sidebar en V0.2 (voir `docs/backlog.md`) : il sera étudié plus tard, une fois la distinction entre Finance, Trésorerie et indicateurs de pilotage plus claire.
+
+## Précision importante — découpage de la V0.4
+
+La V0.4 (Clients / fiche client / socle CRM) est découpée en trois sous-versions plutôt que traitée en un seul bloc, la fiche client étant centrale pour construire un vrai CRM : **V0.4.1** pose la liste Clients améliorée (recherche, filtre, accès à la fiche) ; **V0.4.2** construira la fiche client complète (historique, rendez-vous, devis, factures, notes, relances) ; **V0.4.3** ajoutera la personnalisation des statuts et de premières interactions CRM simples.
