@@ -557,6 +557,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
 
+    window.COCKPIT_CLIENT_DETAILS = CLIENT_DETAILS;
+
     var nameEl = document.getElementById('client-identity-name');
 
     if (!nameEl) {
@@ -957,7 +959,23 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    function renderAppointments(appointments) {
+    function buildAgendaHref(rdvId, slug) {
+        var params = [];
+        if (rdvId) {
+            params.push('rdv=' + encodeURIComponent(rdvId));
+        }
+        if (slug) {
+            params.push('from=fiche-client');
+            params.push('client=' + encodeURIComponent(slug));
+        }
+        return 'agenda.html' + (params.length ? '?' + params.join('&') : '');
+    }
+
+    function buildFacturationHref(slug) {
+        return slug ? 'facturation.html?from=fiche-client&client=' + encodeURIComponent(slug) : 'facturation.html';
+    }
+
+    function renderAppointments(appointments, slug) {
         var list = document.getElementById('client-appointments-list');
         if (!list) {
             return;
@@ -975,7 +993,7 @@ document.addEventListener('DOMContentLoaded', function () {
         appointments.slice(0, 3).forEach(function (appointment) {
             var item = document.createElement('a');
             item.className = 'appointment-item appointment-item-link';
-            item.href = 'agenda.html' + (appointment.id ? '?rdv=' + encodeURIComponent(appointment.id) : '');
+            item.href = buildAgendaHref(appointment.id, slug);
 
             var infoEl = document.createElement('div');
             infoEl.className = 'appointment-info';
@@ -1102,7 +1120,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var statusEl = document.getElementById('client-identity-status');
         if (statusEl && statusInfo) {
             statusEl.textContent = statusInfo.label;
-            statusEl.className = 'badge ' + statusInfo.badgeClass;
+            statusEl.className = 'badge badge-clickable ' + statusInfo.badgeClass;
         }
 
         setText('kpi-ca-genere', client.kpis.caGenere.value);
@@ -1129,12 +1147,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
         renderNotes(client.notes, client);
         renderHistory(client.historique);
-        renderAppointments(client.rendezVous);
+        renderAppointments(client.rendezVous, slug);
         renderDocuments(client.documents);
 
-        var statusEditBtn = document.getElementById('client-status-edit-btn');
-        if (statusEditBtn) {
-            statusEditBtn.onclick = function () {
+        var agendaLinkHeader = document.getElementById('agenda-link-header');
+        if (agendaLinkHeader) {
+            agendaLinkHeader.href = buildAgendaHref(null, slug);
+        }
+
+        var facturationLinkHeader = document.getElementById('facturation-link-header');
+        if (facturationLinkHeader) {
+            facturationLinkHeader.href = buildFacturationHref(slug);
+        }
+
+        if (statusEl) {
+            statusEl.onclick = function () {
                 openStatusModal(client);
             };
         }
@@ -1156,4 +1183,37 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var params = new URLSearchParams(window.location.search);
     renderClient(params.get('client'));
+})();
+
+// Retour contextuel vers la fiche client depuis Agenda / Facturation (V0.4.3.1)
+// N'affiche un lien de retour que si la page a été ouverte depuis la fiche client
+// (paramètres "from" et "client" présents et connus) ; aucun changement sinon,
+// notamment lors d'un accès direct à ces pages depuis la sidebar.
+
+(function () {
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('from') !== 'fiche-client') {
+        return;
+    }
+
+    var slug = params.get('client');
+    if (!slug) {
+        return;
+    }
+
+    var pageContent = document.querySelector('.page-content');
+    if (!pageContent) {
+        return;
+    }
+
+    var clientDetails = window.COCKPIT_CLIENT_DETAILS || {};
+    var client = clientDetails[slug];
+    var label = client ? 'Retour à la fiche de ' + client.nom : 'Retour à la fiche client';
+
+    var link = document.createElement('a');
+    link.className = 'contextual-back-link';
+    link.href = 'fiche-client.html?client=' + encodeURIComponent(slug);
+    link.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg> ' + label;
+
+    pageContent.insertBefore(link, pageContent.firstChild);
 })();

@@ -966,6 +966,51 @@ svg {
     color: var(--color-text-secondary);
 }
 
+.badge-clickable {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: none;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: filter 0.15s ease;
+}
+
+.badge-clickable:hover {
+    filter: brightness(0.95);
+}
+
+.badge-clickable:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.badge-clickable::after {
+    content: "";
+    width: 5px;
+    height: 5px;
+    border-top: 1.5px solid currentColor;
+    border-right: 1.5px solid currentColor;
+    transform: rotate(45deg);
+    opacity: 0.5;
+}
+
+.contextual-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    margin-bottom: 16px;
+}
+
+.contextual-back-link:hover {
+    color: var(--color-primary);
+    text-decoration: underline;
+}
+
 .clients-filters {
     display: flex;
     align-items: center;
