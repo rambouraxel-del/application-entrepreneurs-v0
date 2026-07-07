@@ -81,6 +81,129 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 })();
 
+// Moteur de modale générique (V0.4.3)
+// Réutilisable par n'importe quelle page : le contenu (titre, action d'en-tête
+// optionnelle, corps, pied) est fourni par l'appelant via COCKPIT_MODAL.open(...).
+// Reste indépendant du pop-up "Work in progress" ci-dessus, pour ne pas risquer
+// de régression sur ce composant déjà validé.
+
+(function () {
+    var overlay = null;
+    var modalCard = null;
+    var titleEl = null;
+    var headerExtraSlot = null;
+    var bodyEl = null;
+    var footerEl = null;
+    var closeXButton = null;
+    var lastTrigger = null;
+
+    function build() {
+        overlay = document.createElement('div');
+        overlay.className = 'modal-overlay';
+
+        modalCard = document.createElement('div');
+        modalCard.className = 'modal-card';
+        modalCard.setAttribute('role', 'dialog');
+        modalCard.setAttribute('aria-modal', 'true');
+
+        var header = document.createElement('div');
+        header.className = 'modal-header';
+
+        titleEl = document.createElement('h2');
+        titleEl.className = 'modal-title';
+
+        headerExtraSlot = document.createElement('div');
+        headerExtraSlot.className = 'modal-header-extra';
+
+        closeXButton = document.createElement('button');
+        closeXButton.type = 'button';
+        closeXButton.className = 'modal-close-x';
+        closeXButton.setAttribute('aria-label', 'Fermer');
+        closeXButton.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+        closeXButton.addEventListener('click', function () {
+            close();
+        });
+
+        header.appendChild(titleEl);
+        header.appendChild(headerExtraSlot);
+        header.appendChild(closeXButton);
+
+        bodyEl = document.createElement('div');
+        bodyEl.className = 'modal-body';
+
+        footerEl = document.createElement('div');
+        footerEl.className = 'modal-footer';
+
+        modalCard.appendChild(header);
+        modalCard.appendChild(bodyEl);
+        modalCard.appendChild(footerEl);
+        overlay.appendChild(modalCard);
+
+        overlay.addEventListener('click', function (event) {
+            if (event.target === overlay) {
+                close();
+            }
+        });
+
+        document.body.appendChild(overlay);
+    }
+
+    function open(options) {
+        if (!overlay) {
+            build();
+        }
+
+        lastTrigger = document.activeElement;
+
+        titleEl.textContent = (options && options.title) || '';
+
+        headerExtraSlot.innerHTML = '';
+        if (options && options.headerExtra) {
+            headerExtraSlot.appendChild(options.headerExtra);
+        }
+
+        bodyEl.innerHTML = '';
+        if (options && options.body) {
+            bodyEl.appendChild(options.body);
+        }
+
+        footerEl.innerHTML = '';
+        if (options && options.footer) {
+            footerEl.appendChild(options.footer);
+        }
+
+        overlay.classList.add('modal-overlay-visible');
+
+        var focusTarget = modalCard.querySelector('[data-modal-autofocus]') || closeXButton;
+        focusTarget.focus();
+    }
+
+    function close() {
+        if (overlay) {
+            overlay.classList.remove('modal-overlay-visible');
+        }
+        if (lastTrigger && typeof lastTrigger.focus === 'function') {
+            lastTrigger.focus();
+        }
+        lastTrigger = null;
+    }
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && overlay && overlay.classList.contains('modal-overlay-visible')) {
+            close();
+        }
+    });
+
+    document.addEventListener('click', function (event) {
+        if (event.target.closest('[data-modal-close]')) {
+            event.preventDefault();
+            close();
+        }
+    });
+
+    window.COCKPIT_MODAL = { open: open, close: close };
+})();
+
 // Page Clients : recherche, filtre par statut et compteur dynamique (V0.4.1)
 // La liste des statuts est centralisée ici : c'est la seule source à modifier
 // pour faire évoluer les statuts disponibles (préparation de la V0.4.3).
@@ -197,6 +320,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 { contenu: 'Satisfait de la dernière intervention, évoque un futur projet de rénovation.', auteur: 'Julien Martin', date: '20/06/2026' },
                 { contenu: 'Premier contact suite à une recommandation d\'un voisin.', auteur: 'Julien Martin', date: '05/06/2026' }
             ],
+            notesArchive: [
+                { contenu: 'Demande d\'information sur nos horaires d\'intervention.', auteur: 'Julien Martin', date: '28/05/2026' },
+                { contenu: 'Premier échange téléphonique, présentation de nos services.', auteur: 'Julien Martin', date: '20/05/2026' }
+            ],
             historique: [
                 { date: '02/07/2026', heure: '10:15', type: 'appel-sortant', resume: 'Appel de suivi après la dernière intervention. Intérêt confirmé pour l\'offre d\'entretien.', auteur: 'Julien Martin' },
                 { date: '28/06/2026', heure: '09:42', type: 'email-envoye', resume: 'Envoi du devis n°DV-2026-015 pour l\'entretien annuel.', auteur: 'Julien Martin' },
@@ -240,6 +367,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 { contenu: 'A recommandé nos services à deux proches ce trimestre.', auteur: 'Léa Bernard', date: '15/05/2026' },
                 { contenu: 'Souhaite être informée en priorité des nouvelles offres.', auteur: 'Léa Bernard', date: '02/04/2026' }
             ],
+            notesArchive: [
+                { contenu: 'A profité de l\'offre de parrainage lors de son inscription.', auteur: 'Léa Bernard', date: '10/12/2025' },
+                { contenu: 'Cliente très satisfaite de la première prestation réalisée.', auteur: 'Léa Bernard', date: '14/01/2024' }
+            ],
             historique: [
                 { date: '28/06/2026', heure: '16:10', type: 'email-recu', resume: 'Confirmation de satisfaction suite à la dernière prestation.', auteur: 'Léa Bernard' },
                 { date: '15/05/2026', heure: '09:30', type: 'rdv-realise', resume: 'Rendez-vous annuel de suivi réalisé.', auteur: 'Léa Bernard' },
@@ -282,6 +413,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 { contenu: 'Semblait intéressé mais évoque un budget serré.', auteur: 'Julien Martin', date: '01/06/2026' },
                 { contenu: 'Contact initial lors du salon des artisans.', auteur: 'Julien Martin', date: '10/05/2026' }
             ],
+            notesArchive: [
+                { contenu: 'Échange initial sur les besoins d\'agencement de l\'atelier.', auteur: 'Julien Martin', date: '03/09/2025' },
+                { contenu: 'Envoi de la documentation générale de nos prestations.', auteur: 'Julien Martin', date: '05/09/2025' }
+            ],
             historique: [
                 { date: '15/06/2026', heure: '11:00', type: 'relance', resume: 'Relance téléphonique restée sans réponse.', auteur: 'Julien Martin' },
                 { date: '01/06/2026', heure: '10:20', type: 'email-envoye', resume: 'Envoi du devis n°DV-2026-010 pour l\'agencement de l\'atelier.', auteur: 'Julien Martin' },
@@ -321,6 +456,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 { contenu: 'Avait mentionné une pause d\'activité temporaire.', auteur: 'Léa Bernard', date: '02/03/2026' },
                 { contenu: 'Dernière prestation réalisée sans réserve.', auteur: 'Léa Bernard', date: '15/11/2025' }
             ],
+            notesArchive: [
+                { contenu: 'Mise en place du contrat initial de prestation.', auteur: 'Léa Bernard', date: '18/11/2023' },
+                { contenu: 'Première intervention réalisée sans réserve particulière.', auteur: 'Léa Bernard', date: '02/12/2023' }
+            ],
             historique: [
                 { date: '01/06/2026', heure: '09:00', type: 'email-recu', resume: 'Réponse indiquant une pause d\'activité temporaire.', auteur: 'Léa Bernard' },
                 { date: '02/03/2026', heure: '11:30', type: 'relance', resume: 'Relance commerciale sans retour depuis.', auteur: 'Léa Bernard' },
@@ -357,6 +496,9 @@ document.addEventListener('DOMContentLoaded', function () {
             notes: [
                 { contenu: 'Premier contact via le formulaire du site, demande un devis.', auteur: 'Julien Martin', date: '20/06/2026' },
                 { contenu: 'À rappeler la semaine prochaine pour finaliser le devis.', auteur: 'Julien Martin', date: '22/06/2026' }
+            ],
+            notesArchive: [
+                { contenu: 'Inscription à la newsletter suite à une recherche en ligne.', auteur: 'Julien Martin', date: '18/06/2026' }
             ],
             historique: [
                 { date: '22/06/2026', heure: '09:00', type: 'appel-sortant', resume: 'Appel de qualification du besoin.', auteur: 'Julien Martin' },
@@ -396,6 +538,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 { contenu: 'Dossier transmis au service comptabilité pour vérification.', auteur: 'Léa Bernard', date: '12/06/2026' },
                 { contenu: 'Client historique important, litige à traiter en priorité.', auteur: 'Léa Bernard', date: '13/06/2026' }
             ],
+            notesArchive: [
+                { contenu: 'Signature du contrat-cadre pour les prestations d\'agencement.', auteur: 'Léa Bernard', date: '22/07/2022' },
+                { contenu: 'Bilan positif de la première année de collaboration.', auteur: 'Léa Bernard', date: '15/07/2023' }
+            ],
             historique: [
                 { date: '13/06/2026', heure: '15:00', type: 'commentaire-interne', resume: 'Dossier de litige transmis à la comptabilité pour vérification.', auteur: 'Léa Bernard' },
                 { date: '12/06/2026', heure: '10:30', type: 'email-recu', resume: 'Contestation écrite du montant facturé.', auteur: 'Léa Bernard' },
@@ -424,6 +570,262 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    function makeEl(tag, className, text) {
+        var node = document.createElement(tag);
+        if (className) {
+            node.className = className;
+        }
+        if (text !== undefined) {
+            node.textContent = text;
+        }
+        return node;
+    }
+
+    function makeIconButton(className, title, svgMarkup) {
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.className = className;
+        button.title = title;
+        button.setAttribute('aria-label', title);
+        button.innerHTML = svgMarkup;
+        return button;
+    }
+
+    var PENCIL_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>';
+    var TRASH_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>';
+    var SLIDERS_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>';
+    var PLUS_ICON_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>';
+    var BACK_ARROW_ICON_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg>';
+
+    function buildModalFooterButtons(buttons) {
+        var fragment = document.createDocumentFragment();
+        buttons.forEach(function (button) {
+            fragment.appendChild(button);
+        });
+        return fragment;
+    }
+
+    function makeCancelButton(label, autofocus) {
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'btn-secondary';
+        button.setAttribute('data-modal-close', 'true');
+        if (autofocus) {
+            button.setAttribute('data-modal-autofocus', 'true');
+        }
+        button.textContent = label || 'Annuler';
+        return button;
+    }
+
+    function makeSaveButton(label, danger) {
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.className = (danger ? 'btn-danger' : 'btn-primary') + ' btn-wip';
+        button.setAttribute('data-modal-close', 'true');
+        button.textContent = label;
+        return button;
+    }
+
+    function buildStatusModalBody(client) {
+        var body = document.createElement('div');
+
+        body.appendChild(makeEl('p', 'modal-text', 'Client : ' + client.nom));
+
+        var currentLine = makeEl('p', 'modal-text');
+        currentLine.appendChild(document.createTextNode('Statut actuel : '));
+        var statusInfo = clientStatusInfo(client.statut);
+        var currentBadge = makeEl('span', 'badge ' + (statusInfo ? statusInfo.badgeClass : 'badge-neutral'), statusInfo ? statusInfo.label : client.statut);
+        currentLine.appendChild(currentBadge);
+        body.appendChild(currentLine);
+
+        var label = makeEl('label', 'modal-label', 'Nouveau statut');
+        label.setAttribute('for', 'status-modal-select');
+        body.appendChild(label);
+
+        var select = document.createElement('select');
+        select.id = 'status-modal-select';
+        select.className = 'clients-status-select modal-select';
+        select.setAttribute('data-modal-autofocus', 'true');
+        (window.COCKPIT_CLIENT_STATUSES || []).forEach(function (status) {
+            var option = document.createElement('option');
+            option.value = status.value;
+            option.textContent = status.label;
+            if (status.value === client.statut) {
+                option.selected = true;
+            }
+            select.appendChild(option);
+        });
+        body.appendChild(select);
+
+        body.appendChild(makeEl('p', 'modal-hint', 'Ce changement de statut ne sera pas encore enregistré : la persistance sera ajoutée dans une prochaine version.'));
+
+        return body;
+    }
+
+    function openStatusModal(client) {
+        var headerExtra = makeIconButton('block-icon-btn', 'Personnaliser les statuts', SLIDERS_ICON_SVG);
+        headerExtra.addEventListener('click', function () {
+            openStatusCustomizeModal(client);
+        });
+
+        window.COCKPIT_MODAL.open({
+            title: 'Modifier le statut client',
+            headerExtra: headerExtra,
+            body: buildStatusModalBody(client),
+            footer: buildModalFooterButtons([makeCancelButton('Annuler'), makeSaveButton('Enregistrer')])
+        });
+    }
+
+    function buildStatusCustomizeBody(client) {
+        var body = document.createElement('div');
+
+        var backLink = document.createElement('button');
+        backLink.type = 'button';
+        backLink.className = 'modal-back-link';
+        backLink.innerHTML = BACK_ARROW_ICON_SVG + ' Retour au changement de statut';
+        backLink.addEventListener('click', function () {
+            openStatusModal(client);
+        });
+        body.appendChild(backLink);
+
+        var list = document.createElement('div');
+        list.className = 'status-list';
+
+        (window.COCKPIT_CLIENT_STATUSES || []).forEach(function (status) {
+            var row = document.createElement('div');
+            row.className = 'status-row';
+
+            row.appendChild(makeEl('span', 'badge ' + status.badgeClass, status.label));
+
+            var actions = document.createElement('div');
+            actions.className = 'status-row-actions';
+            actions.appendChild(makeIconButton('block-icon-btn btn-wip', 'Modifier le statut ' + status.label, PENCIL_ICON_SVG));
+            actions.appendChild(makeIconButton('block-icon-btn btn-wip', 'Supprimer le statut ' + status.label, TRASH_ICON_SVG));
+            row.appendChild(actions);
+
+            list.appendChild(row);
+        });
+        body.appendChild(list);
+
+        var addButton = document.createElement('button');
+        addButton.type = 'button';
+        addButton.className = 'btn-secondary btn-wip status-add-btn';
+        addButton.innerHTML = PLUS_ICON_SVG + ' Ajouter un statut';
+        body.appendChild(addButton);
+
+        return body;
+    }
+
+    function openStatusCustomizeModal(client) {
+        window.COCKPIT_MODAL.open({
+            title: 'Personnaliser les statuts clients',
+            body: buildStatusCustomizeBody(client),
+            footer: buildModalFooterButtons([makeCancelButton('Fermer', true)])
+        });
+    }
+
+    function buildNoteFormBody(client, existingContent, reminder) {
+        var body = document.createElement('div');
+        body.appendChild(makeEl('p', 'modal-text', 'Client : ' + client.nom));
+
+        if (reminder) {
+            body.appendChild(makeEl('p', 'modal-hint', reminder));
+        }
+
+        var label = makeEl('label', 'modal-label', 'Contenu de la note');
+        label.setAttribute('for', 'note-modal-textarea');
+        body.appendChild(label);
+
+        var textarea = document.createElement('textarea');
+        textarea.id = 'note-modal-textarea';
+        textarea.className = 'modal-textarea';
+        textarea.rows = 4;
+        textarea.placeholder = 'Rédigez votre note commerciale...';
+        textarea.setAttribute('data-modal-autofocus', 'true');
+        if (existingContent) {
+            textarea.value = existingContent;
+        }
+        body.appendChild(textarea);
+
+        return body;
+    }
+
+    function openNewNoteModal(client) {
+        window.COCKPIT_MODAL.open({
+            title: 'Ajouter une note commerciale',
+            body: buildNoteFormBody(client),
+            footer: buildModalFooterButtons([makeCancelButton('Annuler'), makeSaveButton('Ajouter')])
+        });
+    }
+
+    function openEditNoteModal(client, note) {
+        window.COCKPIT_MODAL.open({
+            title: 'Modifier la note',
+            body: buildNoteFormBody(client, note.contenu, 'Auteur : ' + note.auteur + ' · ' + note.date),
+            footer: buildModalFooterButtons([makeCancelButton('Annuler'), makeSaveButton('Enregistrer')])
+        });
+    }
+
+    function openDeleteNoteModal(note) {
+        var body = document.createElement('div');
+        body.appendChild(makeEl('p', 'modal-text', 'Voulez-vous vraiment supprimer cette note ?'));
+
+        var truncated = note.contenu.length > 90 ? note.contenu.slice(0, 90) + '…' : note.contenu;
+        body.appendChild(makeEl('p', 'modal-note-excerpt', '« ' + truncated + ' »'));
+
+        window.COCKPIT_MODAL.open({
+            title: 'Supprimer cette note ?',
+            body: body,
+            footer: buildModalFooterButtons([makeCancelButton('Annuler', true), makeSaveButton('Supprimer', true)])
+        });
+    }
+
+    function buildNoteCard(note) {
+        var card = document.createElement('div');
+        card.className = 'note-card';
+        card.appendChild(makeEl('p', 'note-content', note.contenu));
+
+        var authorWords = note.auteur.split(' ').filter(function (word) {
+            return word.length > 0;
+        });
+        var authorInitials = authorWords.slice(0, 2).map(function (word) {
+            return word.charAt(0).toUpperCase();
+        }).join('');
+
+        var meta = document.createElement('div');
+        meta.className = 'note-meta';
+        meta.appendChild(makeEl('span', 'note-author-avatar', authorInitials || '?'));
+        meta.appendChild(makeEl('span', 'note-author', note.auteur));
+        meta.appendChild(makeEl('span', 'note-date', note.date));
+        card.appendChild(meta);
+
+        return card;
+    }
+
+    function openAllNotesModal(client) {
+        var body = document.createElement('div');
+        var list = document.createElement('div');
+        list.className = 'notes-list modal-notes-list';
+
+        var allNotes = (client.notes || []).concat(client.notesArchive || []);
+
+        if (allNotes.length === 0) {
+            list.appendChild(makeEl('p', 'empty-state-inline', 'Aucune note pour ce client.'));
+        } else {
+            allNotes.forEach(function (note) {
+                list.appendChild(buildNoteCard(note));
+            });
+        }
+
+        body.appendChild(list);
+
+        window.COCKPIT_MODAL.open({
+            title: 'Toutes les notes commerciales',
+            body: body,
+            footer: buildModalFooterButtons([makeCancelButton('Fermer', true)])
+        });
+    }
+
     function clientStatusInfo(statusValue) {
         var statuses = window.COCKPIT_CLIENT_STATUSES || [];
         for (var i = 0; i < statuses.length; i++) {
@@ -434,7 +836,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return null;
     }
 
-    function renderNotes(notes) {
+    function renderNotes(notes, client) {
         var list = document.getElementById('client-notes-list');
         if (!list) {
             return;
@@ -453,9 +855,30 @@ document.addEventListener('DOMContentLoaded', function () {
             var card = document.createElement('div');
             card.className = 'note-card';
 
+            var headerRow = document.createElement('div');
+            headerRow.className = 'note-card-header';
+
             var content = document.createElement('p');
             content.className = 'note-content';
             content.textContent = note.contenu;
+            headerRow.appendChild(content);
+
+            var actions = document.createElement('div');
+            actions.className = 'note-card-actions';
+
+            var editBtn = makeIconButton('block-icon-btn', 'Modifier la note du ' + note.date, PENCIL_ICON_SVG);
+            editBtn.addEventListener('click', function () {
+                openEditNoteModal(client, note);
+            });
+
+            var deleteBtn = makeIconButton('block-icon-btn', 'Supprimer la note du ' + note.date, TRASH_ICON_SVG);
+            deleteBtn.addEventListener('click', function () {
+                openDeleteNoteModal(note);
+            });
+
+            actions.appendChild(editBtn);
+            actions.appendChild(deleteBtn);
+            headerRow.appendChild(actions);
 
             var authorWords = note.auteur.split(' ').filter(function (word) {
                 return word.length > 0;
@@ -483,7 +906,7 @@ document.addEventListener('DOMContentLoaded', function () {
             meta.appendChild(author);
             meta.appendChild(date);
 
-            card.appendChild(content);
+            card.appendChild(headerRow);
             card.appendChild(meta);
             list.appendChild(card);
         });
@@ -704,10 +1127,31 @@ document.addEventListener('DOMContentLoaded', function () {
         setText('info-source-acquisition', client.info.sourceAcquisition);
         setText('info-tva', client.info.tva);
 
-        renderNotes(client.notes);
+        renderNotes(client.notes, client);
         renderHistory(client.historique);
         renderAppointments(client.rendezVous);
         renderDocuments(client.documents);
+
+        var statusEditBtn = document.getElementById('client-status-edit-btn');
+        if (statusEditBtn) {
+            statusEditBtn.onclick = function () {
+                openStatusModal(client);
+            };
+        }
+
+        var newNoteBtn = document.getElementById('notes-new-btn');
+        if (newNoteBtn) {
+            newNoteBtn.onclick = function () {
+                openNewNoteModal(client);
+            };
+        }
+
+        var viewAllNotesBtn = document.getElementById('notes-view-all-btn');
+        if (viewAllNotesBtn) {
+            viewAllNotesBtn.onclick = function () {
+                openAllNotesModal(client);
+            };
+        }
     }
 
     var params = new URLSearchParams(window.location.search);

@@ -17,16 +17,18 @@ Ce document regroupe les idées et pistes identifiées au fil du projet, non tra
 
 ## Clients / CRM
 - Création, modification et suppression réelles de clients (bouton "Ajouter un client" et "Modifier" toujours en Work in progress).
-- Statuts clients personnalisables (interface de gestion), prévu en V0.4.3 — la liste actuelle (Prospect, Client actif, À relancer, Inactif, Fidèle, Litige) reste une base par défaut, centralisée dans `js/app.js` (`CLIENT_STATUSES`, exposée via `window.COCKPIT_CLIENT_STATUSES` depuis la V0.4.2).
-- Tri et pagination de la liste clients (non traités en V0.4.1/V0.4.2, qui se limitent à la recherche, au filtre par statut et au compteur).
-- **`CLIENT_DETAILS` (V0.4.2) reste une source statique en mémoire** : à remplacer par une vraie source de données (backend) le jour où le projet en aura une. Actuellement limitée aux 6 clients déjà présents dans `clients.html`.
-- Personnalisation réelle des champs du bloc Informations client (bouton "Personnaliser les champs" en Work in progress depuis la V0.4.2).
-- Création/édition/suppression réelle de notes commerciales ("Nouvelle note", "Ajouter une note" et "Voir toutes les notes" en Work in progress).
-- Page ou panneau "Voir tout l'historique" des échanges (pas de destination réelle aujourd'hui, historique limité à 5 événements par client sur la fiche).
+- **Vrai changement de statut persistant** : la modale "Modifier le statut client" (V0.4.3) ouvre un vrai sélecteur, mais "Enregistrer" ne modifie rien durablement (ferme la modale + Work in progress).
+- **Vraie personnalisation des statuts** (ajout/modification/suppression) : la modale "Personnaliser les statuts clients" (V0.4.3) est un placeholder visuel complet (liste, icônes, bouton "Ajouter un statut") sans aucune logique réelle. La liste actuelle (Prospect, Client actif, À relancer, Inactif, Fidèle, Litige) reste centralisée dans `js/app.js` (`CLIENT_STATUSES`, exposée via `window.COCKPIT_CLIENT_STATUSES`).
+- Tri et pagination de la liste clients (non traités en V0.4.1/V0.4.2/V0.4.3, qui se limitent à la recherche, au filtre par statut et au compteur).
+- **`CLIENT_DETAILS` (V0.4.2, étendu en V0.4.3 avec `notesArchive`) reste une source statique en mémoire** : à remplacer par une vraie source de données (backend) le jour où le projet en aura une. Actuellement limitée aux 6 clients déjà présents dans `clients.html`.
+- Personnalisation réelle des champs du bloc Informations client (icône "Personnaliser les champs" en Work in progress depuis la V0.4.2).
+- **Vraie création/édition/suppression de notes commerciales** : les modales "Ajouter une note"/"Modifier la note"/"Supprimer cette note ?" (V0.4.3) s'ouvrent réellement (textarea pré-rempli pour l'édition, extrait pour la suppression) mais aucune validation n'est persistée. La modale "Toutes les notes commerciales" reste en lecture seule (pas d'icônes modifier/supprimer sur les notes archivées).
+- Page ou panneau complet "Voir tout l'historique" des échanges (reste en Work in progress ; historique limité à 5 événements par client sur la fiche).
 - Vraie liaison dynamique fiche client ↔ Agenda et fiche client ↔ Facturation : les liens "Voir dans l'agenda"/"Voir dans Facturation" (V0.4.2) pointent vers les pages génériques, sans filtrage par client.
 - Téléchargement PDF réel des documents liés à un client (bouton "Télécharger PDF" en Work in progress).
 - Vrai menu d'actions pour le bouton "…" de la fiche client (aucun composant de menu contextuel dans le projet à ce jour).
 - Vrai ciblage d'un rendez-vous précis dans l'agenda (le lien `agenda.html?rdv=<id>` ajouté en V0.4.2.1 n'est pas encore lu par `agenda.html`).
+- Le moteur de modale générique (`COCKPIT_MODAL`, V0.4.3) est réutilisable par d'autres pages si un besoin de modale apparaît ailleurs dans l'application.
 
 ## Agenda
 - Vraie gestion des rendez-vous (création, modification, suppression).

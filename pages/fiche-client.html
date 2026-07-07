@@ -96,6 +96,9 @@
                                 <div class="client-identity-heading">
                                     <h2 id="client-identity-name">Client sélectionné</h2>
                                     <span class="badge badge-neutral" id="client-identity-status">—</span>
+                                    <button type="button" class="block-icon-btn" id="client-status-edit-btn" title="Modifier le statut" aria-label="Modifier le statut du client">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                                    </button>
                                 </div>
                                 <p class="client-identity-company" id="client-identity-company">—</p>
                                 <div class="client-identity-meta">
@@ -205,10 +208,10 @@
                             <div class="dashboard-block-header">
                                 <h2>Bloc-notes commercial</h2>
                                 <div class="dashboard-block-actions">
-                                    <button type="button" class="block-icon-btn btn-wip" title="Voir toutes les notes" aria-label="Voir toutes les notes">
+                                    <button type="button" class="block-icon-btn" id="notes-view-all-btn" title="Voir toutes les notes" aria-label="Voir toutes les notes">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
                                     </button>
-                                    <button type="button" class="btn-secondary btn-wip">Nouvelle note</button>
+                                    <button type="button" class="btn-secondary" id="notes-new-btn">Nouvelle note</button>
                                 </div>
                             </div>
                             <div class="notes-list" id="client-notes-list"></div>

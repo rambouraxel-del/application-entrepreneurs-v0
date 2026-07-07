@@ -12,9 +12,9 @@ Cette roadmap présente les phases prévues après la V0 initiale (livrée à l'
 | V0.2 | Navigation et architecture générale | Validée |
 | V0.3 | Tableau de bord : hub de navigation et interactions de base | Validée |
 | V0.4.1 | Liste clients CRM : recherche, filtre par statut, accès fiche client | Validée |
-| V0.4.2 | Fiche client CRM complète, visuelle et ergonomique | En cours |
-| V0.4.2.1 | Ajustements UX de la fiche client (correction intégrée à la V0.4.2 avant sa validation finale) | En cours |
-| V0.4.3 | Statuts personnalisables + premières interactions CRM simples | À venir |
+| V0.4.2 | Fiche client CRM complète, visuelle et ergonomique | Validée |
+| V0.4.2.1 | Ajustements UX de la fiche client (correction intégrée à la V0.4.2 avant sa validation finale) | Validée |
+| V0.4.3 | Interactions CRM préparatoires : modales placeholder (statut client, personnalisation des statuts, notes commerciales) | En cours |
 | V0.5 | Page Agenda | À venir |
 | V0.6 | Page Facturation | À venir |
 | V0.7 | Page Trésorerie | À venir |
@@ -38,4 +38,4 @@ Le module **Statistiques / Pilotage** n'est volontairement pas ajouté à la sid
 
 ## Précision importante — découpage de la V0.4
 
-La V0.4 (Clients / fiche client / socle CRM) est découpée en trois sous-versions plutôt que traitée en un seul bloc, la fiche client étant centrale pour construire un vrai CRM : **V0.4.1** pose la liste Clients améliorée (recherche, filtre, accès à la fiche) ; **V0.4.2** construira la fiche client complète (historique, rendez-vous, devis, factures, notes, relances) ; **V0.4.3** ajoutera la personnalisation des statuts et de premières interactions CRM simples.
+La V0.4 (Clients / fiche client / socle CRM) est découpée en trois sous-versions plutôt que traitée en un seul bloc, la fiche client étant centrale pour construire un vrai CRM : **V0.4.1** pose la liste Clients améliorée (recherche, filtre, accès à la fiche) ; **V0.4.2** construit la fiche client complète (historique, rendez-vous, devis, factures, notes) ; **V0.4.3** ajoute des interactions préparatoires sous forme de modales placeholder (changement de statut, personnalisation des statuts, gestion des notes) — aucune de ces actions ne modifie durablement les données ; la vraie logique (persistance, CRUD réel) reste à construire dans une phase ultérieure.
