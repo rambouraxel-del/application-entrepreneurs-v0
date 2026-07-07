@@ -66,11 +66,17 @@
             </header>
 
             <main class="page-content">
-                <nav class="breadcrumb" aria-label="Fil d'Ariane">
-                    <a href="clients.html">Clients</a>
-                    <span>›</span>
-                    <span class="breadcrumb-current">Fiche client</span>
-                </nav>
+                <div class="fiche-top-row">
+                    <nav class="breadcrumb" aria-label="Fil d'Ariane">
+                        <a href="clients.html">Clients</a>
+                        <span>›</span>
+                        <span class="breadcrumb-current">Fiche client</span>
+                    </nav>
+                    <a href="clients.html" class="fiche-back-link">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg>
+                        Retour à la liste
+                    </a>
+                </div>
 
                 <div id="client-not-found" class="empty-state" style="display: none;">
                     <span class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path><line x1="8" y1="8" x2="14" y2="14"></line><line x1="14" y1="8" x2="8" y2="14"></line></svg></span>
@@ -117,10 +123,6 @@
                             </div>
                         </div>
                         <div class="client-identity-actions">
-                            <a href="clients.html" class="btn-secondary fiche-back-btn">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg>
-                                Retour à la liste
-                            </a>
                             <button type="button" class="btn-secondary btn-wip">Modifier</button>
                             <button type="button" class="btn-primary btn-wip">Ajouter une note</button>
                             <button type="button" class="topbar-icon-btn btn-wip" aria-label="Plus d'actions">
@@ -135,31 +137,31 @@
                             <div class="kpi-card-body">
                                 <h2>Chiffre d'affaires généré</h2>
                                 <p class="kpi-value" id="kpi-ca-genere">—</p>
-                                <p class="kpi-variation status-neutral">sur 12 derniers mois</p>
+                                <p class="kpi-variation status-neutral" id="kpi-ca-genere-caption">—</p>
                             </div>
                         </div>
                         <div class="dashboard-card kpi-card">
-                            <div class="kpi-icon kpi-icon-2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
+                            <div class="kpi-icon kpi-icon-2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4z"></path></svg></div>
                             <div class="kpi-card-body">
-                                <h2>Relances en cours</h2>
-                                <p class="kpi-value" id="kpi-relances">—</p>
-                                <p class="kpi-variation status-neutral">à traiter</p>
+                                <h2>Montant à encaisser</h2>
+                                <p class="kpi-value" id="kpi-montant-encaisser">—</p>
+                                <p class="kpi-variation status-neutral" id="kpi-montant-encaisser-caption">—</p>
                             </div>
                         </div>
                         <div class="dashboard-card kpi-card">
-                            <div class="kpi-icon kpi-icon-3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></svg></div>
+                            <div class="kpi-icon kpi-icon-3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M9 13h6"></path><path d="M9 17h6"></path></svg></div>
                             <div class="kpi-card-body">
-                                <h2>Rendez-vous à venir</h2>
-                                <p class="kpi-value" id="kpi-rdv-avenir">—</p>
-                                <p class="kpi-variation status-neutral">prochains rendez-vous</p>
+                                <h2>Devis en cours</h2>
+                                <p class="kpi-value" id="kpi-devis-encours">—</p>
+                                <p class="kpi-variation status-neutral" id="kpi-devis-encours-caption">—</p>
                             </div>
                         </div>
                         <div class="dashboard-card kpi-card">
-                            <div class="kpi-icon kpi-icon-4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M9 13h6"></path><path d="M9 17h6"></path></svg></div>
+                            <div class="kpi-icon kpi-icon-4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
                             <div class="kpi-card-body">
-                                <h2>Documents récents</h2>
-                                <p class="kpi-value" id="kpi-documents-recents">—</p>
-                                <p class="kpi-variation status-neutral">devis, factures, contrats</p>
+                                <h2>Prochaine action</h2>
+                                <p class="kpi-value" id="kpi-prochaine-action">—</p>
+                                <p class="kpi-variation status-neutral" id="kpi-prochaine-action-caption">—</p>
                             </div>
                         </div>
                         <div class="dashboard-card kpi-card">
@@ -167,7 +169,7 @@
                             <div class="kpi-card-body">
                                 <h2>Gestes commerciaux</h2>
                                 <p class="kpi-value" id="kpi-avantages">—</p>
-                                <p class="kpi-variation status-neutral">avantages accordés</p>
+                                <p class="kpi-variation status-neutral" id="kpi-avantages-caption">—</p>
                             </div>
                         </div>
                     </section>
@@ -176,7 +178,14 @@
                         <div class="dashboard-block">
                             <div class="dashboard-block-header">
                                 <h2>Informations client</h2>
-                                <a href="#" class="dashboard-block-link btn-wip">Personnaliser les champs</a>
+                                <div class="dashboard-block-actions">
+                                    <button type="button" class="block-icon-btn btn-wip" title="Personnaliser les champs" aria-label="Personnaliser les champs">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>
+                                    </button>
+                                    <button type="button" class="block-icon-btn btn-wip" title="Modifier les informations" aria-label="Modifier les informations">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                                    </button>
+                                </div>
                             </div>
                             <div class="info-grid">
                                 <div class="info-item"><span class="info-label">Statut juridique</span><span class="info-value" id="info-statut-juridique">—</span></div>
@@ -196,7 +205,9 @@
                             <div class="dashboard-block-header">
                                 <h2>Bloc-notes commercial</h2>
                                 <div class="dashboard-block-actions">
-                                    <a href="#" class="dashboard-block-link btn-wip">Voir toutes les notes</a>
+                                    <button type="button" class="block-icon-btn btn-wip" title="Voir toutes les notes" aria-label="Voir toutes les notes">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                                    </button>
                                     <button type="button" class="btn-secondary btn-wip">Nouvelle note</button>
                                 </div>
                             </div>
@@ -207,7 +218,9 @@
                     <div class="dashboard-block">
                         <div class="dashboard-block-header">
                             <h2>Historique des échanges</h2>
-                            <a href="#" class="dashboard-block-link btn-wip">Voir tout l'historique</a>
+                            <button type="button" class="block-icon-btn btn-wip" title="Voir tout l'historique" aria-label="Voir tout l'historique">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            </button>
                         </div>
                         <div class="history-list" id="client-history-list"></div>
                     </div>
@@ -216,7 +229,9 @@
                         <div class="dashboard-block">
                             <div class="dashboard-block-header">
                                 <h2>Rendez-vous liés</h2>
-                                <a href="agenda.html" class="dashboard-block-link">Voir dans l'agenda</a>
+                                <a href="agenda.html" class="block-icon-btn" title="Voir dans l'agenda" aria-label="Voir dans l'agenda">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></svg>
+                                </a>
                             </div>
                             <div class="appointments-list" id="client-appointments-list"></div>
                         </div>
@@ -224,7 +239,9 @@
                         <div class="dashboard-block">
                             <div class="dashboard-block-header">
                                 <h2>Documents &amp; facturation</h2>
-                                <a href="facturation.html" class="dashboard-block-link">Voir dans Facturation</a>
+                                <a href="facturation.html" class="block-icon-btn" title="Voir dans Facturation" aria-label="Voir dans Facturation">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M9 13h6"></path><path d="M9 17h6"></path></svg>
+                                </a>
                             </div>
                             <table class="data-table">
                                 <thead>

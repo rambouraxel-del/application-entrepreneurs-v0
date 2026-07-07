@@ -1035,12 +1035,27 @@ svg {
     font-weight: 600;
 }
 
-.fiche-back-btn {
+.fiche-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.fiche-back-link {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    margin-bottom: 20px;
+    font-size: 13px;
+    color: var(--color-text-secondary);
     text-decoration: none;
+    white-space: nowrap;
+}
+
+.fiche-back-link:hover {
+    color: var(--color-primary);
+    text-decoration: underline;
 }
 
 .client-identity-card {
@@ -1145,6 +1160,60 @@ svg {
     gap: 10px;
 }
 
+.block-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    text-decoration: none;
+    flex-shrink: 0;
+}
+
+.block-icon-btn:hover {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.block-icon-btn svg {
+    width: 15px;
+    height: 15px;
+}
+
+.pdf-download {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--color-primary);
+    text-decoration: none;
+    font-size: 13px;
+}
+
+.pdf-download:hover {
+    text-decoration: underline;
+}
+
+.pdf-download svg {
+    width: 15px;
+    height: 15px;
+}
+
+.pdf-badge {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background-color: var(--color-neutral-bg);
+    color: var(--color-text-secondary);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
 .info-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -1177,21 +1246,58 @@ svg {
 }
 
 .note-card {
-    background-color: var(--color-neutral-bg);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-left: 3px solid var(--color-primary);
     border-radius: 10px;
-    padding: 12px 14px;
+    padding: 14px 16px;
+    box-shadow: var(--shadow-card);
 }
 
 .note-content {
-    margin: 0 0 6px;
+    margin: 0 0 12px;
     font-size: 14px;
+    line-height: 1.45;
     color: var(--color-text);
 }
 
 .note-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     margin: 0;
+    padding-top: 10px;
+    border-top: 1px solid var(--color-border);
     font-size: 12px;
     color: var(--color-text-secondary);
+}
+
+.note-author-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: var(--color-primary-soft);
+    color: var(--color-primary);
+    font-size: 10px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.note-author {
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.note-date {
+    color: var(--color-text-secondary);
+}
+
+.note-date::before {
+    content: '·';
+    margin-right: 8px;
 }
 
 .history-item {
@@ -1230,6 +1336,17 @@ svg {
     padding: 12px 14px;
     border-radius: 10px;
     background-color: var(--color-neutral-bg);
+}
+
+.appointment-item-link {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    transition: filter 0.15s ease;
+}
+
+.appointment-item-link:hover {
+    filter: brightness(0.97);
 }
 
 .appointment-info p {

@@ -26,6 +26,7 @@ Ce document regroupe les idées et pistes identifiées au fil du projet, non tra
 - Vraie liaison dynamique fiche client ↔ Agenda et fiche client ↔ Facturation : les liens "Voir dans l'agenda"/"Voir dans Facturation" (V0.4.2) pointent vers les pages génériques, sans filtrage par client.
 - Téléchargement PDF réel des documents liés à un client (bouton "Télécharger PDF" en Work in progress).
 - Vrai menu d'actions pour le bouton "…" de la fiche client (aucun composant de menu contextuel dans le projet à ce jour).
+- Vrai ciblage d'un rendez-vous précis dans l'agenda (le lien `agenda.html?rdv=<id>` ajouté en V0.4.2.1 n'est pas encore lu par `agenda.html`).
 
 ## Agenda
 - Vraie gestion des rendez-vous (création, modification, suppression).

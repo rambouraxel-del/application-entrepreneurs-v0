@@ -179,7 +179,13 @@ document.addEventListener('DOMContentLoaded', function () {
             dernierContact: '02/07/2026',
             adresse: '12 rue des Artisans, 75011 Paris',
             clientDepuis: '12/03/2026',
-            kpis: { caGenere: '4 250 €', relances: 1, rdvAVenir: 2, documentsRecents: 2, avantages: '150 €' },
+            kpis: {
+                caGenere: { value: '4 250 €', caption: 'sur 12 derniers mois' },
+                montantAEncaisser: { value: '0 €', caption: 'aucune facture impayée' },
+                devisEnCours: { value: '1', caption: 'en attente de réponse' },
+                prochaineAction: { value: '08/07/2026', caption: 'Rendez-vous prévu' },
+                avantages: { value: '150 €', caption: 'avantages accordés' }
+            },
             info: {
                 statutJuridique: 'Particulier', siret: '—', secteur: 'Rénovation intérieure', siteWeb: '—',
                 commercialReferent: 'Julien Martin', conditionsPaiement: '30 jours fin de mois',
@@ -199,8 +205,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 { date: '05/06/2026', heure: '08:55', type: 'commentaire-interne', resume: 'Client sérieux, bon potentiel de fidélisation.', auteur: 'Julien Martin' }
             ],
             rendezVous: [
-                { date: '08/07/2026', heure: '10:00', objet: 'Présentation offre entretien', lieu: 'Visioconférence', statut: 'Confirmé', badgeClass: 'badge-success' },
-                { date: '22/07/2026', heure: '14:00', objet: 'Suivi chantier', lieu: '12 rue des Artisans, Paris', statut: 'Planifié', badgeClass: 'badge-info' }
+                { id: 'rdv-martin-dupont-1', date: '08/07/2026', heure: '10:00', objet: 'Présentation offre entretien', lieu: 'Visioconférence', statut: 'Confirmé', badgeClass: 'badge-success' },
+                { id: 'rdv-martin-dupont-2', date: '22/07/2026', heure: '14:00', objet: 'Suivi chantier', lieu: '12 rue des Artisans, Paris', statut: 'Planifié', badgeClass: 'badge-info' }
             ],
             documents: [
                 { nom: 'DV-2026-015', type: 'Devis', date: '28/06/2026', statut: 'Envoyé', badgeClass: 'badge-info' },
@@ -216,7 +222,13 @@ document.addEventListener('DOMContentLoaded', function () {
             dernierContact: '28/06/2026',
             adresse: '8 avenue des Tilleuls, 69003 Lyon',
             clientDepuis: '14/01/2024',
-            kpis: { caGenere: '11 800 €', relances: 0, rdvAVenir: 1, documentsRecents: 2, avantages: '320 €' },
+            kpis: {
+                caGenere: { value: '11 800 €', caption: 'sur 12 derniers mois' },
+                montantAEncaisser: { value: '0 €', caption: 'aucune facture impayée' },
+                devisEnCours: { value: '0', caption: 'aucun devis en attente' },
+                prochaineAction: { value: '15/07/2026', caption: 'Rendez-vous prévu' },
+                avantages: { value: '320 €', caption: 'avantages accordés' }
+            },
             info: {
                 statutJuridique: 'Particulier', siret: '—', secteur: 'Services aux particuliers', siteWeb: '—',
                 commercialReferent: 'Léa Bernard', conditionsPaiement: 'Comptant',
@@ -236,7 +248,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 { date: '08/01/2026', heure: '15:20', type: 'commentaire-interne', resume: 'Cliente à privilégier pour le programme de fidélité.', auteur: 'Léa Bernard' }
             ],
             rendezVous: [
-                { date: '15/07/2026', heure: '09:30', objet: 'Rendez-vous annuel de suivi', lieu: '8 avenue des Tilleuls, Lyon', statut: 'Planifié', badgeClass: 'badge-info' }
+                { id: 'rdv-sophie-bernard-1', date: '15/07/2026', heure: '09:30', objet: 'Rendez-vous annuel de suivi', lieu: '8 avenue des Tilleuls, Lyon', statut: 'Planifié', badgeClass: 'badge-info' }
             ],
             documents: [
                 { nom: 'FA-2026-012', type: 'Facture', date: '20/02/2026', statut: 'Payée', badgeClass: 'badge-success' },
@@ -252,7 +264,13 @@ document.addEventListener('DOMContentLoaded', function () {
             dernierContact: '15/06/2026',
             adresse: '24 rue de l\'Artisanat, 44000 Nantes',
             clientDepuis: '03/09/2025',
-            kpis: { caGenere: '6 500 €', relances: 2, rdvAVenir: 0, documentsRecents: 1, avantages: '0 €' },
+            kpis: {
+                caGenere: { value: '6 500 €', caption: 'sur 12 derniers mois' },
+                montantAEncaisser: { value: '1 200 €', caption: 'facture en attente' },
+                devisEnCours: { value: '1', caption: 'en attente de réponse' },
+                prochaineAction: { value: '31/07/2026', caption: 'Relance à faire' },
+                avantages: { value: '0 €', caption: 'avantages accordés' }
+            },
             info: {
                 statutJuridique: 'Entreprise individuelle', siret: '812 345 678 00019', secteur: 'Menuiserie d\'art',
                 siteWeb: 'www.atelierleroy.example.com', commercialReferent: 'Julien Martin',
@@ -285,7 +303,13 @@ document.addEventListener('DOMContentLoaded', function () {
             dernierContact: '01/06/2026',
             adresse: '5 place du Marché, 33000 Bordeaux',
             clientDepuis: '18/11/2023',
-            kpis: { caGenere: '2 100 €', relances: 0, rdvAVenir: 0, documentsRecents: 1, avantages: '0 €' },
+            kpis: {
+                caGenere: { value: '2 100 €', caption: 'sur 12 derniers mois' },
+                montantAEncaisser: { value: '0 €', caption: 'aucune facture impayée' },
+                devisEnCours: { value: '0', caption: 'aucun devis en attente' },
+                prochaineAction: { value: '—', caption: 'Aucune action prévue' },
+                avantages: { value: '0 €', caption: 'avantages accordés' }
+            },
             info: {
                 statutJuridique: 'Entreprise individuelle', siret: '798 123 456 00027', secteur: 'Commerce alimentaire',
                 siteWeb: '—', commercialReferent: 'Léa Bernard', conditionsPaiement: 'Comptant',
@@ -318,7 +342,13 @@ document.addEventListener('DOMContentLoaded', function () {
             dernierContact: '20/06/2026',
             adresse: '3 rue des Lilas, 31000 Toulouse',
             clientDepuis: '20/06/2026',
-            kpis: { caGenere: '0 €', relances: 1, rdvAVenir: 1, documentsRecents: 1, avantages: '0 €' },
+            kpis: {
+                caGenere: { value: '0 €', caption: 'sur 12 derniers mois' },
+                montantAEncaisser: { value: '0 €', caption: 'aucune facture émise' },
+                devisEnCours: { value: '1', caption: 'brouillon à finaliser' },
+                prochaineAction: { value: '05/07/2026', caption: 'Rendez-vous découverte' },
+                avantages: { value: '0 €', caption: 'avantages accordés' }
+            },
             info: {
                 statutJuridique: 'Particulier', siret: '—', secteur: '—', siteWeb: '—',
                 commercialReferent: 'Julien Martin', conditionsPaiement: '—', modeReglement: '—',
@@ -333,7 +363,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 { date: '20/06/2026', heure: '18:40', type: 'email-recu', resume: 'Demande de devis via le formulaire du site.', auteur: 'Julien Martin' }
             ],
             rendezVous: [
-                { date: '05/07/2026', heure: '11:00', objet: 'Premier rendez-vous découverte', lieu: 'Visioconférence', statut: 'À confirmer', badgeClass: 'badge-warning' }
+                { id: 'rdv-julien-petit-1', date: '05/07/2026', heure: '11:00', objet: 'Premier rendez-vous découverte', lieu: 'Visioconférence', statut: 'À confirmer', badgeClass: 'badge-warning' }
             ],
             documents: [
                 { nom: 'DV-2026-018', type: 'Devis', date: '23/06/2026', statut: 'Brouillon', badgeClass: 'badge-neutral' }
@@ -348,7 +378,13 @@ document.addEventListener('DOMContentLoaded', function () {
             dernierContact: '10/06/2026',
             adresse: '17 zone industrielle du Bois, 59000 Lille',
             clientDepuis: '22/07/2022',
-            kpis: { caGenere: '18 900 €', relances: 3, rdvAVenir: 0, documentsRecents: 2, avantages: '0 €' },
+            kpis: {
+                caGenere: { value: '18 900 €', caption: 'sur 12 derniers mois' },
+                montantAEncaisser: { value: '3 450 €', caption: 'facture contestée' },
+                devisEnCours: { value: '0', caption: 'aucun devis en attente' },
+                prochaineAction: { value: 'En cours', caption: 'Suivi du litige' },
+                avantages: { value: '0 €', caption: 'avantages accordés' }
+            },
             info: {
                 statutJuridique: 'SARL', siret: '501 234 567 00045', secteur: 'Fabrication bois & agencement',
                 siteWeb: 'www.technibois.example.com', commercialReferent: 'Léa Bernard',
@@ -421,9 +457,31 @@ document.addEventListener('DOMContentLoaded', function () {
             content.className = 'note-content';
             content.textContent = note.contenu;
 
-            var meta = document.createElement('p');
+            var authorWords = note.auteur.split(' ').filter(function (word) {
+                return word.length > 0;
+            });
+            var authorInitials = authorWords.slice(0, 2).map(function (word) {
+                return word.charAt(0).toUpperCase();
+            }).join('');
+
+            var meta = document.createElement('div');
             meta.className = 'note-meta';
-            meta.textContent = note.auteur + ' · ' + note.date;
+
+            var avatar = document.createElement('span');
+            avatar.className = 'note-author-avatar';
+            avatar.textContent = authorInitials || '?';
+
+            var author = document.createElement('span');
+            author.className = 'note-author';
+            author.textContent = note.auteur;
+
+            var date = document.createElement('span');
+            date.className = 'note-date';
+            date.textContent = note.date;
+
+            meta.appendChild(avatar);
+            meta.appendChild(author);
+            meta.appendChild(date);
 
             card.appendChild(content);
             card.appendChild(meta);
@@ -492,8 +550,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         appointments.slice(0, 3).forEach(function (appointment) {
-            var item = document.createElement('div');
-            item.className = 'appointment-item';
+            var item = document.createElement('a');
+            item.className = 'appointment-item appointment-item-link';
+            item.href = 'agenda.html' + (appointment.id ? '?rdv=' + encodeURIComponent(appointment.id) : '');
 
             var infoEl = document.createElement('div');
             infoEl.className = 'appointment-info';
@@ -563,8 +622,10 @@ document.addEventListener('DOMContentLoaded', function () {
             var actionsCell = document.createElement('td');
             var downloadLink = document.createElement('a');
             downloadLink.href = '#';
-            downloadLink.className = 'btn-table-action btn-wip';
-            downloadLink.textContent = 'Télécharger PDF';
+            downloadLink.className = 'pdf-download btn-wip';
+            downloadLink.title = 'Télécharger le PDF';
+            downloadLink.setAttribute('aria-label', 'Télécharger le PDF de ' + doc.nom);
+            downloadLink.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg><span class="pdf-badge">PDF</span>';
             actionsCell.appendChild(downloadLink);
 
             row.appendChild(nomCell);
@@ -621,11 +682,16 @@ document.addEventListener('DOMContentLoaded', function () {
             statusEl.className = 'badge ' + statusInfo.badgeClass;
         }
 
-        setText('kpi-ca-genere', client.kpis.caGenere);
-        setText('kpi-relances', client.kpis.relances);
-        setText('kpi-rdv-avenir', client.kpis.rdvAVenir);
-        setText('kpi-documents-recents', client.kpis.documentsRecents);
-        setText('kpi-avantages', client.kpis.avantages);
+        setText('kpi-ca-genere', client.kpis.caGenere.value);
+        setText('kpi-ca-genere-caption', client.kpis.caGenere.caption);
+        setText('kpi-montant-encaisser', client.kpis.montantAEncaisser.value);
+        setText('kpi-montant-encaisser-caption', client.kpis.montantAEncaisser.caption);
+        setText('kpi-devis-encours', client.kpis.devisEnCours.value);
+        setText('kpi-devis-encours-caption', client.kpis.devisEnCours.caption);
+        setText('kpi-prochaine-action', client.kpis.prochaineAction.value);
+        setText('kpi-prochaine-action-caption', client.kpis.prochaineAction.caption);
+        setText('kpi-avantages', client.kpis.avantages.value);
+        setText('kpi-avantages-caption', client.kpis.avantages.caption);
 
         setText('info-statut-juridique', client.info.statutJuridique);
         setText('info-siret', client.info.siret);
