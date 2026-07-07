@@ -1045,14 +1045,23 @@ svg {
 
 .client-identity-card {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
     gap: 20px;
     background-color: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-card);
     box-shadow: var(--shadow-card);
     padding: 24px;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
+}
+
+.client-identity-main {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    min-width: 0;
 }
 
 .client-identity-avatar {
@@ -1078,6 +1087,217 @@ svg {
     margin: 0 0 2px;
     font-size: 14px;
     color: var(--color-text-secondary);
+}
+
+.client-identity-heading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+}
+
+.client-identity-heading h2 {
+    margin: 0;
+}
+
+.client-identity-company {
+    margin: 0 0 12px;
+    font-size: 14px;
+    color: var(--color-text-secondary);
+}
+
+.client-identity-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 6px 24px;
+    max-width: 640px;
+}
+
+.client-identity-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+}
+
+.client-identity-meta-item svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+.client-identity-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.client-kpis {
+    grid-template-columns: repeat(5, 1fr);
+}
+
+.dashboard-block-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px 24px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.info-label {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+}
+
+.info-value {
+    font-size: 14px;
+    color: var(--color-text);
+    font-weight: 500;
+}
+
+.notes-list,
+.history-list,
+.appointments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.note-card {
+    background-color: var(--color-neutral-bg);
+    border-radius: 10px;
+    padding: 12px 14px;
+}
+
+.note-content {
+    margin: 0 0 6px;
+    font-size: 14px;
+    color: var(--color-text);
+}
+
+.note-meta {
+    margin: 0;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+}
+
+.history-item {
+    display: grid;
+    grid-template-columns: 140px auto 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background-color: var(--color-neutral-bg);
+}
+
+.history-date {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+}
+
+.history-resume {
+    margin: 0;
+    font-size: 14px;
+    color: var(--color-text);
+}
+
+.history-author {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+}
+
+.appointment-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background-color: var(--color-neutral-bg);
+}
+
+.appointment-info p {
+    margin: 0;
+}
+
+.appointment-date {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+}
+
+.appointment-objet {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text);
+    margin-top: 2px !important;
+}
+
+.appointment-lieu {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin-top: 2px !important;
+}
+
+.empty-state-inline {
+    margin: 0;
+    padding: 12px 0;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    text-align: center;
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.empty-state-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: var(--color-neutral-bg);
+    color: var(--color-text-secondary);
+}
+
+.empty-state-icon svg {
+    width: 22px;
+    height: 22px;
+}
+
+.empty-state h2 {
+    margin: 0;
+    font-size: 18px;
+    color: var(--color-text);
+}
+
+.empty-state p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    max-width: 420px;
 }
 
 .database-grid {

@@ -72,26 +72,174 @@
                     <span class="breadcrumb-current">Fiche client</span>
                 </nav>
 
-                <a href="clients.html" class="btn-secondary fiche-back-btn">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg>
-                    Retour à la liste
-                </a>
-
-                <div class="client-identity-card">
-                    <div class="client-identity-avatar" id="client-identity-initials">?</div>
-                    <div class="client-identity-body">
-                        <h2 id="client-identity-name">Client sélectionné</h2>
-                        <p>Entreprise : —</p>
-                        <p>Téléphone : 01 23 45 67 89</p>
-                        <p>E-mail : contact@example.com</p>
-                        <p>Client depuis : 12/03/2026</p>
-                        <p><span class="badge badge-info">Fidèle</span></p>
-                    </div>
+                <div id="client-not-found" class="empty-state" style="display: none;">
+                    <span class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path><line x1="8" y1="8" x2="14" y2="14"></line><line x1="14" y1="8" x2="8" y2="14"></line></svg></span>
+                    <h2>Client introuvable</h2>
+                    <p>Aucun client ne correspond à ce lien. Il a peut-être été supprimé, ou l'adresse est incorrecte.</p>
+                    <a href="clients.html" class="btn-secondary">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg>
+                        Retour à la liste
+                    </a>
                 </div>
 
-                <div class="construction-banner">
-                    <span class="construction-banner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg></span>
-                    <p><strong>Fiche en construction.</strong> Cette première version de la fiche client est générique et prépare la structure de la V0.4.2, où elle sera enrichie avec l'historique, les rendez-vous, devis, factures, chiffre d'affaires, notes et relances propres à chaque client.</p>
+                <div id="client-profile-content">
+                    <div class="client-identity-card">
+                        <div class="client-identity-main">
+                            <div class="client-identity-avatar" id="client-identity-initials">?</div>
+                            <div class="client-identity-body">
+                                <div class="client-identity-heading">
+                                    <h2 id="client-identity-name">Client sélectionné</h2>
+                                    <span class="badge badge-neutral" id="client-identity-status">—</span>
+                                </div>
+                                <p class="client-identity-company" id="client-identity-company">—</p>
+                                <div class="client-identity-meta">
+                                    <span class="client-identity-meta-item">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                                        <span id="client-identity-phone">—</span>
+                                    </span>
+                                    <span class="client-identity-meta-item">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z" opacity="0"></path><path d="M22 6 12 13 2 6"></path><rect x="2" y="4" width="20" height="16" rx="2"></rect></svg>
+                                        <span id="client-identity-email">—</span>
+                                    </span>
+                                    <span class="client-identity-meta-item">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                                        <span id="client-identity-address">—</span>
+                                    </span>
+                                    <span class="client-identity-meta-item">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></svg>
+                                        Client depuis <span id="client-identity-since">—</span>
+                                    </span>
+                                    <span class="client-identity-meta-item">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                        Dernier contact <span id="client-identity-last-contact">—</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="client-identity-actions">
+                            <a href="clients.html" class="btn-secondary fiche-back-btn">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg>
+                                Retour à la liste
+                            </a>
+                            <button type="button" class="btn-secondary btn-wip">Modifier</button>
+                            <button type="button" class="btn-primary btn-wip">Ajouter une note</button>
+                            <button type="button" class="topbar-icon-btn btn-wip" aria-label="Plus d'actions">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <section class="dashboard-kpis client-kpis">
+                        <div class="dashboard-card kpi-card">
+                            <div class="kpi-icon kpi-icon-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg></div>
+                            <div class="kpi-card-body">
+                                <h2>Chiffre d'affaires généré</h2>
+                                <p class="kpi-value" id="kpi-ca-genere">—</p>
+                                <p class="kpi-variation status-neutral">sur 12 derniers mois</p>
+                            </div>
+                        </div>
+                        <div class="dashboard-card kpi-card">
+                            <div class="kpi-icon kpi-icon-2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
+                            <div class="kpi-card-body">
+                                <h2>Relances en cours</h2>
+                                <p class="kpi-value" id="kpi-relances">—</p>
+                                <p class="kpi-variation status-neutral">à traiter</p>
+                            </div>
+                        </div>
+                        <div class="dashboard-card kpi-card">
+                            <div class="kpi-icon kpi-icon-3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></svg></div>
+                            <div class="kpi-card-body">
+                                <h2>Rendez-vous à venir</h2>
+                                <p class="kpi-value" id="kpi-rdv-avenir">—</p>
+                                <p class="kpi-variation status-neutral">prochains rendez-vous</p>
+                            </div>
+                        </div>
+                        <div class="dashboard-card kpi-card">
+                            <div class="kpi-icon kpi-icon-4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M9 13h6"></path><path d="M9 17h6"></path></svg></div>
+                            <div class="kpi-card-body">
+                                <h2>Documents récents</h2>
+                                <p class="kpi-value" id="kpi-documents-recents">—</p>
+                                <p class="kpi-variation status-neutral">devis, factures, contrats</p>
+                            </div>
+                        </div>
+                        <div class="dashboard-card kpi-card">
+                            <div class="kpi-icon kpi-icon-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><circle cx="7" cy="7" r="1"></circle></svg></div>
+                            <div class="kpi-card-body">
+                                <h2>Gestes commerciaux</h2>
+                                <p class="kpi-value" id="kpi-avantages">—</p>
+                                <p class="kpi-variation status-neutral">avantages accordés</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <div class="dashboard-row">
+                        <div class="dashboard-block">
+                            <div class="dashboard-block-header">
+                                <h2>Informations client</h2>
+                                <a href="#" class="dashboard-block-link btn-wip">Personnaliser les champs</a>
+                            </div>
+                            <div class="info-grid">
+                                <div class="info-item"><span class="info-label">Statut juridique</span><span class="info-value" id="info-statut-juridique">—</span></div>
+                                <div class="info-item"><span class="info-label">SIRET</span><span class="info-value" id="info-siret">—</span></div>
+                                <div class="info-item"><span class="info-label">Secteur d'activité</span><span class="info-value" id="info-secteur">—</span></div>
+                                <div class="info-item"><span class="info-label">Site web</span><span class="info-value" id="info-site-web">—</span></div>
+                                <div class="info-item"><span class="info-label">Commercial référent</span><span class="info-value" id="info-commercial-referent">—</span></div>
+                                <div class="info-item"><span class="info-label">Conditions de paiement</span><span class="info-value" id="info-conditions-paiement">—</span></div>
+                                <div class="info-item"><span class="info-label">Mode de règlement</span><span class="info-value" id="info-mode-reglement">—</span></div>
+                                <div class="info-item"><span class="info-label">Catégorie client</span><span class="info-value" id="info-categorie-client">—</span></div>
+                                <div class="info-item"><span class="info-label">Source d'acquisition</span><span class="info-value" id="info-source-acquisition">—</span></div>
+                                <div class="info-item"><span class="info-label">TVA intracommunautaire</span><span class="info-value" id="info-tva">—</span></div>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-block">
+                            <div class="dashboard-block-header">
+                                <h2>Bloc-notes commercial</h2>
+                                <div class="dashboard-block-actions">
+                                    <a href="#" class="dashboard-block-link btn-wip">Voir toutes les notes</a>
+                                    <button type="button" class="btn-secondary btn-wip">Nouvelle note</button>
+                                </div>
+                            </div>
+                            <div class="notes-list" id="client-notes-list"></div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-block">
+                        <div class="dashboard-block-header">
+                            <h2>Historique des échanges</h2>
+                            <a href="#" class="dashboard-block-link btn-wip">Voir tout l'historique</a>
+                        </div>
+                        <div class="history-list" id="client-history-list"></div>
+                    </div>
+
+                    <div class="dashboard-row">
+                        <div class="dashboard-block">
+                            <div class="dashboard-block-header">
+                                <h2>Rendez-vous liés</h2>
+                                <a href="agenda.html" class="dashboard-block-link">Voir dans l'agenda</a>
+                            </div>
+                            <div class="appointments-list" id="client-appointments-list"></div>
+                        </div>
+
+                        <div class="dashboard-block">
+                            <div class="dashboard-block-header">
+                                <h2>Documents &amp; facturation</h2>
+                                <a href="facturation.html" class="dashboard-block-link">Voir dans Facturation</a>
+                            </div>
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Document</th>
+                                        <th>Type</th>
+                                        <th>Date</th>
+                                        <th>Statut</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="client-documents-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </main>
         </div>

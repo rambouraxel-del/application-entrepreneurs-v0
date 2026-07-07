@@ -11,8 +11,8 @@ Cette roadmap présente les phases prévues après la V0 initiale (livrée à l'
 | V0.1.2 | Structuration technique : Git, GitHub, roadmap, backlog, versioning | Validée |
 | V0.2 | Navigation et architecture générale | Validée |
 | V0.3 | Tableau de bord : hub de navigation et interactions de base | Validée |
-| V0.4.1 | Liste clients CRM : recherche, filtre par statut, accès fiche client | En cours |
-| V0.4.2 | Fiche client complète, visuelle et ergonomique | À venir |
+| V0.4.1 | Liste clients CRM : recherche, filtre par statut, accès fiche client | Validée |
+| V0.4.2 | Fiche client CRM complète, visuelle et ergonomique | En cours |
 | V0.4.3 | Statuts personnalisables + premières interactions CRM simples | À venir |
 | V0.5 | Page Agenda | À venir |
 | V0.6 | Page Facturation | À venir |
