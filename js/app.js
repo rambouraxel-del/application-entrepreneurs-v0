@@ -1253,7 +1253,10 @@ document.addEventListener('DOMContentLoaded', function () {
             descriptionDetaillee: 'Un audit complet en trois temps : analyse de l\'activité actuelle, identification des leviers de croissance prioritaires, restitution sous forme de plan d\'action synthétique. Destiné aux dirigeants souhaitant prendre du recul sur leur stratégie.',
             beneficesClient: ['Vision claire des priorités à court terme', 'Plan d\'action concret et hiérarchisé'],
             limitesConditions: ['Prestation ponctuelle, non reconductible automatiquement', 'Restitution limitée à un document de synthèse'],
-            coutEstime: '280 € HT',
+            couts: [
+                { nom: 'Temps de préparation', quantite: 1, coutUnitaire: 180 },
+                { nom: 'Déplacement client', quantite: 1, coutUnitaire: 100 }
+            ],
             margeEstimee: '≈ 63 %',
             modalitesPaiement: ['comptant', 'plusieurs-fois'],
             prixModifiable: true,
@@ -1263,10 +1266,10 @@ document.addEventListener('DOMContentLoaded', function () {
             derniereMiseAJour: '03/06/2026',
             noteInterne: 'Bien cadrer le périmètre avec le client avant le premier rendez-vous pour éviter les dérives de champ.',
             historique: [
-                { date: '14/01/2025', type: 'creation', resume: 'Création de l\'offre.' },
-                { date: '20/01/2025', type: 'passage-actif', resume: 'Passage en statut Actif.' },
-                { date: '03/06/2026', type: 'modification-prix', resume: 'Prix ajusté de 690 € à 750 € HT.' },
-                { date: '20/06/2026', type: 'modification-modalites', resume: 'Ajout du paiement en plusieurs fois en complément du paiement comptant.' }
+                { date: '14/01/2025', heure: '09:15', type: 'creation', resume: 'Création de l\'offre.', auteur: 'Administrateur principal' },
+                { date: '20/01/2025', heure: '10:00', type: 'passage-actif', resume: 'Passage en statut Actif.', auteur: 'Administrateur principal' },
+                { date: '03/06/2026', heure: '09:42', type: 'modification-prix', resume: 'Prix ajusté de 690 € à 750 € HT.', auteur: 'Administrateur principal' },
+                { date: '20/06/2026', heure: '14:20', type: 'modification-modalites', resume: 'Ajout du paiement en plusieurs fois en complément du paiement comptant.', auteur: 'Administrateur principal' }
             ]
         },
         'creation-site-vitrine': {
@@ -1275,7 +1278,10 @@ document.addEventListener('DOMContentLoaded', function () {
             descriptionDetaillee: 'Site vitrine responsive de 5 pages incluant maquette, rédaction assistée, mise en ligne et formation de prise en main. Livré avec hébergement configuré pour la première année.',
             beneficesClient: ['Présence en ligne professionnelle rapide', 'Formation incluse pour l\'autonomie du client'],
             limitesConditions: ['Limité à 5 pages, au-delà devis complémentaire', 'Contenus textuels à fournir par le client'],
-            coutEstime: '620 € HT',
+            couts: [
+                { nom: 'Développement', quantite: 1, coutUnitaire: 450 },
+                { nom: 'Hébergement 1ère année', quantite: 1, coutUnitaire: 170 }
+            ],
             margeEstimee: '≈ 66 %',
             modalitesPaiement: ['comptant', 'plusieurs-fois'],
             prixModifiable: true,
@@ -1285,10 +1291,10 @@ document.addEventListener('DOMContentLoaded', function () {
             derniereMiseAJour: '15/05/2026',
             noteInterne: 'Vérifier la disponibilité du nom de domaine avant de confirmer le devis.',
             historique: [
-                { date: '02/03/2025', type: 'creation', resume: 'Création de l\'offre.' },
-                { date: '10/03/2025', type: 'passage-actif', resume: 'Passage en statut Actif.' },
-                { date: '15/05/2026', type: 'modification-prix', resume: 'Prix ajusté de 1 650 € à 1 800 € HT.' },
-                { date: '22/05/2026', type: 'modification-modalites', resume: 'Ajout du paiement en plusieurs fois en complément du paiement comptant.' }
+                { date: '02/03/2025', heure: '08:50', type: 'creation', resume: 'Création de l\'offre.', auteur: 'Administrateur principal' },
+                { date: '10/03/2025', heure: '09:30', type: 'passage-actif', resume: 'Passage en statut Actif.', auteur: 'Administrateur principal' },
+                { date: '15/05/2026', heure: '11:10', type: 'modification-prix', resume: 'Prix ajusté de 1 650 € à 1 800 € HT.', auteur: 'Administrateur principal' },
+                { date: '22/05/2026', heure: '15:05', type: 'modification-modalites', resume: 'Ajout du paiement en plusieurs fois en complément du paiement comptant.', auteur: 'Administrateur principal' }
             ]
         },
         'maintenance-mensuelle': {
@@ -1297,7 +1303,10 @@ document.addEventListener('DOMContentLoaded', function () {
             descriptionDetaillee: 'Abonnement mensuel incluant mises à jour techniques, sauvegardes régulières et un créneau de petites modifications. Reconduit tacitement chaque mois.',
             beneficesClient: ['Site maintenu à jour sans intervention du client', 'Tranquillité d\'esprit sur la sécurité'],
             limitesConditions: ['Modifications limitées à 1h par mois', 'Hors refonte ou évolution majeure'],
-            coutEstime: '95 € HT',
+            couts: [
+                { nom: 'Temps de suivi mensuel', quantite: 2, coutUnitaire: 40 },
+                { nom: 'Outils de supervision', quantite: 1, coutUnitaire: 15 }
+            ],
             margeEstimee: '≈ 62 %',
             modalitesPaiement: ['recurrent', 'abonnement'],
             prixModifiable: false,
@@ -1307,8 +1316,8 @@ document.addEventListener('DOMContentLoaded', function () {
             derniereMiseAJour: '18/04/2025',
             noteInterne: 'Offre standardisée : éviter les exceptions de prix pour ne pas complexifier le suivi des abonnements.',
             historique: [
-                { date: '18/04/2025', type: 'creation', resume: 'Création de l\'offre.' },
-                { date: '25/04/2025', type: 'passage-actif', resume: 'Passage en statut Actif.' }
+                { date: '18/04/2025', heure: '10:20', type: 'creation', resume: 'Création de l\'offre.', auteur: 'Administrateur principal' },
+                { date: '25/04/2025', heure: '09:00', type: 'passage-actif', resume: 'Passage en statut Actif.', auteur: 'Administrateur principal' }
             ]
         },
         'formation-personnalisee': {
@@ -1317,7 +1326,10 @@ document.addEventListener('DOMContentLoaded', function () {
             descriptionDetaillee: 'Journée de formation sur mesure (7h), présentiel ou distanciel, avec support pédagogique remis en fin de session. Le programme est ajusté après un court échange préalable.',
             beneficesClient: ['Contenu adapté au niveau réel du participant', 'Support pédagogique conservé après la session'],
             limitesConditions: ['Limité à un seul participant par session', 'Programme à valider une semaine avant la date'],
-            coutEstime: '310 € HT',
+            couts: [
+                { nom: 'Préparation pédagogique', quantite: 2, coutUnitaire: 60 },
+                { nom: 'Animation (journée)', quantite: 1, coutUnitaire: 190 }
+            ],
             margeEstimee: '≈ 67 %',
             modalitesPaiement: ['comptant', 'forfait'],
             prixModifiable: true,
@@ -1327,9 +1339,9 @@ document.addEventListener('DOMContentLoaded', function () {
             derniereMiseAJour: '12/02/2026',
             noteInterne: 'Vérifier l\'éligibilité au taux de TVA réduit avant émission du devis final.',
             historique: [
-                { date: '05/09/2025', type: 'creation', resume: 'Création de l\'offre.' },
-                { date: '09/09/2025', type: 'passage-actif', resume: 'Passage en statut Actif.' },
-                { date: '12/02/2026', type: 'modification-tva', resume: 'TVA indicative ajustée de 20 % à 10 %.' }
+                { date: '05/09/2025', heure: '08:40', type: 'creation', resume: 'Création de l\'offre.', auteur: 'Administrateur principal' },
+                { date: '09/09/2025', heure: '09:15', type: 'passage-actif', resume: 'Passage en statut Actif.', auteur: 'Administrateur principal' },
+                { date: '12/02/2026', heure: '13:50', type: 'modification-tva', resume: 'TVA indicative ajustée de 20 % à 10 %.', auteur: 'Administrateur principal' }
             ]
         },
         'pack-accompagnement-dirigeant': {
@@ -1338,7 +1350,10 @@ document.addEventListener('DOMContentLoaded', function () {
             descriptionDetaillee: 'Offre en cours de construction : accompagnement resserré du dirigeant (points réguliers, suivi d\'objectifs) sur une durée de trois mois. Le contenu précis reste à finaliser avant activation.',
             beneficesClient: ['Suivi resserré et personnalisé', 'Objectifs suivis dans la durée'],
             limitesConditions: ['Offre non finalisée, contenu susceptible d\'évoluer', 'Non disponible à la vente tant qu\'elle reste en Brouillon'],
-            coutEstime: '410 € HT',
+            couts: [
+                { nom: 'Temps d\'accompagnement', quantite: 4, coutUnitaire: 85 },
+                { nom: 'Supports remis', quantite: 1, coutUnitaire: 70 }
+            ],
             margeEstimee: '≈ 66 %',
             modalitesPaiement: ['forfait', 'plusieurs-fois'],
             prixModifiable: true,
@@ -1348,7 +1363,7 @@ document.addEventListener('DOMContentLoaded', function () {
             derniereMiseAJour: '20/05/2026',
             noteInterne: 'En attente de validation du contenu détaillé avant activation ; ne pas proposer aux clients dans l\'état actuel.',
             historique: [
-                { date: '20/05/2026', type: 'creation', resume: 'Création de l\'offre en statut Brouillon.' }
+                { date: '20/05/2026', heure: '16:30', type: 'creation', resume: 'Création de l\'offre en statut Brouillon.', auteur: 'Administrateur principal' }
             ]
         },
         'kit-demarrage-digital': {
@@ -1357,7 +1372,10 @@ document.addEventListener('DOMContentLoaded', function () {
             descriptionDetaillee: 'Pack comprenant un guide pratique, des modèles de visuels réseaux sociaux et une checklist de mise en ligne. Livré au format numérique après commande.',
             beneficesClient: ['Démarrage rapide sans compétence technique', 'Modèles réutilisables immédiatement'],
             limitesConditions: ['Contenu générique, non personnalisé', 'Pas d\'accompagnement humain inclus'],
-            coutEstime: '35 € HT',
+            couts: [
+                { nom: 'Impression du guide', quantite: 1, coutUnitaire: 12 },
+                { nom: 'Packaging & envoi numérique', quantite: 1, coutUnitaire: 23 }
+            ],
             margeEstimee: '≈ 73 %',
             modalitesPaiement: ['comptant'],
             prixModifiable: false,
@@ -1367,8 +1385,8 @@ document.addEventListener('DOMContentLoaded', function () {
             derniereMiseAJour: '11/11/2025',
             noteInterne: 'Produit numérique standardisé : ne pas proposer de remise individuelle.',
             historique: [
-                { date: '11/11/2025', type: 'creation', resume: 'Création de l\'offre.' },
-                { date: '15/11/2025', type: 'passage-actif', resume: 'Passage en statut Actif.' }
+                { date: '11/11/2025', heure: '09:05', type: 'creation', resume: 'Création de l\'offre.', auteur: 'Administrateur principal' },
+                { date: '15/11/2025', heure: '10:45', type: 'passage-actif', resume: 'Passage en statut Actif.', auteur: 'Administrateur principal' }
             ]
         },
         'accessoire-premium': {
@@ -1377,7 +1395,10 @@ document.addEventListener('DOMContentLoaded', function () {
             descriptionDetaillee: 'Accessoire physique proposé en complément d\'une prestation. Actuellement en rupture d\'approvisionnement fournisseur, la vente est suspendue jusqu\'à nouvel ordre.',
             beneficesClient: ['Complète efficacement l\'offre principale'],
             limitesConditions: ['Non disponible actuellement (rupture fournisseur)', 'Délai de réapprovisionnement inconnu à ce jour'],
-            coutEstime: '42 € HT',
+            couts: [
+                { nom: 'Matière première', quantite: 1.5, coutUnitaire: 20 },
+                { nom: 'Assemblage', quantite: 1, coutUnitaire: 12 }
+            ],
             margeEstimee: '≈ 53 %',
             modalitesPaiement: ['comptant'],
             prixModifiable: false,
@@ -1387,9 +1408,9 @@ document.addEventListener('DOMContentLoaded', function () {
             derniereMiseAJour: '28/06/2026',
             noteInterne: 'Relancer le fournisseur avant de réactiver cette offre.',
             historique: [
-                { date: '02/02/2025', type: 'creation', resume: 'Création de l\'offre.' },
-                { date: '08/02/2025', type: 'passage-actif', resume: 'Passage en statut Actif.' },
-                { date: '28/06/2026', type: 'modification-prix', resume: 'Prix ajusté de 79 € à 89 € HT.' }
+                { date: '02/02/2025', heure: '09:20', type: 'creation', resume: 'Création de l\'offre.', auteur: 'Administrateur principal' },
+                { date: '08/02/2025', heure: '10:10', type: 'passage-actif', resume: 'Passage en statut Actif.', auteur: 'Administrateur principal' },
+                { date: '28/06/2026', heure: '14:35', type: 'modification-prix', resume: 'Prix ajusté de 79 € à 89 € HT.', auteur: 'Administrateur principal' }
             ]
         },
         'ancienne-offre-decouverte': {
@@ -1398,7 +1419,10 @@ document.addEventListener('DOMContentLoaded', function () {
             descriptionDetaillee: 'Offre d\'entrée de gamme proposée les premières années d\'activité, remplacée depuis par des prestations plus adaptées. Conservée uniquement à titre d\'historique commercial.',
             beneficesClient: ['Offre historique, non proposée aux nouveaux clients'],
             limitesConditions: ['Archivée, non disponible à la vente', 'Conditions d\'origine non garanties si réactivée'],
-            coutEstime: '140 € HT',
+            couts: [
+                { nom: 'Temps de prestation', quantite: 2, coutUnitaire: 60 },
+                { nom: 'Frais divers', quantite: 1, coutUnitaire: 20 }
+            ],
             margeEstimee: '≈ 53 %',
             modalitesPaiement: ['comptant'],
             prixModifiable: false,
@@ -1408,9 +1432,9 @@ document.addEventListener('DOMContentLoaded', function () {
             derniereMiseAJour: '10/01/2026',
             noteInterne: 'Conservée pour référence uniquement, ne plus proposer aux prospects.',
             historique: [
-                { date: '03/06/2024', type: 'creation', resume: 'Création de l\'offre.' },
-                { date: '10/06/2024', type: 'passage-actif', resume: 'Passage en statut Actif.' },
-                { date: '10/01/2026', type: 'archivage', resume: 'Archivage de l\'offre.' }
+                { date: '03/06/2024', heure: '09:00', type: 'creation', resume: 'Création de l\'offre.', auteur: 'Administrateur principal' },
+                { date: '10/06/2024', heure: '09:30', type: 'passage-actif', resume: 'Passage en statut Actif.', auteur: 'Administrateur principal' },
+                { date: '10/01/2026', heure: '11:15', type: 'archivage', resume: 'Archivage de l\'offre.', auteur: 'Administrateur principal' }
             ]
         }
     };
@@ -1696,15 +1720,17 @@ document.addEventListener('DOMContentLoaded', function () {
     var paramConditionsEl = document.getElementById('item-param-conditions');
     var paymentBadgesEl = document.getElementById('item-payment-badges');
 
-    var selectionnableDevisEl = document.getElementById('item-selectionnable-devis');
-    var selectionnableFactureEl = document.getElementById('item-selectionnable-facture');
-
     var noteMetaEl = document.getElementById('item-note-meta');
     var noteInterneEl = document.getElementById('item-note-interne');
     var historyListEl = document.getElementById('item-history-list');
 
-    var editBtn = document.getElementById('item-edit-btn');
+    var costBodyEl = document.getElementById('item-cost-body');
+    var costTotalEl = document.getElementById('item-cost-total');
+    var costAddBtn = document.getElementById('item-cost-add-btn');
+
+    var nameEditBtn = document.getElementById('item-name-edit-btn');
     var marginDetailBtn = document.getElementById('kpi-item-marge-detail');
+    var descriptionEditBtn = document.getElementById('item-description-edit-btn');
     var paymentEditBtn = document.getElementById('item-payment-edit-btn');
     var noteEditBtn = document.getElementById('item-note-edit-btn');
     var historyViewBtn = document.getElementById('item-history-view-btn');
@@ -1794,11 +1820,11 @@ document.addEventListener('DOMContentLoaded', function () {
             var typeInfo = OFFER_HISTORY_TYPES[event.type] || { label: event.type, badgeClass: 'badge-neutral' };
 
             var item = document.createElement('div');
-            item.className = 'history-item history-item-compact';
+            item.className = 'history-item';
 
             var dateEl = document.createElement('div');
             dateEl.className = 'history-date';
-            dateEl.textContent = event.date;
+            dateEl.textContent = event.date + (event.heure ? ' · ' + event.heure : '');
 
             var typeEl2 = document.createElement('span');
             typeEl2.className = 'badge ' + typeInfo.badgeClass;
@@ -1808,9 +1834,14 @@ document.addEventListener('DOMContentLoaded', function () {
             resumeEl.className = 'history-resume';
             resumeEl.textContent = event.resume;
 
+            var authorEl = document.createElement('span');
+            authorEl.className = 'history-author';
+            authorEl.textContent = event.auteur || '—';
+
             item.appendChild(dateEl);
             item.appendChild(typeEl2);
             item.appendChild(resumeEl);
+            item.appendChild(authorEl);
             list.appendChild(item);
         });
 
@@ -1887,26 +1918,24 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    function buildOfferFormFields(item) {
+    function openChangeTypeModal(item) {
         var body = document.createElement('div');
+        body.appendChild(makeEl('p', 'modal-text', 'Offre : ' + item.nom));
 
-        var nameLabel = makeEl('label', 'modal-label', 'Nom');
-        nameLabel.setAttribute('for', 'edit-offer-name');
-        body.appendChild(nameLabel);
-        var nameInput = document.createElement('input');
-        nameInput.type = 'text';
-        nameInput.id = 'edit-offer-name';
-        nameInput.className = 'modal-input';
-        nameInput.value = item.nom;
-        nameInput.setAttribute('data-modal-autofocus', 'true');
-        body.appendChild(nameInput);
+        var currentLine = makeEl('p', 'modal-text');
+        currentLine.appendChild(document.createTextNode('Type actuel : '));
+        var typeInfo = findLabel(window.COCKPIT_PRODUCT_TYPES, item.type);
+        currentLine.appendChild(makeEl('span', 'badge ' + (typeInfo ? typeInfo.badgeClass : 'badge-neutral'), typeInfo ? typeInfo.label : item.type));
+        body.appendChild(currentLine);
 
-        var typeLabel = makeEl('label', 'modal-label', 'Type');
-        typeLabel.setAttribute('for', 'edit-offer-type');
-        body.appendChild(typeLabel);
-        var typeSelect = document.createElement('select');
-        typeSelect.id = 'edit-offer-type';
-        typeSelect.className = 'table-select modal-select';
+        var label = makeEl('label', 'modal-label', 'Nouveau type');
+        label.setAttribute('for', 'offer-type-select');
+        body.appendChild(label);
+
+        var select = document.createElement('select');
+        select.id = 'offer-type-select';
+        select.className = 'table-select modal-select';
+        select.setAttribute('data-modal-autofocus', 'true');
         (window.COCKPIT_PRODUCT_TYPES || []).forEach(function (type) {
             var option = document.createElement('option');
             option.value = type.value;
@@ -1914,56 +1943,148 @@ document.addEventListener('DOMContentLoaded', function () {
             if (type.value === item.type) {
                 option.selected = true;
             }
-            typeSelect.appendChild(option);
+            select.appendChild(option);
         });
-        body.appendChild(typeSelect);
+        body.appendChild(select);
 
-        var statusLabel = makeEl('label', 'modal-label', 'Statut');
-        statusLabel.setAttribute('for', 'edit-offer-status');
-        body.appendChild(statusLabel);
-        var statusSelect = document.createElement('select');
-        statusSelect.id = 'edit-offer-status';
-        statusSelect.className = 'table-select modal-select';
-        (window.COCKPIT_PRODUCT_STATUSES || []).forEach(function (status) {
-            var option = document.createElement('option');
-            option.value = status.value;
-            option.textContent = status.label;
-            if (status.value === item.statut) {
-                option.selected = true;
-            }
-            statusSelect.appendChild(option);
+        body.appendChild(makeEl('p', 'modal-hint', 'Le type reste uniquement Produit ou Service. Ce changement ne sera pas encore enregistré.'));
+
+        window.COCKPIT_MODAL.open({
+            title: 'Changer le type de l\'offre',
+            body: body,
+            footer: buildModalFooterButtons([makeCancelButton('Annuler'), makeSaveButton('Valider')])
         });
-        body.appendChild(statusSelect);
+    }
+
+    function openEditNameModal(item) {
+        var body = document.createElement('div');
+
+        var label = makeEl('label', 'modal-label', 'Nom de l\'offre');
+        label.setAttribute('for', 'edit-name-input');
+        body.appendChild(label);
+
+        var input = document.createElement('input');
+        input.type = 'text';
+        input.id = 'edit-name-input';
+        input.className = 'modal-input';
+        input.value = item.nom;
+        input.setAttribute('data-modal-autofocus', 'true');
+        body.appendChild(input);
+
+        body.appendChild(makeEl('p', 'modal-hint', 'Cette modification ne sera pas encore enregistrée.'));
+
+        window.COCKPIT_MODAL.open({
+            title: 'Modifier le nom de l\'offre',
+            body: body,
+            footer: buildModalFooterButtons([makeCancelButton('Annuler'), makeSaveButton('Enregistrer')])
+        });
+    }
+
+    function openEditDescriptionModal(item) {
+        var body = document.createElement('div');
+        body.appendChild(makeEl('p', 'modal-text', 'Offre : ' + item.nom));
+
+        var shortLabel = makeEl('label', 'modal-label', 'Description courte');
+        shortLabel.setAttribute('for', 'edit-desc-courte');
+        body.appendChild(shortLabel);
+        var shortInput = document.createElement('input');
+        shortInput.type = 'text';
+        shortInput.id = 'edit-desc-courte';
+        shortInput.className = 'modal-input';
+        shortInput.value = item.descriptionCourte || '';
+        shortInput.setAttribute('data-modal-autofocus', 'true');
+        body.appendChild(shortInput);
+
+        var longLabel = makeEl('label', 'modal-label', 'Description détaillée');
+        longLabel.setAttribute('for', 'edit-desc-detaillee');
+        body.appendChild(longLabel);
+        var longTextarea = document.createElement('textarea');
+        longTextarea.id = 'edit-desc-detaillee';
+        longTextarea.className = 'modal-textarea';
+        longTextarea.rows = 3;
+        longTextarea.value = item.descriptionDetaillee || '';
+        body.appendChild(longTextarea);
+
+        var benefitsLabel = makeEl('label', 'modal-label', 'Bénéfices client (une ligne par bénéfice)');
+        benefitsLabel.setAttribute('for', 'edit-desc-benefices');
+        body.appendChild(benefitsLabel);
+        var benefitsTextarea = document.createElement('textarea');
+        benefitsTextarea.id = 'edit-desc-benefices';
+        benefitsTextarea.className = 'modal-textarea';
+        benefitsTextarea.rows = 2;
+        benefitsTextarea.value = (item.beneficesClient || []).join('\n');
+        body.appendChild(benefitsTextarea);
+
+        var limitsLabel = makeEl('label', 'modal-label', 'Limites / conditions (une ligne par élément)');
+        limitsLabel.setAttribute('for', 'edit-desc-limites');
+        body.appendChild(limitsLabel);
+        var limitsTextarea = document.createElement('textarea');
+        limitsTextarea.id = 'edit-desc-limites';
+        limitsTextarea.className = 'modal-textarea';
+        limitsTextarea.rows = 2;
+        limitsTextarea.value = (item.limitesConditions || []).join('\n');
+        body.appendChild(limitsTextarea);
+
+        body.appendChild(makeEl('p', 'modal-hint', 'Cette modification ne sera pas encore enregistrée.'));
+
+        window.COCKPIT_MODAL.open({
+            title: 'Modifier la description commerciale',
+            body: body,
+            footer: buildModalFooterButtons([makeCancelButton('Annuler'), makeSaveButton('Enregistrer')])
+        });
+    }
+
+    function openEditSaleParamsModal(item) {
+        var body = document.createElement('div');
+        body.appendChild(makeEl('p', 'modal-text', 'Offre : ' + item.nom));
 
         var priceLabel = makeEl('label', 'modal-label', 'Prix HT');
-        priceLabel.setAttribute('for', 'edit-offer-price');
+        priceLabel.setAttribute('for', 'edit-params-price');
         body.appendChild(priceLabel);
         var priceInput = document.createElement('input');
         priceInput.type = 'number';
-        priceInput.id = 'edit-offer-price';
+        priceInput.id = 'edit-params-price';
         priceInput.className = 'modal-input';
         priceInput.value = item.prixHT;
+        priceInput.setAttribute('data-modal-autofocus', 'true');
         body.appendChild(priceInput);
 
         var vatLabel = makeEl('label', 'modal-label', 'TVA par défaut (%)');
-        vatLabel.setAttribute('for', 'edit-offer-vat');
+        vatLabel.setAttribute('for', 'edit-params-vat');
         body.appendChild(vatLabel);
         var vatInput = document.createElement('input');
         vatInput.type = 'number';
-        vatInput.id = 'edit-offer-vat';
+        vatInput.id = 'edit-params-vat';
         vatInput.className = 'modal-input';
         vatInput.value = item.tva;
         body.appendChild(vatInput);
 
-        var descLabel = makeEl('label', 'modal-label', 'Description courte');
-        descLabel.setAttribute('for', 'edit-offer-description');
-        body.appendChild(descLabel);
-        var descInput = document.createElement('input');
-        descInput.type = 'text';
-        descInput.id = 'edit-offer-description';
-        descInput.className = 'modal-input';
-        descInput.value = item.descriptionCourte || '';
-        body.appendChild(descInput);
+        var modifiableLabel = makeEl('label', 'modal-label', 'Prix modifiable en devis/facture');
+        modifiableLabel.setAttribute('for', 'edit-params-modifiable');
+        body.appendChild(modifiableLabel);
+        var modifiableSelect = document.createElement('select');
+        modifiableSelect.id = 'edit-params-modifiable';
+        modifiableSelect.className = 'table-select modal-select';
+        [{ value: 'oui', label: 'Oui' }, { value: 'non', label: 'Non' }].forEach(function (option) {
+            var optionEl = document.createElement('option');
+            optionEl.value = option.value;
+            optionEl.textContent = option.label;
+            if ((option.value === 'oui') === !!item.prixModifiable) {
+                optionEl.selected = true;
+            }
+            modifiableSelect.appendChild(optionEl);
+        });
+        body.appendChild(modifiableSelect);
+
+        var conditionsLabel = makeEl('label', 'modal-label', 'Conditions particulières');
+        conditionsLabel.setAttribute('for', 'edit-params-conditions');
+        body.appendChild(conditionsLabel);
+        var conditionsInput = document.createElement('input');
+        conditionsInput.type = 'text';
+        conditionsInput.id = 'edit-params-conditions';
+        conditionsInput.className = 'modal-input';
+        conditionsInput.value = item.conditionsParticulieres || '';
+        body.appendChild(conditionsInput);
 
         var paymentLabel = makeEl('p', 'modal-label', 'Modalités de paiement acceptées');
         body.appendChild(paymentLabel);
@@ -1974,7 +2095,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var checkboxLabel = makeEl('label', 'modal-checkbox-item');
             var checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
-            checkbox.id = 'edit-offer-payment-' + index;
+            checkbox.id = 'edit-params-payment-' + index;
             checkbox.value = modality.value;
             checkbox.checked = currentModalites.indexOf(modality.value) !== -1;
             checkboxLabel.appendChild(checkbox);
@@ -1983,73 +2104,98 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         body.appendChild(paymentList);
 
-        var noteLabel = makeEl('label', 'modal-label', 'Note interne');
-        noteLabel.setAttribute('for', 'edit-offer-note');
-        body.appendChild(noteLabel);
-        var noteTextarea = document.createElement('textarea');
-        noteTextarea.id = 'edit-offer-note';
-        noteTextarea.className = 'modal-textarea';
-        noteTextarea.rows = 3;
-        noteTextarea.value = item.noteInterne || '';
-        body.appendChild(noteTextarea);
-
-        body.appendChild(makeEl('p', 'modal-hint', 'Cette modification ne sera pas encore enregistrée : la persistance sera ajoutée dans une prochaine version.'));
-
-        return body;
-    }
-
-    function openEditOfferModal(item) {
-        window.COCKPIT_MODAL.open({
-            title: 'Modifier l\'offre',
-            body: buildOfferFormFields(item),
-            footer: buildModalFooterButtons([makeCancelButton('Annuler'), makeSaveButton('Enregistrer')])
-        });
-    }
-
-    function openPaymentModalitiesModal(item) {
-        var body = document.createElement('div');
-        body.appendChild(makeEl('p', 'modal-text', 'Offre : ' + item.nom));
-
-        var list = document.createElement('div');
-        list.className = 'modal-checkbox-list';
-        var currentModalites = item.modalitesPaiement || [];
-        (window.COCKPIT_PRODUCT_PAYMENT_MODALITIES || []).forEach(function (modality, index) {
-            var checkboxLabel = makeEl('label', 'modal-checkbox-item');
-            var checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.id = 'payment-modal-' + index;
-            checkbox.value = modality.value;
-            checkbox.checked = currentModalites.indexOf(modality.value) !== -1;
-            if (index === 0) {
-                checkbox.setAttribute('data-modal-autofocus', 'true');
-            }
-            checkboxLabel.appendChild(checkbox);
-            checkboxLabel.appendChild(document.createTextNode(modality.label));
-            list.appendChild(checkboxLabel);
-        });
-        body.appendChild(list);
-
-        body.appendChild(makeEl('p', 'modal-hint', 'Le Type (Produit ou Service) n\'est pas concerné par ces modalités de paiement. Ce changement ne sera pas encore enregistré.'));
+        body.appendChild(makeEl('p', 'modal-hint', 'Le Type (Produit ou Service) n\'est pas concerné par ces modalités de paiement. Cette modification ne sera pas encore enregistrée.'));
 
         window.COCKPIT_MODAL.open({
-            title: 'Modalités de paiement acceptées',
+            title: 'Modifier les paramètres de vente',
             body: body,
             footer: buildModalFooterButtons([makeCancelButton('Annuler'), makeSaveButton('Enregistrer')])
         });
     }
 
+    function computeCostTotal(couts) {
+        return (couts || []).reduce(function (sum, cout) {
+            return sum + (cout.quantite * cout.coutUnitaire);
+        }, 0);
+    }
+
+    function openAddCostModal(item) {
+        var body = document.createElement('div');
+        body.appendChild(makeEl('p', 'modal-text', 'Offre : ' + item.nom));
+
+        var nameLabel = makeEl('label', 'modal-label', 'Nom du coût');
+        nameLabel.setAttribute('for', 'add-cost-name');
+        body.appendChild(nameLabel);
+        var nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.id = 'add-cost-name';
+        nameInput.className = 'modal-input';
+        nameInput.placeholder = 'Ex. Matière première';
+        nameInput.setAttribute('data-modal-autofocus', 'true');
+        body.appendChild(nameInput);
+
+        var qtyLabel = makeEl('label', 'modal-label', 'Quantité par vente / prestation');
+        qtyLabel.setAttribute('for', 'add-cost-qty');
+        body.appendChild(qtyLabel);
+        var qtyInput = document.createElement('input');
+        qtyInput.type = 'number';
+        qtyInput.step = 'any';
+        qtyInput.id = 'add-cost-qty';
+        qtyInput.className = 'modal-input';
+        qtyInput.placeholder = 'Ex. 0.5';
+        body.appendChild(qtyInput);
+
+        var unitLabel = makeEl('label', 'modal-label', 'Coût unitaire');
+        unitLabel.setAttribute('for', 'add-cost-unit');
+        body.appendChild(unitLabel);
+        var unitInput = document.createElement('input');
+        unitInput.type = 'number';
+        unitInput.step = 'any';
+        unitInput.id = 'add-cost-unit';
+        unitInput.className = 'modal-input';
+        unitInput.placeholder = 'Ex. 6';
+        body.appendChild(unitInput);
+
+        body.appendChild(makeEl('p', 'modal-hint', 'Le total de la ligne sera indicatif, calculé à l\'affichage (quantité × coût unitaire). Cet ajout ne sera pas encore enregistré.'));
+
+        window.COCKPIT_MODAL.open({
+            title: 'Ajouter un coût',
+            body: body,
+            footer: buildModalFooterButtons([makeCancelButton('Annuler'), makeSaveButton('Ajouter')])
+        });
+    }
+
     function openMarginDetailModal(item) {
         var body = document.createElement('div');
+        var costTotal = computeCostTotal(item.couts);
 
         var recap = document.createElement('div');
         recap.className = 'info-grid';
         recap.appendChild(makeEl('div', 'info-item'));
-        recap.lastChild.appendChild(makeEl('span', 'info-label', 'Coût estimé actuel'));
-        recap.lastChild.appendChild(makeEl('span', 'info-value', item.coutEstime || '—'));
+        recap.lastChild.appendChild(makeEl('span', 'info-label', 'Coût estimé total'));
+        recap.lastChild.appendChild(makeEl('span', 'info-value', formatPrice(costTotal) + ' €'));
         recap.appendChild(makeEl('div', 'info-item'));
         recap.lastChild.appendChild(makeEl('span', 'info-label', 'Marge estimée actuelle'));
         recap.lastChild.appendChild(makeEl('span', 'info-value', item.margeEstimee || '—'));
         body.appendChild(recap);
+
+        if (item.couts && item.couts.length > 0) {
+            body.appendChild(makeEl('p', 'modal-label', 'Détail des composantes de coût'));
+            var breakdown = document.createElement('table');
+            breakdown.className = 'data-table';
+            var thead = document.createElement('thead');
+            thead.innerHTML = '<tr><th>Composante</th><th>Quantité</th><th>Coût unitaire</th><th>Total ligne</th></tr>';
+            breakdown.appendChild(thead);
+            var tbody = document.createElement('tbody');
+            item.couts.forEach(function (cout) {
+                var row = document.createElement('tr');
+                var lineTotal = cout.quantite * cout.coutUnitaire;
+                row.innerHTML = '<td>' + cout.nom + '</td><td>' + cout.quantite + '</td><td>' + formatPrice(cout.coutUnitaire) + ' €</td><td>' + formatPrice(lineTotal) + ' €</td>';
+                tbody.appendChild(row);
+            });
+            breakdown.appendChild(tbody);
+            body.appendChild(breakdown);
+        }
 
         body.appendChild(makeEl('p', 'modal-hint', 'Futur outil de calcul de marge : familles de coûts prévues.'));
 
@@ -2140,7 +2286,10 @@ document.addEventListener('DOMContentLoaded', function () {
         var typeInfo = findLabel(window.COCKPIT_PRODUCT_TYPES, item.type);
         if (typeEl) {
             typeEl.textContent = typeInfo ? typeInfo.label : item.type;
-            typeEl.className = 'badge ' + (typeInfo ? typeInfo.badgeClass : 'badge-neutral');
+            typeEl.className = 'badge badge-clickable ' + (typeInfo ? typeInfo.badgeClass : 'badge-neutral');
+            typeEl.onclick = function () {
+                openChangeTypeModal(item);
+            };
         }
 
         var statusInfo = findLabel(window.COCKPIT_PRODUCT_STATUSES, item.statut);
@@ -2171,8 +2320,9 @@ document.addEventListener('DOMContentLoaded', function () {
         if (kpiTvaEl) {
             kpiTvaEl.textContent = formattedVat;
         }
+        var costTotal = computeCostTotal(item.couts);
         if (kpiCoutEl) {
-            kpiCoutEl.textContent = item.coutEstime || '—';
+            kpiCoutEl.textContent = formatPrice(costTotal) + ' €';
         }
         if (kpiMargeEl) {
             kpiMargeEl.textContent = item.margeEstimee || '—';
@@ -2209,11 +2359,17 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         renderPaymentBadges(item.modalitesPaiement);
 
-        if (selectionnableDevisEl) {
-            selectionnableDevisEl.textContent = availability.selectionnable ? 'Oui' : 'Non';
+        if (costBodyEl) {
+            costBodyEl.innerHTML = '';
+            (item.couts || []).forEach(function (cout) {
+                var row = document.createElement('tr');
+                var lineTotal = cout.quantite * cout.coutUnitaire;
+                row.innerHTML = '<td>' + cout.nom + '</td><td>' + cout.quantite + '</td><td>' + formatPrice(cout.coutUnitaire) + ' €</td><td>' + formatPrice(lineTotal) + ' €</td>';
+                costBodyEl.appendChild(row);
+            });
         }
-        if (selectionnableFactureEl) {
-            selectionnableFactureEl.textContent = availability.selectionnable ? 'Oui' : 'Non';
+        if (costTotalEl) {
+            costTotalEl.textContent = formatPrice(costTotal) + ' €';
         }
 
         if (noteMetaEl) {
@@ -2225,9 +2381,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
         renderHistory(item.historique);
 
-        if (editBtn) {
-            editBtn.onclick = function () {
-                openEditOfferModal(item);
+        if (nameEditBtn) {
+            nameEditBtn.onclick = function () {
+                openEditNameModal(item);
+            };
+        }
+        if (descriptionEditBtn) {
+            descriptionEditBtn.onclick = function () {
+                openEditDescriptionModal(item);
             };
         }
         if (marginDetailBtn) {
@@ -2237,7 +2398,12 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         if (paymentEditBtn) {
             paymentEditBtn.onclick = function () {
-                openPaymentModalitiesModal(item);
+                openEditSaleParamsModal(item);
+            };
+        }
+        if (costAddBtn) {
+            costAddBtn.onclick = function () {
+                openAddCostModal(item);
             };
         }
         if (noteEditBtn) {

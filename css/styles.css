@@ -1417,10 +1417,6 @@ svg {
     white-space: nowrap;
 }
 
-.history-item-compact {
-    grid-template-columns: 140px auto 1fr;
-}
-
 .appointment-item {
     display: flex;
     align-items: center;
@@ -1837,6 +1833,22 @@ svg {
 
 .kpi-detail-link:hover {
     text-decoration: underline;
+}
+
+/* Correction de contraste scopée à la fiche produit/service (V0.5.3.1) :
+   les textes secondaires (#6b7280) étaient trop pâles sur les fonds clairs
+   des blocs Description commerciale / Paramètres de vente / Note interne /
+   Historique / Coûts & marge. Scopé à #item-profile-content pour ne pas
+   modifier --color-text-secondary ni les autres pages qui réutilisent ces
+   mêmes classes (fiche client notamment). */
+
+#item-profile-content .info-label,
+#item-profile-content .modal-hint,
+#item-profile-content .kpi-variation.status-neutral,
+#item-profile-content .history-date,
+#item-profile-content .history-author,
+#item-profile-content .empty-state-inline {
+    color: #4b5563;
 }
 
 .modal-footer {

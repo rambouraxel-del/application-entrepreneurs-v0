@@ -94,7 +94,10 @@
                             <div class="client-identity-body">
                                 <div class="client-identity-heading">
                                     <h2 id="item-name">Élément sélectionné</h2>
-                                    <span class="badge badge-neutral" id="item-type">—</span>
+                                    <button type="button" class="block-icon-btn" id="item-name-edit-btn" title="Modifier le nom de l'offre" aria-label="Modifier le nom de l'offre">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                                    </button>
+                                    <button type="button" class="badge badge-clickable badge-neutral" id="item-type" title="Modifier le type de l'offre" aria-label="Modifier le type de l'offre">—</button>
                                     <button type="button" class="badge badge-clickable badge-neutral" id="item-status" title="Modifier le statut de l'offre" aria-label="Modifier le statut de l'offre">—</button>
                                 </div>
                                 <p class="client-identity-company" id="item-description-header">—</p>
@@ -109,9 +112,6 @@
                                     </span>
                                 </div>
                             </div>
-                        </div>
-                        <div class="client-identity-actions">
-                            <button type="button" class="btn-secondary" id="item-edit-btn">Modifier</button>
                         </div>
                     </div>
 
@@ -137,7 +137,7 @@
                             <div class="kpi-card-body">
                                 <h2>Coût estimé</h2>
                                 <p class="kpi-value" id="kpi-item-cout">—</p>
-                                <p class="kpi-variation status-neutral">Placeholder interne, non calculé</p>
+                                <p class="kpi-variation status-neutral">Calcul local, non persistant</p>
                             </div>
                         </div>
                         <div class="dashboard-card kpi-card">
@@ -163,6 +163,9 @@
                         <div class="dashboard-block">
                             <div class="dashboard-block-header">
                                 <h2>Description commerciale</h2>
+                                <button type="button" class="block-icon-btn" id="item-description-edit-btn" title="Modifier la description commerciale" aria-label="Modifier la description commerciale">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                                </button>
                             </div>
                             <div class="info-grid info-grid-wide">
                                 <div class="info-item">
@@ -187,7 +190,7 @@
                         <div class="dashboard-block">
                             <div class="dashboard-block-header">
                                 <h2>Paramètres de vente</h2>
-                                <button type="button" class="block-icon-btn" id="item-payment-edit-btn" title="Modifier les modalités" aria-label="Modifier les modalités">
+                                <button type="button" class="block-icon-btn" id="item-payment-edit-btn" title="Modifier les paramètres de vente" aria-label="Modifier les paramètres de vente">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
                                 </button>
                             </div>
@@ -207,14 +210,24 @@
                     <div class="dashboard-row">
                         <div class="dashboard-block">
                             <div class="dashboard-block-header">
-                                <h2>Utilisation future en facturation</h2>
+                                <h2>Coûts &amp; marge</h2>
                             </div>
-                            <div class="info-grid">
-                                <div class="info-item"><span class="info-label">Sélectionnable dans un devis</span><span class="info-value" id="item-selectionnable-devis">—</span></div>
-                                <div class="info-item"><span class="info-label">Sélectionnable dans une facture</span><span class="info-value" id="item-selectionnable-facture">—</span></div>
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Composante</th>
+                                        <th>Quantité par vente / prestation</th>
+                                        <th>Coût unitaire</th>
+                                        <th>Total ligne</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="item-cost-body"></tbody>
+                            </table>
+                            <div class="info-item" style="margin-top: 16px;">
+                                <span class="info-label">Coût estimé total</span>
+                                <span class="info-value" id="item-cost-total">—</span>
                             </div>
-                            <p class="modal-hint" style="margin-top: 12px;">Données reprises automatiquement : nom, description courte, prix HT, TVA par défaut.</p>
-                            <p class="modal-hint" style="margin-top: 6px;">Cet élément pourra être sélectionné dans les devis et factures en V0.6.</p>
+                            <button type="button" class="btn-secondary" id="item-cost-add-btn" style="margin-top: 12px;">Ajouter un coût</button>
                         </div>
 
                         <div class="dashboard-block">

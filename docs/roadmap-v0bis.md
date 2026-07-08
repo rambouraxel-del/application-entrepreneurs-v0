@@ -18,7 +18,8 @@ Cette roadmap présente les phases prévues après la V0 initiale (livrée à l'
 | V0.4.3.1 | Ajustements de parcours (retour contextuel Agenda/Facturation, statut cliquable) | Validée |
 | V0.5.1 | Catalogue Produits / Services : recherche, filtres type/statut, accès fiche produit/service | Validée |
 | V0.5.2 | Fiche Produit / Service complète (en-tête, résumé commercial, description commerciale, paramètres de vente, utilisation future en facturation, note interne, historique de l'offre) | Validée |
-| V0.5.3 | Interactions préparatoires Produits / Services : 7 modales placeholder (ajout, modification, statut, modalités de paiement, marge, note interne, historique complet) | En cours |
+| V0.5.3 | Interactions préparatoires Produits / Services : modales placeholder (ajout, statut, type, paramètres de vente, marge, note interne, historique complet) | En cours |
+| V0.5.3.1 | Correction UX/produit de la V0.5.3 (bloc Coûts & marge remplaçant "Utilisation future en facturation", historique enrichi, badge Type cliquable, modifications bloc par bloc, contraste) | En cours |
 | V0.6 | Page Facturation / Devis / Factures | À venir |
 | V0.7 | Page Trésorerie | À venir |
 | V0.8 | Page Agenda | À venir |
