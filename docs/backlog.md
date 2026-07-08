@@ -37,9 +37,17 @@ Ce document regroupe les idées et pistes identifiées au fil du projet, non tra
 - Vues jour/semaine/mois interactives.
 
 ## Facturation
-- Création réelle de devis et de factures.
+- Page placeholder ajoutée à la navigation en V0.2 ; devenue la vraie liste des devis en V0.6.1 (recherche, filtre statut, pagination), avec un éditeur de devis complet (`pages/devis-edition.html`).
+- **Vraie création, modification, suppression de devis** : le générateur (client, lignes, calculs HT/TVA/TTC/remise) est entièrement fonctionnel en direct, mais "Enregistrer"/"Supprimer"/"Créer une nouvelle version" ne persistent rien (Work in progress).
+- **`DEVIS_DETAILS` (V0.6.1) reste une source statique en mémoire**, limitée à 5 devis fictifs : à remplacer par une vraie source de données le jour où le projet en aura une.
+- **Vraie numérotation persistante** : `computeNextDevisNumero` calcule un numéro plausible par balayage des données fictives existantes, sans allocation réelle ni compteur qui survivrait à un rechargement.
+- **Vrai versionnement persistant** : le concept (plusieurs versions d'un même devis, une seule active, historique consultable) est démontré sur `DEV-2026-00015`, mais aucune nouvelle version ne peut réellement être créée et conservée.
+- Factures réelles, conversion devis → facture, paiements, échéances, avoirs : prévus dans une prochaine sous-version (V0.6.2), pour laquelle l'onglet "Factures" (actuellement `btn-wip` sur `facturation.html`) est déjà préparé.
+- Export des documents (PDF notamment), impression.
 - Suivi réel des statuts de paiement.
-- Export des documents (PDF notamment).
+- Vraie sélection de client via une modale de recherche (plutôt qu'un simple `<select>`) si le volume de clients augmente significativement.
+- Remise en montant fixe par ligne, en complément de la remise en pourcentage actuelle.
+- Statistiques et tableau de bord liés à la facturation.
 
 ## Trésorerie
 - Page placeholder ajoutée à la navigation en V0.2 ; développement fonctionnel réel prévu en V0.7 sur la roadmap.
@@ -57,7 +65,7 @@ Ce document regroupe les idées et pistes identifiées au fil du projet, non tra
 - Historique de ventes, statistiques de performance par produit/service.
 - **Historique de l'offre toujours statique** : la modale "Historique complet de l'offre" affiche l'intégralité des événements écrits en dur par élément (`OFFER_HISTORY_TYPES`, incluant "Modification des modalités de paiement" depuis la V0.5.3), désormais avec heure et auteur fictif ("Administrateur principal", V0.5.3.1) ; aucun mécanisme n'enregistre automatiquement un changement réel, ni ne distingue plusieurs administrateurs.
 - **Bloc "Utilisation future en facturation" supprimé en V0.5.3.1** (jugé trop déclaratif) : la préparation de la Facturation V0.6 repose désormais uniquement sur la structure des données (`PRODUCT_DETAILS`) et non plus sur un bloc dédié de la fiche ; à revoir lors de la construction réelle de la V0.6.
-- **"Sélectionnable en devis/facture" et le champ `STATUS_AVAILABILITY`** (introduits en V0.5.2 pour ce bloc, devenu obsolète) ne sont plus affichés nulle part depuis la V0.5.3.1, mais restent dans `js/app.js` pour alimenter la carte KPI "Statut d'utilisation" — à réévaluer si un jour ces deux notions doivent pouvoir diverger du statut brut.
+- **`STATUS_AVAILABILITY.selectionnable`** (posé en V0.5.2, plus affiché comme bloc dédié depuis la V0.5.3.1 mais toujours utilisé pour la carte KPI "Statut d'utilisation") **sert désormais aussi de filtre réel** dans la modale "Ajouter depuis le catalogue" du module Devis (V0.6.1) : seuls les produits/services au statut Actif y sont proposés. À réévaluer si un jour la "disponibilité en devis/facture" doit pouvoir diverger du statut brut (ex. un produit Actif volontairement exclu des devis).
 - **Vraie personnalisation des statuts, des types et des modalités de paiement** (ajout/modification/suppression des valeurs elles-mêmes) : contrairement à la fiche client (V0.4.3), aucune modale de personnalisation n'est proposée pour les produits/services — seule la sélection parmi les valeurs existantes est proposée.
 - Tri des colonnes du catalogue (non traité ; pagination ajoutée en V0.5.4 via `window.COCKPIT_LIST_PAGINATION`, partagé avec la liste Clients).
 - **Sauvegarde du nombre d'éléments par page choisi (V0.5.4)** : repart toujours à 5 au rechargement, aucune préférence n'est mémorisée (pas de `localStorage`).
@@ -71,8 +79,9 @@ Ce document regroupe les idées et pistes identifiées au fil du projet, non tra
 - Indicateurs de performance personnalisables.
 
 ## Paramètres
-- Rendre fonctionnels les boutons "Modifier" de chaque section.
+- Rendre fonctionnels les boutons "Modifier" des sections restantes (Préférences d'affichage, Notifications, Compte utilisateur, Objectifs mensuels, Sécurité) ; "Informations de l'entreprise" mène désormais à une vraie page (`pages/parametres-entreprise.html`, V0.6.1), mais "Enregistrer" n'y persiste rien.
 - Gestion réelle du compte utilisateur et de la sécurité (mot de passe, etc.).
+- **`COMPANY_SETTINGS` (V0.6.1) reste une source statique en mémoire** (un seul enregistrement fictif) : à remplacer par une vraie source de données le jour où le projet en aura une. Un logo réel (upload) reste hors périmètre (bouton "Changer le logo" en Work in progress).
 
 ## Notifications
 - Vrai système de notifications (actuellement un badge fictif relié au pop-up "Work in progress").

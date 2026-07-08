@@ -2503,3 +2503,874 @@ document.addEventListener('DOMContentLoaded', function () {
     var params = new URLSearchParams(window.location.search);
     renderItem(params.get('item'));
 })();
+
+// Données Facturation / Devis (V0.6.1)
+// COMPANY_SETTINGS est la source par défaut de l'émetteur pour tout nouveau
+// devis ; chaque version de devis conserve ensuite son propre companySnapshot
+// et clientSnapshot, figés au moment de leur création, pour ne jamais changer
+// rétroactivement un devis existant si les Paramètres entreprise ou la fiche
+// client évoluent plus tard. DEVIS_DETAILS est une source statique en mémoire,
+// comme CLIENT_DETAILS et PRODUCT_DETAILS : aucune persistance réelle, aucun
+// localStorage. Le versionnement et le verrouillage sont démontrés sur ce jeu
+// de données fictif ; ils ne sont pas reconstruits dynamiquement.
+
+(function () {
+    var COMPANY_SETTINGS = {
+        nom: 'Cockpit Entrepreneur SARL',
+        adresse: '10 rue de l\'Innovation, 75011 Paris',
+        telephone: '01 84 12 34 56',
+        email: 'contact@cockpit-entrepreneur.example.com',
+        siteInternet: 'www.cockpit-entrepreneur.example.com',
+        siren: '123 456 789',
+        siret: '123 456 789 00012',
+        tva: 'FR12 123456789',
+        iban: 'FR76 1234 5678 9012 3456 7890 123',
+        bic: 'ABCDEFGHXXX',
+        mentionsLegales: 'En cas de retard de paiement, une pénalité de 3 fois le taux d\'intérêt légal sera appliquée, ainsi qu\'une indemnité forfaitaire de 40 € pour frais de recouvrement (art. L441-10 du Code de commerce). Aucun escompte pour paiement anticipé.'
+    };
+
+    var DEVIS_STATUSES = [
+        { value: 'brouillon', label: 'Brouillon', badgeClass: 'badge-neutral' },
+        { value: 'envoye', label: 'Envoyé', badgeClass: 'badge-info' },
+        { value: 'accepte', label: 'Accepté', badgeClass: 'badge-success' },
+        { value: 'refuse', label: 'Refusé', badgeClass: 'badge-danger' }
+    ];
+
+    function snapshotClient(slug) {
+        var client = (window.COCKPIT_CLIENT_DETAILS || {})[slug];
+        if (!client) {
+            return null;
+        }
+        return {
+            nom: client.nom,
+            entreprise: client.entreprise,
+            adresse: client.adresse,
+            telephone: client.telephone,
+            email: client.email
+        };
+    }
+
+    function snapshotCompany() {
+        return {
+            nom: COMPANY_SETTINGS.nom,
+            adresse: COMPANY_SETTINGS.adresse,
+            telephone: COMPANY_SETTINGS.telephone,
+            email: COMPANY_SETTINGS.email,
+            siret: COMPANY_SETTINGS.siret,
+            tva: COMPANY_SETTINGS.tva
+        };
+    }
+
+    var DEVIS_DETAILS = {
+        'DEV-2026-00011': {
+            numero: 'DEV-2026-00011',
+            versionActive: 1,
+            versions: [
+                {
+                    version: 1,
+                    statut: 'brouillon',
+                    dateCreation: '05/07/2026',
+                    dateModification: '05/07/2026',
+                    clientSlug: 'julien-petit',
+                    clientSnapshot: snapshotClient('julien-petit'),
+                    companySnapshot: snapshotCompany(),
+                    lignes: [
+                        { designation: 'Audit stratégique', description: 'Diagnostic complet de la situation de l\'entreprise et recommandations stratégiques.', quantite: 1, prixUnitaireHT: 750, tauxTVA: 20, remisePourcent: 0 }
+                    ]
+                }
+            ]
+        },
+        'DEV-2026-00012': {
+            numero: 'DEV-2026-00012',
+            versionActive: 1,
+            versions: [
+                {
+                    version: 1,
+                    statut: 'envoye',
+                    dateCreation: '22/06/2026',
+                    dateModification: '22/06/2026',
+                    clientSlug: 'atelier-leroy',
+                    clientSnapshot: snapshotClient('atelier-leroy'),
+                    companySnapshot: snapshotCompany(),
+                    lignes: [
+                        { designation: 'Création site vitrine', description: 'Conception et mise en ligne d\'un site vitrine professionnel clé en main.', quantite: 1, prixUnitaireHT: 1800, tauxTVA: 20, remisePourcent: 10 },
+                        { designation: 'Maintenance mensuelle', description: 'Suivi technique mensuel et mises à jour de sécurité pour un site existant.', quantite: 3, prixUnitaireHT: 250, tauxTVA: 20, remisePourcent: 0 }
+                    ]
+                }
+            ]
+        },
+        'DEV-2026-00013': {
+            numero: 'DEV-2026-00013',
+            versionActive: 1,
+            versions: [
+                {
+                    version: 1,
+                    statut: 'refuse',
+                    dateCreation: '15/05/2026',
+                    dateModification: '15/05/2026',
+                    clientSlug: 'techni-bois-sarl',
+                    clientSnapshot: snapshotClient('techni-bois-sarl'),
+                    companySnapshot: snapshotCompany(),
+                    lignes: [
+                        { designation: 'Formation personnalisée', description: 'Session de formation individuelle adaptée aux besoins du client.', quantite: 2, prixUnitaireHT: 950, tauxTVA: 10, remisePourcent: 0 }
+                    ]
+                }
+            ]
+        },
+        'DEV-2026-00014': {
+            numero: 'DEV-2026-00014',
+            versionActive: 1,
+            versions: [
+                {
+                    version: 1,
+                    statut: 'envoye',
+                    dateCreation: '28/06/2026',
+                    dateModification: '28/06/2026',
+                    clientSlug: 'boucherie-morel',
+                    clientSnapshot: snapshotClient('boucherie-morel'),
+                    companySnapshot: snapshotCompany(),
+                    lignes: [
+                        { designation: 'Kit de démarrage digital', description: 'Kit prêt à l\'emploi pour démarrer sa présence digitale.', quantite: 5, prixUnitaireHT: 129, tauxTVA: 20, remisePourcent: 5 },
+                        { designation: 'Accessoire premium', description: 'Accessoire complémentaire, retiré temporairement de la vente.', quantite: 2, prixUnitaireHT: 89, tauxTVA: 20, remisePourcent: 0 }
+                    ]
+                }
+            ]
+        },
+        'DEV-2026-00015': {
+            numero: 'DEV-2026-00015',
+            versionActive: 3,
+            versions: [
+                {
+                    version: 1,
+                    statut: 'envoye',
+                    dateCreation: '14/02/2026',
+                    dateModification: '14/02/2026',
+                    clientSlug: 'martin-dupont',
+                    clientSnapshot: { nom: 'Martin Dupont', entreprise: '—', adresse: '8 rue des Artisans, 75011 Paris', telephone: '01 23 45 67 89', email: 'martin.dupont@example.com' },
+                    companySnapshot: snapshotCompany(),
+                    lignes: [
+                        { designation: 'Audit stratégique', description: 'Diagnostic complet de la situation de l\'entreprise et recommandations stratégiques.', quantite: 1, prixUnitaireHT: 750, tauxTVA: 20, remisePourcent: 0 },
+                        { designation: 'Maintenance mensuelle', description: 'Suivi technique mensuel et mises à jour de sécurité pour un site existant.', quantite: 1, prixUnitaireHT: 250, tauxTVA: 20, remisePourcent: 0 }
+                    ]
+                },
+                {
+                    version: 2,
+                    statut: 'envoye',
+                    dateCreation: '02/03/2026',
+                    dateModification: '02/03/2026',
+                    clientSlug: 'martin-dupont',
+                    clientSnapshot: snapshotClient('martin-dupont'),
+                    companySnapshot: snapshotCompany(),
+                    lignes: [
+                        { designation: 'Audit stratégique', description: 'Diagnostic complet de la situation de l\'entreprise et recommandations stratégiques.', quantite: 1, prixUnitaireHT: 750, tauxTVA: 20, remisePourcent: 0 },
+                        { designation: 'Création site vitrine', description: 'Conception et mise en ligne d\'un site vitrine professionnel clé en main.', quantite: 1, prixUnitaireHT: 1800, tauxTVA: 20, remisePourcent: 10 },
+                        { designation: 'Maintenance mensuelle', description: 'Suivi technique mensuel et mises à jour de sécurité pour un site existant.', quantite: 1, prixUnitaireHT: 250, tauxTVA: 20, remisePourcent: 0 }
+                    ]
+                },
+                {
+                    version: 3,
+                    statut: 'accepte',
+                    dateCreation: '15/03/2026',
+                    dateModification: '15/03/2026',
+                    clientSlug: 'martin-dupont',
+                    clientSnapshot: snapshotClient('martin-dupont'),
+                    companySnapshot: snapshotCompany(),
+                    lignes: [
+                        { designation: 'Audit stratégique', description: 'Diagnostic complet de la situation de l\'entreprise et recommandations stratégiques.', quantite: 1, prixUnitaireHT: 750, tauxTVA: 20, remisePourcent: 0 },
+                        { designation: 'Création site vitrine', description: 'Conception et mise en ligne d\'un site vitrine professionnel clé en main.', quantite: 1, prixUnitaireHT: 1800, tauxTVA: 20, remisePourcent: 10 },
+                        { designation: 'Maintenance mensuelle', description: 'Suivi technique mensuel et mises à jour de sécurité pour un site existant.', quantite: 3, prixUnitaireHT: 250, tauxTVA: 20, remisePourcent: 0 }
+                    ]
+                }
+            ]
+        }
+    };
+
+    function roundMoney(value) {
+        return Math.round((value + Number.EPSILON) * 100) / 100;
+    }
+
+    function formatMoney(value) {
+        var rounded = roundMoney(value || 0);
+        var fixed = rounded.toFixed(2);
+        var parts = fixed.split('.');
+        var intPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+        return intPart + ',' + parts[1] + ' €';
+    }
+
+    function computeLine(line) {
+        var quantite = parseFloat(line.quantite) || 0;
+        var prixUnitaireHT = parseFloat(line.prixUnitaireHT) || 0;
+        var remisePourcent = parseFloat(line.remisePourcent) || 0;
+        var tauxTVA = parseFloat(line.tauxTVA) || 0;
+        var brutHT = quantite * prixUnitaireHT;
+        var remiseMontant = brutHT * (remisePourcent / 100);
+        var netHT = roundMoney(brutHT - remiseMontant);
+        var montantTVA = roundMoney(netHT * (tauxTVA / 100));
+        var totalTTC = roundMoney(netHT + montantTVA);
+        return { netHT: netHT, montantTVA: montantTVA, totalTTC: totalTTC, tauxTVA: tauxTVA };
+    }
+
+    function computeDevisTotals(lignes) {
+        var totalHT = 0;
+        var totalTVA = 0;
+        var totalTTC = 0;
+        var tvaParTaux = {};
+
+        (lignes || []).forEach(function (line) {
+            var computed = computeLine(line);
+            totalHT = roundMoney(totalHT + computed.netHT);
+            totalTVA = roundMoney(totalTVA + computed.montantTVA);
+            totalTTC = roundMoney(totalTTC + computed.totalTTC);
+
+            var rateKey = String(computed.tauxTVA);
+            tvaParTaux[rateKey] = roundMoney((tvaParTaux[rateKey] || 0) + computed.montantTVA);
+        });
+
+        return { totalHT: totalHT, totalTVA: totalTVA, totalTTC: totalTTC, tvaParTaux: tvaParTaux };
+    }
+
+    function getActiveVersion(devis) {
+        if (!devis) {
+            return null;
+        }
+        var match = devis.versions.filter(function (version) {
+            return version.version === devis.versionActive;
+        })[0];
+        return match || devis.versions[devis.versions.length - 1];
+    }
+
+    function computeNextDevisNumero(annee) {
+        var maxSeq = 0;
+        Object.keys(DEVIS_DETAILS).forEach(function (numero) {
+            var match = numero.match(/^DEV-(\d{4})-(\d{5})$/);
+            if (match && match[1] === String(annee)) {
+                var seq = parseInt(match[2], 10);
+                if (seq > maxSeq) {
+                    maxSeq = seq;
+                }
+            }
+        });
+        var nextSeq = maxSeq + 1;
+        var padded = String(nextSeq);
+        while (padded.length < 5) {
+            padded = '0' + padded;
+        }
+        return 'DEV-' + annee + '-' + padded;
+    }
+
+    window.COCKPIT_COMPANY_SETTINGS = COMPANY_SETTINGS;
+    window.COCKPIT_DEVIS_STATUSES = DEVIS_STATUSES;
+    window.COCKPIT_DEVIS_DETAILS = DEVIS_DETAILS;
+    window.COCKPIT_DEVIS_CALC = {
+        roundMoney: roundMoney,
+        formatMoney: formatMoney,
+        computeLine: computeLine,
+        computeDevisTotals: computeDevisTotals,
+        getActiveVersion: getActiveVersion,
+        computeNextDevisNumero: computeNextDevisNumero,
+        snapshotClient: snapshotClient,
+        snapshotCompany: snapshotCompany
+    };
+})();
+
+// Page Facturation : liste des devis, recherche/filtre/pagination (V0.6.1)
+// via COCKPIT_LIST_PAGINATION (V0.5.4). Les lignes du tableau sont écrites en
+// dur dans facturation.html (comme pour Clients et Produits/Services) ; cette
+// IIFE ne fait que peupler le filtre de statut et déléguer au helper commun.
+// Les factures ne sont pas encore réelles : l'onglet "Factures" reste en
+// Work in progress, prêt à accueillir un vrai contenu en V0.6.2.
+
+(function () {
+    var table = document.getElementById('devis-table');
+    var searchInput = document.getElementById('devis-search');
+    var statusFilter = document.getElementById('devis-status-filter');
+    var resetButton = document.getElementById('devis-reset-filters');
+    var counter = document.getElementById('devis-counter');
+    var pageSizeSelect = document.getElementById('devis-page-size');
+    var prevButton = document.getElementById('devis-prev-page');
+    var nextButton = document.getElementById('devis-next-page');
+    var pageIndicator = document.getElementById('devis-page-indicator');
+
+    if (!table || !searchInput || !statusFilter || !counter || !pageSizeSelect) {
+        return;
+    }
+
+    (window.COCKPIT_DEVIS_STATUSES || []).forEach(function (status) {
+        var option = document.createElement('option');
+        option.value = status.value;
+        option.textContent = status.label;
+        statusFilter.appendChild(option);
+    });
+
+    var rows = Array.prototype.slice.call(table.querySelectorAll('tbody tr'));
+
+    window.COCKPIT_LIST_PAGINATION.init({
+        rows: rows,
+        searchInput: searchInput,
+        filterSelects: [statusFilter],
+        resetButton: resetButton,
+        counterEl: counter,
+        pageSizeSelect: pageSizeSelect,
+        prevButton: prevButton,
+        nextButton: nextButton,
+        pageIndicatorEl: pageIndicator,
+        labelSingular: 'devis',
+        labelPlural: 'devis',
+        labelEmpty: 'Aucun devis trouvé',
+        matchRow: function (row, searchValue) {
+            var matchesSearch = !searchValue || (row.dataset.search || '').indexOf(searchValue) !== -1;
+            var matchesStatus = !statusFilter.value || row.dataset.status === statusFilter.value;
+            return matchesSearch && matchesStatus;
+        }
+    });
+})();
+
+// Page Paramètres entreprise (V0.6.1) : formulaire pré-rempli depuis
+// COMPANY_SETTINGS. "Enregistrer" reste en Work in progress, comme partout
+// ailleurs dans le projet : aucune persistance réelle.
+
+(function () {
+    var nameInput = document.getElementById('company-nom');
+    if (!nameInput) {
+        return;
+    }
+
+    var settings = window.COCKPIT_COMPANY_SETTINGS || {};
+
+    var fields = {
+        'company-nom': settings.nom,
+        'company-adresse': settings.adresse,
+        'company-telephone': settings.telephone,
+        'company-email': settings.email,
+        'company-site': settings.siteInternet,
+        'company-siren': settings.siren,
+        'company-siret': settings.siret,
+        'company-tva': settings.tva,
+        'company-iban': settings.iban,
+        'company-bic': settings.bic
+    };
+
+    Object.keys(fields).forEach(function (id) {
+        var input = document.getElementById(id);
+        if (input) {
+            input.value = fields[id] || '';
+        }
+    });
+
+    var mentionsField = document.getElementById('company-mentions');
+    if (mentionsField) {
+        mentionsField.value = settings.mentionsLegales || '';
+    }
+})();
+
+// Page Devis — édition (V0.6.1) : consultation, création, duplication.
+// "Enregistrer", "Supprimer" (après confirmation) et "Créer une nouvelle
+// version" déclenchent uniquement le pop-up Work in progress existant :
+// aucune sauvegarde réelle, conformément au reste du projet. En revanche,
+// tout le reste est fonctionnel en direct (client, lignes, calculs HT/TVA/
+// TTC/remise, verrouillage, navigation entre versions fictives).
+//
+// Le client est toujours une référence vivante vers CLIENT_DETAILS le temps
+// de la sélection, mais chaque version conserve un clientSnapshot figé : une
+// fois affiché/enregistré (fictivement), il ne change plus si la fiche client
+// évolue ensuite. Même logique pour companySnapshot vis-à-vis de
+// COMPANY_SETTINGS. Les lignes issues du catalogue sont copiées une bonne
+// fois pour toutes dans la ligne : une évolution ultérieure du catalogue ne
+// modifie jamais un devis existant.
+
+(function () {
+    var contentEl = document.getElementById('devis-content');
+    var notFoundEl = document.getElementById('devis-not-found');
+    if (!contentEl) {
+        return;
+    }
+
+    var calc = window.COCKPIT_DEVIS_CALC;
+    var DEVIS_DETAILS = window.COCKPIT_DEVIS_DETAILS || {};
+    var DEVIS_STATUSES = window.COCKPIT_DEVIS_STATUSES || [];
+
+    var numeroHeadingEl = document.getElementById('devis-numero-heading');
+    var versionTagEl = document.getElementById('devis-version-tag');
+    var statusBadgeEl = document.getElementById('devis-status-badge');
+    var metaEl = document.getElementById('devis-meta');
+    var readonlyHintEl = document.getElementById('devis-readonly-hint');
+    var versionSwitchEl = document.getElementById('devis-version-switch');
+    var lockedBannerEl = document.getElementById('devis-locked-banner');
+    var companyContentEl = document.getElementById('devis-company-content');
+    var clientContentEl = document.getElementById('devis-client-content');
+    var linesBodyEl = document.getElementById('devis-lines-body');
+    var linesEmptyEl = document.getElementById('devis-lines-empty');
+    var linesActionsEl = document.getElementById('devis-lines-actions');
+    var addLineBtn = document.getElementById('devis-add-line-btn');
+    var addCatalogBtn = document.getElementById('devis-add-catalog-btn');
+    var summaryEl = document.getElementById('devis-summary');
+    var saveBtn = document.getElementById('devis-save-btn');
+    var duplicateBtn = document.getElementById('devis-duplicate-btn');
+    var newVersionBtn = document.getElementById('devis-new-version-btn');
+    var deleteBtn = document.getElementById('devis-delete-btn');
+
+    function makeEl(tag, className, text) {
+        var node = document.createElement(tag);
+        if (className) {
+            node.className = className;
+        }
+        if (text !== undefined) {
+            node.textContent = text;
+        }
+        return node;
+    }
+
+    function findStatusInfo(value) {
+        return DEVIS_STATUSES.filter(function (status) {
+            return status.value === value;
+        })[0] || null;
+    }
+
+    var nextLineId = 1;
+
+    function makeLine(data) {
+        return {
+            id: nextLineId++,
+            designation: data.designation || '',
+            description: data.description || '',
+            quantite: data.quantite !== undefined ? data.quantite : 1,
+            prixUnitaireHT: data.prixUnitaireHT !== undefined ? data.prixUnitaireHT : 0,
+            tauxTVA: data.tauxTVA !== undefined ? data.tauxTVA : 20,
+            remisePourcent: data.remisePourcent !== undefined ? data.remisePourcent : 0
+        };
+    }
+
+    function cloneLines(sourceLines) {
+        return (sourceLines || []).map(makeLine);
+    }
+
+    var state = {
+        mode: 'new',
+        numero: null,
+        version: 1,
+        statut: 'brouillon',
+        dateCreation: null,
+        dateModification: null,
+        clientSlug: null,
+        clientSnapshot: null,
+        companySnapshot: null,
+        lines: [],
+        sourceDevis: null,
+        viewingVersion: null,
+        editable: true
+    };
+
+    function loadFromParams() {
+        var params = new URLSearchParams(window.location.search);
+        var devisParam = params.get('devis');
+        var versionParam = params.get('version');
+        var duplicateParam = params.get('duplicate');
+
+        if (devisParam) {
+            var devis = DEVIS_DETAILS[devisParam];
+            if (!devis) {
+                return false;
+            }
+            var versionNumber = versionParam ? parseInt(versionParam, 10) : devis.versionActive;
+            var versionData = devis.versions.filter(function (v) {
+                return v.version === versionNumber;
+            })[0];
+            if (!versionData) {
+                return false;
+            }
+
+            state.mode = 'view';
+            state.numero = devis.numero;
+            state.version = versionData.version;
+            state.statut = versionData.statut;
+            state.dateCreation = versionData.dateCreation;
+            state.dateModification = versionData.dateModification;
+            state.clientSlug = versionData.clientSlug;
+            state.clientSnapshot = versionData.clientSnapshot;
+            state.companySnapshot = versionData.companySnapshot;
+            state.lines = cloneLines(versionData.lignes);
+            state.sourceDevis = devis;
+            state.viewingVersion = versionData;
+            state.editable = (versionData.version === devis.versionActive) && versionData.statut !== 'accepte';
+            return true;
+        }
+
+        if (duplicateParam) {
+            var sourceDevis = DEVIS_DETAILS[duplicateParam];
+            if (!sourceDevis) {
+                return false;
+            }
+            var dupVersionNumber = versionParam ? parseInt(versionParam, 10) : sourceDevis.versionActive;
+            var dupVersionData = sourceDevis.versions.filter(function (v) {
+                return v.version === dupVersionNumber;
+            })[0] || calc.getActiveVersion(sourceDevis);
+
+            state.mode = 'duplicate';
+            state.numero = calc.computeNextDevisNumero(new Date().getFullYear());
+            state.version = 1;
+            state.statut = 'brouillon';
+            state.dateCreation = null;
+            state.dateModification = null;
+            state.clientSlug = dupVersionData.clientSlug;
+            state.clientSnapshot = dupVersionData.clientSlug ? calc.snapshotClient(dupVersionData.clientSlug) : null;
+            state.companySnapshot = calc.snapshotCompany();
+            state.lines = cloneLines(dupVersionData.lignes);
+            state.sourceDevis = null;
+            state.viewingVersion = null;
+            state.editable = true;
+            return true;
+        }
+
+        state.mode = 'new';
+        state.numero = calc.computeNextDevisNumero(new Date().getFullYear());
+        state.version = 1;
+        state.statut = 'brouillon';
+        state.dateCreation = null;
+        state.dateModification = null;
+        state.clientSlug = null;
+        state.clientSnapshot = null;
+        state.companySnapshot = calc.snapshotCompany();
+        state.lines = [];
+        state.sourceDevis = null;
+        state.viewingVersion = null;
+        state.editable = true;
+        return true;
+    }
+
+    function renderHeader() {
+        numeroHeadingEl.textContent = state.numero;
+        versionTagEl.textContent = 'v' + state.version;
+
+        var statusInfo = findStatusInfo(state.statut);
+        statusBadgeEl.textContent = statusInfo ? statusInfo.label : state.statut;
+        statusBadgeEl.className = 'badge ' + (statusInfo ? statusInfo.badgeClass : 'badge-neutral');
+
+        if (state.mode !== 'view') {
+            metaEl.textContent = state.mode === 'duplicate'
+                ? 'Nouveau devis dupliqué, numéro attribué automatiquement à l\'enregistrement.'
+                : 'Numéro attribué automatiquement à l\'enregistrement.';
+        } else if (state.dateModification && state.dateModification !== state.dateCreation) {
+            metaEl.textContent = 'Créé le ' + state.dateCreation + ' · Modifié le ' + state.dateModification;
+        } else {
+            metaEl.textContent = 'Créé le ' + state.dateCreation;
+        }
+
+        lockedBannerEl.style.display = (!state.editable && state.statut === 'accepte') ? '' : 'none';
+        readonlyHintEl.style.display = (!state.editable && state.statut !== 'accepte') ? '' : 'none';
+    }
+
+    function renderVersionSwitch() {
+        versionSwitchEl.innerHTML = '';
+        if (!state.sourceDevis || state.sourceDevis.versions.length <= 1) {
+            return;
+        }
+        state.sourceDevis.versions.forEach(function (v) {
+            var pill = document.createElement('a');
+            pill.className = 'version-pill' + (v.version === state.version ? ' version-pill-active' : '');
+            pill.textContent = 'v' + v.version;
+            pill.href = 'devis-edition.html?devis=' + encodeURIComponent(state.numero) + '&version=' + v.version;
+            versionSwitchEl.appendChild(pill);
+        });
+    }
+
+    function renderCompanyParty() {
+        var c = state.companySnapshot || {};
+        companyContentEl.innerHTML = '';
+        companyContentEl.appendChild(makeEl('p', 'document-party-name', c.nom || '—'));
+        [c.adresse, c.telephone, c.email, c.siret ? ('SIRET ' + c.siret) : null, c.tva ? ('TVA ' + c.tva) : null].forEach(function (line) {
+            if (line) {
+                companyContentEl.appendChild(makeEl('p', null, line));
+            }
+        });
+    }
+
+    function renderClientInfoInto(container) {
+        container.innerHTML = '';
+        var c = state.clientSnapshot;
+        if (!c) {
+            container.appendChild(makeEl('p', 'empty-state-inline', 'Aucun client sélectionné.'));
+            return;
+        }
+        container.appendChild(makeEl('p', 'document-party-name', c.nom || '—'));
+        [(c.entreprise && c.entreprise !== '—') ? c.entreprise : null, c.adresse, c.telephone, c.email].forEach(function (line) {
+            if (line) {
+                container.appendChild(makeEl('p', null, line));
+            }
+        });
+    }
+
+    function renderClientParty() {
+        clientContentEl.innerHTML = '';
+
+        if (!state.editable) {
+            renderClientInfoInto(clientContentEl);
+            return;
+        }
+
+        var select = document.createElement('select');
+        select.className = 'table-select modal-select';
+        select.id = 'devis-client-select';
+        select.setAttribute('aria-label', 'Choisir un client');
+
+        var placeholderOption = document.createElement('option');
+        placeholderOption.value = '';
+        placeholderOption.textContent = 'Choisir un client...';
+        select.appendChild(placeholderOption);
+
+        var clientDetails = window.COCKPIT_CLIENT_DETAILS || {};
+        Object.keys(clientDetails).forEach(function (slug) {
+            var option = document.createElement('option');
+            option.value = slug;
+            option.textContent = clientDetails[slug].nom;
+            if (slug === state.clientSlug) {
+                option.selected = true;
+            }
+            select.appendChild(option);
+        });
+
+        var infoWrap = document.createElement('div');
+        infoWrap.style.marginTop = '10px';
+
+        select.addEventListener('change', function () {
+            state.clientSlug = select.value || null;
+            state.clientSnapshot = state.clientSlug ? calc.snapshotClient(state.clientSlug) : null;
+            renderClientInfoInto(infoWrap);
+        });
+
+        clientContentEl.appendChild(select);
+        clientContentEl.appendChild(infoWrap);
+        renderClientInfoInto(infoWrap);
+    }
+
+    function makeInputCell(line, field, type) {
+        var td = document.createElement('td');
+        var input = document.createElement('input');
+        input.type = type;
+        if (type === 'number') {
+            input.step = 'any';
+            input.min = '0';
+        }
+        input.value = line[field];
+        input.addEventListener('input', function () {
+            line[field] = type === 'number' ? (parseFloat(input.value) || 0) : input.value;
+            var row = input.closest('tr');
+            var totalCell = row ? row.querySelector('.line-total-cell') : null;
+            if (totalCell) {
+                totalCell.textContent = calc.formatMoney(calc.computeLine(line).totalTTC);
+            }
+            renderSummary();
+        });
+        td.appendChild(input);
+        return td;
+    }
+
+    function renderLines() {
+        linesBodyEl.innerHTML = '';
+        linesEmptyEl.style.display = state.lines.length === 0 ? '' : 'none';
+        linesActionsEl.style.display = state.editable ? '' : 'none';
+
+        state.lines.forEach(function (line) {
+            var row = document.createElement('tr');
+
+            if (state.editable) {
+                row.appendChild(makeInputCell(line, 'designation', 'text'));
+                row.appendChild(makeInputCell(line, 'description', 'text'));
+                row.appendChild(makeInputCell(line, 'quantite', 'number'));
+                row.appendChild(makeInputCell(line, 'prixUnitaireHT', 'number'));
+                row.appendChild(makeInputCell(line, 'tauxTVA', 'number'));
+                row.appendChild(makeInputCell(line, 'remisePourcent', 'number'));
+            } else {
+                [line.designation, line.description, line.quantite, calc.formatMoney(line.prixUnitaireHT), line.tauxTVA + ' %', line.remisePourcent + ' %'].forEach(function (value) {
+                    row.appendChild(makeEl('td', null, String(value)));
+                });
+            }
+
+            var totalCell = makeEl('td', 'line-total-cell', calc.formatMoney(calc.computeLine(line).totalTTC));
+            row.appendChild(totalCell);
+
+            var actionCell = document.createElement('td');
+            if (state.editable) {
+                var removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'line-remove-btn';
+                removeBtn.setAttribute('aria-label', 'Supprimer la ligne');
+                removeBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path></svg>';
+                removeBtn.addEventListener('click', function () {
+                    state.lines = state.lines.filter(function (l) {
+                        return l.id !== line.id;
+                    });
+                    renderLines();
+                    renderSummary();
+                });
+                actionCell.appendChild(removeBtn);
+            }
+            row.appendChild(actionCell);
+
+            linesBodyEl.appendChild(row);
+        });
+    }
+
+    function makeSummaryRow(label, value) {
+        var row = document.createElement('div');
+        row.className = 'devis-summary-row';
+        row.appendChild(makeEl('span', null, label));
+        row.appendChild(makeEl('span', null, value));
+        return row;
+    }
+
+    function renderSummary() {
+        var totals = calc.computeDevisTotals(state.lines);
+        summaryEl.innerHTML = '';
+
+        summaryEl.appendChild(makeSummaryRow('Total HT', calc.formatMoney(totals.totalHT)));
+
+        Object.keys(totals.tvaParTaux).sort(function (a, b) {
+            return parseFloat(a) - parseFloat(b);
+        }).forEach(function (rate) {
+            summaryEl.appendChild(makeSummaryRow('TVA ' + rate + ' %', calc.formatMoney(totals.tvaParTaux[rate])));
+        });
+
+        summaryEl.appendChild(makeSummaryRow('Total TVA', calc.formatMoney(totals.totalTVA)));
+
+        var ttcRow = makeSummaryRow('Total TTC', calc.formatMoney(totals.totalTTC));
+        ttcRow.classList.add('devis-summary-row-total');
+        summaryEl.appendChild(ttcRow);
+    }
+
+    function renderActions() {
+        saveBtn.style.display = state.editable ? '' : 'none';
+        deleteBtn.style.display = (state.mode === 'view' && state.editable) ? '' : 'none';
+        duplicateBtn.style.display = (state.mode === 'view') ? '' : 'none';
+        newVersionBtn.style.display = (
+            state.mode === 'view' &&
+            !state.editable &&
+            state.statut === 'accepte' &&
+            state.sourceDevis &&
+            state.viewingVersion.version === state.sourceDevis.versionActive
+        ) ? '' : 'none';
+    }
+
+    function openAddFromCatalogModal() {
+        var body = document.createElement('div');
+        var productDetails = window.COCKPIT_PRODUCT_DETAILS || {};
+        var productTypes = window.COCKPIT_PRODUCT_TYPES || [];
+
+        var list = document.createElement('div');
+        list.className = 'modal-checkbox-list';
+
+        var sellableSlugs = Object.keys(productDetails).filter(function (slug) {
+            return productDetails[slug].statut === 'actif';
+        });
+
+        if (sellableSlugs.length === 0) {
+            body.appendChild(makeEl('p', 'empty-state-inline', 'Aucun produit ou service Actif dans le catalogue.'));
+        } else {
+            sellableSlugs.forEach(function (slug) {
+                var item = productDetails[slug];
+                var typeInfo = productTypes.filter(function (t) { return t.value === item.type; })[0];
+                var option = document.createElement('button');
+                option.type = 'button';
+                option.className = 'catalog-picker-item';
+                option.innerHTML = '<span class="catalog-picker-name">' + item.nom + '</span>' +
+                    '<span class="badge ' + (typeInfo ? typeInfo.badgeClass : 'badge-neutral') + '">' + (typeInfo ? typeInfo.label : item.type) + '</span>' +
+                    '<span class="catalog-picker-price">' + calc.formatMoney(item.prixHT) + ' HT</span>';
+                option.addEventListener('click', function () {
+                    state.lines.push(makeLine({
+                        designation: item.nom,
+                        description: item.descriptionCourte,
+                        quantite: 1,
+                        prixUnitaireHT: item.prixHT,
+                        tauxTVA: item.tva,
+                        remisePourcent: 0
+                    }));
+                    window.COCKPIT_MODAL.close();
+                    renderLines();
+                    renderSummary();
+                });
+                list.appendChild(option);
+            });
+            body.appendChild(list);
+        }
+
+        window.COCKPIT_MODAL.open({
+            title: 'Ajouter depuis le catalogue',
+            body: body,
+            footer: (function () {
+                var cancelButton = document.createElement('button');
+                cancelButton.type = 'button';
+                cancelButton.className = 'btn-secondary';
+                cancelButton.setAttribute('data-modal-close', 'true');
+                cancelButton.setAttribute('data-modal-autofocus', 'true');
+                cancelButton.textContent = 'Fermer';
+                var fragment = document.createDocumentFragment();
+                fragment.appendChild(cancelButton);
+                return fragment;
+            })()
+        });
+    }
+
+    function openDeleteDevisModal() {
+        var body = document.createElement('div');
+        body.appendChild(makeEl('p', 'modal-text', 'Voulez-vous vraiment supprimer le devis ' + state.numero + ' ?'));
+        body.appendChild(makeEl('p', 'modal-hint', 'Cette suppression ne sera pas encore enregistrée.'));
+
+        var cancelButton = document.createElement('button');
+        cancelButton.type = 'button';
+        cancelButton.className = 'btn-secondary';
+        cancelButton.setAttribute('data-modal-close', 'true');
+        cancelButton.setAttribute('data-modal-autofocus', 'true');
+        cancelButton.textContent = 'Annuler';
+
+        var confirmButton = document.createElement('button');
+        confirmButton.type = 'button';
+        confirmButton.className = 'btn-danger btn-wip';
+        confirmButton.setAttribute('data-modal-close', 'true');
+        confirmButton.textContent = 'Supprimer';
+
+        var footer = document.createDocumentFragment();
+        footer.appendChild(cancelButton);
+        footer.appendChild(confirmButton);
+
+        window.COCKPIT_MODAL.open({
+            title: 'Supprimer ce devis ?',
+            body: body,
+            footer: footer
+        });
+    }
+
+    function renderAll() {
+        renderHeader();
+        renderVersionSwitch();
+        renderCompanyParty();
+        renderClientParty();
+        renderLines();
+        renderSummary();
+        renderActions();
+    }
+
+    if (!loadFromParams()) {
+        notFoundEl.style.display = '';
+        contentEl.style.display = 'none';
+    } else {
+        notFoundEl.style.display = 'none';
+        contentEl.style.display = '';
+        renderAll();
+
+        addLineBtn.addEventListener('click', function () {
+            state.lines.push(makeLine({}));
+            renderLines();
+            renderSummary();
+        });
+
+        addCatalogBtn.addEventListener('click', openAddFromCatalogModal);
+
+        duplicateBtn.addEventListener('click', function () {
+            if (state.mode !== 'view') {
+                return;
+            }
+            window.location.href = 'devis-edition.html?duplicate=' + encodeURIComponent(state.numero) + '&version=' + state.version;
+        });
+
+        deleteBtn.addEventListener('click', openDeleteDevisModal);
+    }
+})();

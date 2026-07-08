@@ -48,7 +48,7 @@
             <header class="topbar">
                 <div class="topbar-greeting">
                     <h1>Facturation</h1>
-                    <p class="page-subtitle">Suivez vos devis et factures.</p>
+                    <p class="page-subtitle">Gérez vos devis. Les factures arriveront dans une prochaine version.</p>
                 </div>
                 <div class="topbar-actions">
                     <div class="topbar-search">
@@ -66,64 +66,93 @@
             </header>
 
             <main class="page-content">
+                <div class="page-tabs">
+                    <span class="page-tab page-tab-active">Devis</span>
+                    <button type="button" class="page-tab btn-wip" title="Disponible dans une prochaine version">Factures</button>
+                </div>
+
                 <div class="page-toolbar">
+                    <div class="search-bar page-toolbar-search">
+                        <span class="search-bar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg></span>
+                        <input type="text" id="devis-search" placeholder="Rechercher un devis...">
+                    </div>
+                    <div class="table-filters">
+                        <select id="devis-status-filter" class="table-select" aria-label="Filtrer par statut">
+                            <option value="">Tous les statuts</option>
+                        </select>
+                        <button type="button" id="devis-reset-filters" class="btn-secondary">Réinitialiser</button>
+                    </div>
                     <div class="page-header-actions">
-                        <button type="button" class="btn-primary btn-wip">Créer une facture</button>
-                        <button type="button" class="btn-secondary btn-wip">Créer un devis</button>
+                        <a href="devis-edition.html" class="btn-primary">Créer un devis</a>
+                        <button type="button" class="btn-secondary btn-wip">Créer une facture</button>
                     </div>
                 </div>
 
-                <table class="data-table">
+                <div class="list-pagination-bar">
+                    <p class="table-counter" id="devis-counter"></p>
+                    <div class="pagination-controls">
+                        <select id="devis-page-size" class="table-select" aria-label="Éléments par page">
+                            <option value="5">Afficher 5</option>
+                            <option value="10">Afficher 10</option>
+                            <option value="25">Afficher 25</option>
+                        </select>
+                        <button type="button" class="btn-secondary" id="devis-prev-page" aria-label="Page précédente">Précédent</button>
+                        <span class="pagination-page-indicator" id="devis-page-indicator">Page 1 sur 1</span>
+                        <button type="button" class="btn-secondary" id="devis-next-page" aria-label="Page suivante">Suivant</button>
+                    </div>
+                </div>
+
+                <table class="data-table" id="devis-table">
                     <thead>
                         <tr>
-                            <th>N° document</th>
-                            <th>Type</th>
+                            <th>N° devis</th>
                             <th>Client</th>
-                            <th>Montant</th>
+                            <th>Montant TTC</th>
                             <th>Statut</th>
                             <th>Date</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>FAC-001</td>
-                            <td>Facture</td>
-                            <td>Martin Dupont</td>
-                            <td>1 250 €</td>
-                            <td><span class="badge badge-danger">En retard</span></td>
-                            <td>12/06/2026</td>
-                        </tr>
-                        <tr>
-                            <td>DEV-004</td>
-                            <td>Devis</td>
-                            <td>Atelier Leroy</td>
-                            <td>890 €</td>
-                            <td><span class="badge badge-info">Envoyé</span></td>
-                            <td>20/06/2026</td>
-                        </tr>
-                        <tr>
-                            <td>FAC-002</td>
-                            <td>Facture</td>
-                            <td>Sophie Bernard</td>
-                            <td>430 €</td>
-                            <td><span class="badge badge-success">Payé</span></td>
-                            <td>25/06/2026</td>
-                        </tr>
-                        <tr>
-                            <td>DEV-005</td>
-                            <td>Devis</td>
-                            <td>Boucherie Morel</td>
-                            <td>610 €</td>
+                        <tr data-status="brouillon" data-search="dev-2026-00011 julien petit">
+                            <td>DEV-2026-00011 <span class="version-tag">v1</span></td>
+                            <td>Julien Petit</td>
+                            <td>900,00 €</td>
                             <td><span class="badge badge-neutral">Brouillon</span></td>
-                            <td>01/07/2026</td>
+                            <td>05/07/2026</td>
+                            <td><a href="devis-edition.html?devis=DEV-2026-00011" class="btn-table-action">Voir le devis</a></td>
                         </tr>
-                        <tr>
-                            <td>FAC-003</td>
-                            <td>Facture</td>
-                            <td>Martin Dupont</td>
-                            <td>980 €</td>
+                        <tr data-status="envoye" data-search="dev-2026-00012 atelier leroy">
+                            <td>DEV-2026-00012 <span class="version-tag">v1</span></td>
+                            <td>Atelier Leroy</td>
+                            <td>2 844,00 €</td>
                             <td><span class="badge badge-info">Envoyé</span></td>
-                            <td>03/07/2026</td>
+                            <td>22/06/2026</td>
+                            <td><a href="devis-edition.html?devis=DEV-2026-00012" class="btn-table-action">Voir le devis</a></td>
+                        </tr>
+                        <tr data-status="refuse" data-search="dev-2026-00013 techni-bois sarl">
+                            <td>DEV-2026-00013 <span class="version-tag">v1</span></td>
+                            <td>Techni-Bois SARL</td>
+                            <td>2 090,00 €</td>
+                            <td><span class="badge badge-danger">Refusé</span></td>
+                            <td>15/05/2026</td>
+                            <td><a href="devis-edition.html?devis=DEV-2026-00013" class="btn-table-action">Voir le devis</a></td>
+                        </tr>
+                        <tr data-status="envoye" data-search="dev-2026-00014 boucherie morel">
+                            <td>DEV-2026-00014 <span class="version-tag">v1</span></td>
+                            <td>Boucherie Morel</td>
+                            <td>948,90 €</td>
+                            <td><span class="badge badge-info">Envoyé</span></td>
+                            <td>28/06/2026</td>
+                            <td><a href="devis-edition.html?devis=DEV-2026-00014" class="btn-table-action">Voir le devis</a></td>
+                        </tr>
+                        <tr data-status="accepte" data-search="dev-2026-00015 martin dupont">
+                            <td>DEV-2026-00015 <span class="version-tag">v3</span></td>
+                            <td>Martin Dupont</td>
+                            <td>3 744,00 €</td>
+                            <td><span class="badge badge-success">Accepté</span></td>
+                            <td>15/03/2026</td>
+                            <td><a href="devis-edition.html?devis=DEV-2026-00015" class="btn-table-action">Voir le devis</a></td>
                         </tr>
                     </tbody>
                 </table>

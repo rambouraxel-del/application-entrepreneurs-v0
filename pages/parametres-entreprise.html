@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Paramètres — Cockpit Entrepreneur</title>
+    <title>Paramètres entreprise — Cockpit Entrepreneur</title>
     <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
@@ -47,8 +47,8 @@
         <div class="main">
             <header class="topbar">
                 <div class="topbar-greeting">
-                    <h1>Paramètres</h1>
-                    <p class="page-subtitle">Configurez votre espace de travail.</p>
+                    <h1>Paramètres entreprise</h1>
+                    <p class="page-subtitle">Ces informations serviront de base à tous vos futurs documents commerciaux.</p>
                 </div>
                 <div class="topbar-actions">
                     <div class="topbar-search">
@@ -66,38 +66,89 @@
             </header>
 
             <main class="page-content">
-                <section class="settings-grid">
-                    <div class="dashboard-block settings-card">
-                        <h2>Informations de l'entreprise</h2>
-                        <p>Nom, logo, coordonnées de votre entreprise.</p>
-                        <a href="parametres-entreprise.html" class="btn-secondary">Modifier</a>
+                <div class="fiche-top-row">
+                    <nav class="breadcrumb" aria-label="Fil d'Ariane">
+                        <a href="settings.html">Paramètres</a>
+                        <span>›</span>
+                        <span class="breadcrumb-current">Paramètres entreprise</span>
+                    </nav>
+                    <a href="settings.html" class="fiche-back-link">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg>
+                        Retour aux paramètres
+                    </a>
+                </div>
+
+                <div class="dashboard-row">
+                    <div class="dashboard-block">
+                        <div class="dashboard-block-header">
+                            <h2>Identité de l'entreprise</h2>
+                        </div>
+                        <div class="company-logo-zone">
+                            <div class="company-logo-placeholder" aria-hidden="true">CE</div>
+                            <button type="button" class="btn-secondary btn-wip">Changer le logo</button>
+                        </div>
+                        <label class="modal-label" for="company-nom">Nom de l'entreprise</label>
+                        <input type="text" id="company-nom" class="modal-input">
+
+                        <label class="modal-label" for="company-adresse">Adresse</label>
+                        <input type="text" id="company-adresse" class="modal-input">
+
+                        <div class="form-grid-2">
+                            <div>
+                                <label class="modal-label" for="company-telephone">Téléphone</label>
+                                <input type="text" id="company-telephone" class="modal-input">
+                            </div>
+                            <div>
+                                <label class="modal-label" for="company-email">E-mail</label>
+                                <input type="email" id="company-email" class="modal-input">
+                            </div>
+                        </div>
+                        <label class="modal-label" for="company-site">Site internet</label>
+                        <input type="text" id="company-site" class="modal-input">
                     </div>
-                    <div class="dashboard-block settings-card">
-                        <h2>Préférences d'affichage</h2>
-                        <p>Thème, densité d'information, mise en page.</p>
-                        <button type="button" class="btn-secondary btn-wip">Modifier</button>
+
+                    <div class="dashboard-block">
+                        <div class="dashboard-block-header">
+                            <h2>Identifiants légaux &amp; bancaires</h2>
+                        </div>
+                        <div class="form-grid-2">
+                            <div>
+                                <label class="modal-label" for="company-siren">SIREN</label>
+                                <input type="text" id="company-siren" class="modal-input">
+                            </div>
+                            <div>
+                                <label class="modal-label" for="company-siret">SIRET</label>
+                                <input type="text" id="company-siret" class="modal-input">
+                            </div>
+                        </div>
+                        <label class="modal-label" for="company-tva">Numéro de TVA intracommunautaire</label>
+                        <input type="text" id="company-tva" class="modal-input">
+
+                        <div class="form-grid-2">
+                            <div>
+                                <label class="modal-label" for="company-iban">IBAN</label>
+                                <input type="text" id="company-iban" class="modal-input">
+                            </div>
+                            <div>
+                                <label class="modal-label" for="company-bic">BIC</label>
+                                <input type="text" id="company-bic" class="modal-input">
+                            </div>
+                        </div>
                     </div>
-                    <div class="dashboard-block settings-card">
-                        <h2>Notifications</h2>
-                        <p>Choix des alertes et rappels reçus.</p>
-                        <button type="button" class="btn-secondary btn-wip">Modifier</button>
+                </div>
+
+                <div class="dashboard-block">
+                    <div class="dashboard-block-header">
+                        <h2>Mentions légales par défaut</h2>
                     </div>
-                    <div class="dashboard-block settings-card">
-                        <h2>Compte utilisateur</h2>
-                        <p>Identifiants et informations personnelles.</p>
-                        <button type="button" class="btn-secondary btn-wip">Modifier</button>
-                    </div>
-                    <div class="dashboard-block settings-card">
-                        <h2>Objectifs mensuels</h2>
-                        <p>Objectifs de chiffre d'affaires et de trésorerie.</p>
-                        <button type="button" class="btn-secondary btn-wip">Modifier</button>
-                    </div>
-                    <div class="dashboard-block settings-card">
-                        <h2>Sécurité</h2>
-                        <p>Mot de passe et paramètres de connexion.</p>
-                        <button type="button" class="btn-secondary btn-wip">Modifier</button>
-                    </div>
-                </section>
+                    <p class="modal-hint" style="margin-bottom: 8px;">Ce texte standardisé sera repris sur vos futurs documents commerciaux. Vous pourrez le personnaliser librement.</p>
+                    <textarea id="company-mentions" class="modal-textarea" rows="4"></textarea>
+                </div>
+
+                <div class="page-toolbar" style="justify-content: flex-start;">
+                    <button type="button" class="btn-primary btn-wip" id="company-save-btn">Enregistrer</button>
+                </div>
+                <p class="modal-hint">Ces modifications ne sont pas encore enregistrées durablement : la persistance sera ajoutée dans une prochaine version.</p>
             </main>
         </div>
     </div>
