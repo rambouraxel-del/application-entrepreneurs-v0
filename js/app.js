@@ -1237,6 +1237,15 @@ document.addEventListener('DOMContentLoaded', function () {
         { value: 'archive', label: 'Archivé', badgeClass: 'badge-info' }
     ];
 
+    var PRODUCT_PAYMENT_MODALITIES = [
+        { value: 'comptant', label: 'Comptant' },
+        { value: 'forfait', label: 'Forfait' },
+        { value: 'abonnement', label: 'Abonnement' },
+        { value: 'plusieurs-fois', label: 'Plusieurs fois' },
+        { value: 'recurrent', label: 'Récurrent' },
+        { value: 'autre', label: 'Autre' }
+    ];
+
     var PRODUCT_DETAILS = {
         'audit-strategique': {
             nom: 'Audit stratégique', type: 'service', prixHT: 750, tva: 20, statut: 'actif',
@@ -1256,7 +1265,8 @@ document.addEventListener('DOMContentLoaded', function () {
             historique: [
                 { date: '14/01/2025', type: 'creation', resume: 'Création de l\'offre.' },
                 { date: '20/01/2025', type: 'passage-actif', resume: 'Passage en statut Actif.' },
-                { date: '03/06/2026', type: 'modification-prix', resume: 'Prix ajusté de 690 € à 750 € HT.' }
+                { date: '03/06/2026', type: 'modification-prix', resume: 'Prix ajusté de 690 € à 750 € HT.' },
+                { date: '20/06/2026', type: 'modification-modalites', resume: 'Ajout du paiement en plusieurs fois en complément du paiement comptant.' }
             ]
         },
         'creation-site-vitrine': {
@@ -1277,7 +1287,8 @@ document.addEventListener('DOMContentLoaded', function () {
             historique: [
                 { date: '02/03/2025', type: 'creation', resume: 'Création de l\'offre.' },
                 { date: '10/03/2025', type: 'passage-actif', resume: 'Passage en statut Actif.' },
-                { date: '15/05/2026', type: 'modification-prix', resume: 'Prix ajusté de 1 650 € à 1 800 € HT.' }
+                { date: '15/05/2026', type: 'modification-prix', resume: 'Prix ajusté de 1 650 € à 1 800 € HT.' },
+                { date: '22/05/2026', type: 'modification-modalites', resume: 'Ajout du paiement en plusieurs fois en complément du paiement comptant.' }
             ]
         },
         'maintenance-mensuelle': {
@@ -1406,7 +1417,161 @@ document.addEventListener('DOMContentLoaded', function () {
 
     window.COCKPIT_PRODUCT_TYPES = PRODUCT_TYPES;
     window.COCKPIT_PRODUCT_STATUSES = PRODUCT_STATUSES;
+    window.COCKPIT_PRODUCT_PAYMENT_MODALITIES = PRODUCT_PAYMENT_MODALITIES;
     window.COCKPIT_PRODUCT_DETAILS = PRODUCT_DETAILS;
+
+    // Modale "Ajouter un produit / service" (V0.5.3) : formulaire simulé,
+    // aucune donnée n'est ajoutée à PRODUCT_DETAILS. "Enregistrer" ferme la
+    // modale et déclenche le pop-up Work in progress existant.
+    var addButton = document.getElementById('products-add-btn');
+    if (addButton) {
+        addButton.addEventListener('click', function () {
+            var body = document.createElement('div');
+
+            var nameLabel = document.createElement('label');
+            nameLabel.className = 'modal-label';
+            nameLabel.textContent = 'Nom';
+            nameLabel.setAttribute('for', 'add-product-name');
+            body.appendChild(nameLabel);
+            var nameInput = document.createElement('input');
+            nameInput.type = 'text';
+            nameInput.id = 'add-product-name';
+            nameInput.className = 'modal-input';
+            nameInput.placeholder = 'Nom du produit ou service';
+            nameInput.setAttribute('data-modal-autofocus', 'true');
+            body.appendChild(nameInput);
+
+            var typeLabel = document.createElement('label');
+            typeLabel.className = 'modal-label';
+            typeLabel.textContent = 'Type';
+            typeLabel.setAttribute('for', 'add-product-type');
+            body.appendChild(typeLabel);
+            var typeSelect = document.createElement('select');
+            typeSelect.id = 'add-product-type';
+            typeSelect.className = 'table-select modal-select';
+            PRODUCT_TYPES.forEach(function (type) {
+                var option = document.createElement('option');
+                option.value = type.value;
+                option.textContent = type.label;
+                typeSelect.appendChild(option);
+            });
+            body.appendChild(typeSelect);
+
+            var priceLabel = document.createElement('label');
+            priceLabel.className = 'modal-label';
+            priceLabel.textContent = 'Prix HT';
+            priceLabel.setAttribute('for', 'add-product-price');
+            body.appendChild(priceLabel);
+            var priceInput = document.createElement('input');
+            priceInput.type = 'number';
+            priceInput.id = 'add-product-price';
+            priceInput.className = 'modal-input';
+            priceInput.placeholder = 'Ex. 500';
+            body.appendChild(priceInput);
+
+            var vatLabel = document.createElement('label');
+            vatLabel.className = 'modal-label';
+            vatLabel.textContent = 'TVA par défaut (%)';
+            vatLabel.setAttribute('for', 'add-product-vat');
+            body.appendChild(vatLabel);
+            var vatInput = document.createElement('input');
+            vatInput.type = 'number';
+            vatInput.id = 'add-product-vat';
+            vatInput.className = 'modal-input';
+            vatInput.placeholder = 'Ex. 20';
+            body.appendChild(vatInput);
+
+            var statusLabel = document.createElement('label');
+            statusLabel.className = 'modal-label';
+            statusLabel.textContent = 'Statut initial';
+            statusLabel.setAttribute('for', 'add-product-status');
+            body.appendChild(statusLabel);
+            var statusSelect = document.createElement('select');
+            statusSelect.id = 'add-product-status';
+            statusSelect.className = 'table-select modal-select';
+            PRODUCT_STATUSES.forEach(function (status) {
+                var option = document.createElement('option');
+                option.value = status.value;
+                option.textContent = status.label;
+                if (status.value === 'brouillon') {
+                    option.selected = true;
+                }
+                statusSelect.appendChild(option);
+            });
+            body.appendChild(statusSelect);
+
+            var descLabel = document.createElement('label');
+            descLabel.className = 'modal-label';
+            descLabel.textContent = 'Description courte';
+            descLabel.setAttribute('for', 'add-product-description');
+            body.appendChild(descLabel);
+            var descInput = document.createElement('input');
+            descInput.type = 'text';
+            descInput.id = 'add-product-description';
+            descInput.className = 'modal-input';
+            descInput.placeholder = 'Une phrase pour présenter l\'offre';
+            body.appendChild(descInput);
+
+            var paymentLabel = document.createElement('p');
+            paymentLabel.className = 'modal-label';
+            paymentLabel.textContent = 'Modalités de paiement acceptées';
+            body.appendChild(paymentLabel);
+            var paymentList = document.createElement('div');
+            paymentList.className = 'modal-checkbox-list';
+            PRODUCT_PAYMENT_MODALITIES.forEach(function (modality, index) {
+                var item = document.createElement('label');
+                item.className = 'modal-checkbox-item';
+                var checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = 'add-product-payment-' + index;
+                checkbox.value = modality.value;
+                item.appendChild(checkbox);
+                item.appendChild(document.createTextNode(modality.label));
+                paymentList.appendChild(item);
+            });
+            body.appendChild(paymentList);
+
+            var noteLabel = document.createElement('label');
+            noteLabel.className = 'modal-label';
+            noteLabel.textContent = 'Note interne';
+            noteLabel.setAttribute('for', 'add-product-note');
+            body.appendChild(noteLabel);
+            var noteTextarea = document.createElement('textarea');
+            noteTextarea.id = 'add-product-note';
+            noteTextarea.className = 'modal-textarea';
+            noteTextarea.rows = 3;
+            noteTextarea.placeholder = 'Précision interne, point de vigilance...';
+            body.appendChild(noteTextarea);
+
+            var hint = document.createElement('p');
+            hint.className = 'modal-hint';
+            hint.style.marginTop = '8px';
+            hint.textContent = 'Cet ajout ne sera pas encore enregistré : la persistance sera ajoutée dans une prochaine version.';
+            body.appendChild(hint);
+
+            var cancelButton = document.createElement('button');
+            cancelButton.type = 'button';
+            cancelButton.className = 'btn-secondary';
+            cancelButton.setAttribute('data-modal-close', 'true');
+            cancelButton.textContent = 'Annuler';
+
+            var saveButton = document.createElement('button');
+            saveButton.type = 'button';
+            saveButton.className = 'btn-primary btn-wip';
+            saveButton.setAttribute('data-modal-close', 'true');
+            saveButton.textContent = 'Enregistrer';
+
+            var footer = document.createDocumentFragment();
+            footer.appendChild(cancelButton);
+            footer.appendChild(saveButton);
+
+            window.COCKPIT_MODAL.open({
+                title: 'Ajouter un produit / service',
+                body: body,
+                footer: footer
+            });
+        });
+    }
 
     var table = document.getElementById('products-table');
     var searchInput = document.getElementById('products-search');
@@ -1489,19 +1654,12 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
     }
 
-    var PRODUCT_PAYMENT_MODALITIES = [
-        { value: 'comptant', label: 'Comptant' },
-        { value: 'forfait', label: 'Forfait' },
-        { value: 'abonnement', label: 'Abonnement' },
-        { value: 'plusieurs-fois', label: 'Plusieurs fois' },
-        { value: 'recurrent', label: 'Récurrent' }
-    ];
-
     var OFFER_HISTORY_TYPES = {
         'creation': { label: 'Création de l\'offre', badgeClass: 'badge-info' },
         'passage-actif': { label: 'Passage en actif', badgeClass: 'badge-success' },
         'modification-prix': { label: 'Modification du prix', badgeClass: 'badge-warning' },
         'modification-tva': { label: 'Modification de la TVA indicative', badgeClass: 'badge-neutral' },
+        'modification-modalites': { label: 'Modification des modalités de paiement', badgeClass: 'badge-neutral' },
         'archivage': { label: 'Archivage', badgeClass: 'badge-info' }
     };
 
@@ -1545,6 +1703,52 @@ document.addEventListener('DOMContentLoaded', function () {
     var noteInterneEl = document.getElementById('item-note-interne');
     var historyListEl = document.getElementById('item-history-list');
 
+    var editBtn = document.getElementById('item-edit-btn');
+    var marginDetailBtn = document.getElementById('kpi-item-marge-detail');
+    var paymentEditBtn = document.getElementById('item-payment-edit-btn');
+    var noteEditBtn = document.getElementById('item-note-edit-btn');
+    var historyViewBtn = document.getElementById('item-history-view-btn');
+
+    function makeEl(tag, className, text) {
+        var node = document.createElement(tag);
+        if (className) {
+            node.className = className;
+        }
+        if (text !== undefined) {
+            node.textContent = text;
+        }
+        return node;
+    }
+
+    function makeCancelButton(label, autofocus) {
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'btn-secondary';
+        button.setAttribute('data-modal-close', 'true');
+        if (autofocus) {
+            button.setAttribute('data-modal-autofocus', 'true');
+        }
+        button.textContent = label || 'Annuler';
+        return button;
+    }
+
+    function makeSaveButton(label) {
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'btn-primary btn-wip';
+        button.setAttribute('data-modal-close', 'true');
+        button.textContent = label;
+        return button;
+    }
+
+    function buildModalFooterButtons(buttons) {
+        var fragment = document.createDocumentFragment();
+        buttons.forEach(function (button) {
+            fragment.appendChild(button);
+        });
+        return fragment;
+    }
+
     function findLabel(list, value) {
         var match = (list || []).filter(function (entry) {
             return entry.value === value;
@@ -1574,7 +1778,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         paymentBadgesEl.innerHTML = '';
         (modalites || []).forEach(function (value) {
-            var modality = findLabel(PRODUCT_PAYMENT_MODALITIES, value);
+            var modality = findLabel(window.COCKPIT_PRODUCT_PAYMENT_MODALITIES, value);
             var badge = document.createElement('span');
             badge.className = 'badge badge-neutral';
             badge.textContent = modality ? modality.label : value;
@@ -1582,19 +1786,9 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    function renderHistory(events) {
-        if (!historyListEl) {
-            return;
-        }
-        historyListEl.innerHTML = '';
-
-        if (!events || events.length === 0) {
-            var empty = document.createElement('p');
-            empty.className = 'empty-state-inline';
-            empty.textContent = 'Aucun historique enregistré pour cette offre.';
-            historyListEl.appendChild(empty);
-            return;
-        }
+    function buildHistoryList(events) {
+        var list = document.createElement('div');
+        list.className = 'history-list';
 
         events.forEach(function (event) {
             var typeInfo = OFFER_HISTORY_TYPES[event.type] || { label: event.type, badgeClass: 'badge-neutral' };
@@ -1617,7 +1811,306 @@ document.addEventListener('DOMContentLoaded', function () {
             item.appendChild(dateEl);
             item.appendChild(typeEl2);
             item.appendChild(resumeEl);
-            historyListEl.appendChild(item);
+            list.appendChild(item);
+        });
+
+        return list;
+    }
+
+    function renderHistory(events) {
+        if (!historyListEl) {
+            return;
+        }
+        historyListEl.innerHTML = '';
+
+        if (!events || events.length === 0) {
+            var empty = document.createElement('p');
+            empty.className = 'empty-state-inline';
+            empty.textContent = 'Aucun historique enregistré pour cette offre.';
+            historyListEl.appendChild(empty);
+            return;
+        }
+
+        var recentEvents = events.slice(-3);
+        historyListEl.appendChild(buildHistoryList(recentEvents));
+
+        var hiddenCount = events.length - recentEvents.length;
+        if (hiddenCount > 0) {
+            var hint = document.createElement('p');
+            hint.className = 'modal-hint';
+            hint.style.marginTop = '8px';
+            hint.textContent = '+' + hiddenCount + ' événement' + (hiddenCount > 1 ? 's' : '') + ' supplémentaire' + (hiddenCount > 1 ? 's' : '') + ' — voir l\'historique complet.';
+            historyListEl.appendChild(hint);
+        }
+    }
+
+    // Modales d'interactions préparatoires (V0.5.3) : aucune ne modifie
+    // `item`, qui reste la référence affichée à l'écran. "Enregistrer"/
+    // "Valider" ferment la modale et déclenchent le pop-up Work in progress
+    // existant (bouton cumulant data-modal-close et btn-wip).
+
+    function openChangeStatusModal(item) {
+        var body = document.createElement('div');
+        body.appendChild(makeEl('p', 'modal-text', 'Offre : ' + item.nom));
+
+        var currentLine = makeEl('p', 'modal-text');
+        currentLine.appendChild(document.createTextNode('Statut actuel : '));
+        var statusInfo = findLabel(window.COCKPIT_PRODUCT_STATUSES, item.statut);
+        currentLine.appendChild(makeEl('span', 'badge ' + (statusInfo ? statusInfo.badgeClass : 'badge-neutral'), statusInfo ? statusInfo.label : item.statut));
+        body.appendChild(currentLine);
+
+        var label = makeEl('label', 'modal-label', 'Nouveau statut');
+        label.setAttribute('for', 'offer-status-select');
+        body.appendChild(label);
+
+        var select = document.createElement('select');
+        select.id = 'offer-status-select';
+        select.className = 'table-select modal-select';
+        select.setAttribute('data-modal-autofocus', 'true');
+        (window.COCKPIT_PRODUCT_STATUSES || []).forEach(function (status) {
+            var option = document.createElement('option');
+            option.value = status.value;
+            option.textContent = status.label;
+            if (status.value === item.statut) {
+                option.selected = true;
+            }
+            select.appendChild(option);
+        });
+        body.appendChild(select);
+
+        body.appendChild(makeEl('p', 'modal-hint', 'L\'archivage est un changement de statut, pas une suppression : l\'offre reste consultable. Ce changement ne sera pas encore enregistré.'));
+
+        window.COCKPIT_MODAL.open({
+            title: 'Changer le statut de l\'offre',
+            body: body,
+            footer: buildModalFooterButtons([makeCancelButton('Annuler'), makeSaveButton('Valider')])
+        });
+    }
+
+    function buildOfferFormFields(item) {
+        var body = document.createElement('div');
+
+        var nameLabel = makeEl('label', 'modal-label', 'Nom');
+        nameLabel.setAttribute('for', 'edit-offer-name');
+        body.appendChild(nameLabel);
+        var nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.id = 'edit-offer-name';
+        nameInput.className = 'modal-input';
+        nameInput.value = item.nom;
+        nameInput.setAttribute('data-modal-autofocus', 'true');
+        body.appendChild(nameInput);
+
+        var typeLabel = makeEl('label', 'modal-label', 'Type');
+        typeLabel.setAttribute('for', 'edit-offer-type');
+        body.appendChild(typeLabel);
+        var typeSelect = document.createElement('select');
+        typeSelect.id = 'edit-offer-type';
+        typeSelect.className = 'table-select modal-select';
+        (window.COCKPIT_PRODUCT_TYPES || []).forEach(function (type) {
+            var option = document.createElement('option');
+            option.value = type.value;
+            option.textContent = type.label;
+            if (type.value === item.type) {
+                option.selected = true;
+            }
+            typeSelect.appendChild(option);
+        });
+        body.appendChild(typeSelect);
+
+        var statusLabel = makeEl('label', 'modal-label', 'Statut');
+        statusLabel.setAttribute('for', 'edit-offer-status');
+        body.appendChild(statusLabel);
+        var statusSelect = document.createElement('select');
+        statusSelect.id = 'edit-offer-status';
+        statusSelect.className = 'table-select modal-select';
+        (window.COCKPIT_PRODUCT_STATUSES || []).forEach(function (status) {
+            var option = document.createElement('option');
+            option.value = status.value;
+            option.textContent = status.label;
+            if (status.value === item.statut) {
+                option.selected = true;
+            }
+            statusSelect.appendChild(option);
+        });
+        body.appendChild(statusSelect);
+
+        var priceLabel = makeEl('label', 'modal-label', 'Prix HT');
+        priceLabel.setAttribute('for', 'edit-offer-price');
+        body.appendChild(priceLabel);
+        var priceInput = document.createElement('input');
+        priceInput.type = 'number';
+        priceInput.id = 'edit-offer-price';
+        priceInput.className = 'modal-input';
+        priceInput.value = item.prixHT;
+        body.appendChild(priceInput);
+
+        var vatLabel = makeEl('label', 'modal-label', 'TVA par défaut (%)');
+        vatLabel.setAttribute('for', 'edit-offer-vat');
+        body.appendChild(vatLabel);
+        var vatInput = document.createElement('input');
+        vatInput.type = 'number';
+        vatInput.id = 'edit-offer-vat';
+        vatInput.className = 'modal-input';
+        vatInput.value = item.tva;
+        body.appendChild(vatInput);
+
+        var descLabel = makeEl('label', 'modal-label', 'Description courte');
+        descLabel.setAttribute('for', 'edit-offer-description');
+        body.appendChild(descLabel);
+        var descInput = document.createElement('input');
+        descInput.type = 'text';
+        descInput.id = 'edit-offer-description';
+        descInput.className = 'modal-input';
+        descInput.value = item.descriptionCourte || '';
+        body.appendChild(descInput);
+
+        var paymentLabel = makeEl('p', 'modal-label', 'Modalités de paiement acceptées');
+        body.appendChild(paymentLabel);
+        var paymentList = document.createElement('div');
+        paymentList.className = 'modal-checkbox-list';
+        var currentModalites = item.modalitesPaiement || [];
+        (window.COCKPIT_PRODUCT_PAYMENT_MODALITIES || []).forEach(function (modality, index) {
+            var checkboxLabel = makeEl('label', 'modal-checkbox-item');
+            var checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = 'edit-offer-payment-' + index;
+            checkbox.value = modality.value;
+            checkbox.checked = currentModalites.indexOf(modality.value) !== -1;
+            checkboxLabel.appendChild(checkbox);
+            checkboxLabel.appendChild(document.createTextNode(modality.label));
+            paymentList.appendChild(checkboxLabel);
+        });
+        body.appendChild(paymentList);
+
+        var noteLabel = makeEl('label', 'modal-label', 'Note interne');
+        noteLabel.setAttribute('for', 'edit-offer-note');
+        body.appendChild(noteLabel);
+        var noteTextarea = document.createElement('textarea');
+        noteTextarea.id = 'edit-offer-note';
+        noteTextarea.className = 'modal-textarea';
+        noteTextarea.rows = 3;
+        noteTextarea.value = item.noteInterne || '';
+        body.appendChild(noteTextarea);
+
+        body.appendChild(makeEl('p', 'modal-hint', 'Cette modification ne sera pas encore enregistrée : la persistance sera ajoutée dans une prochaine version.'));
+
+        return body;
+    }
+
+    function openEditOfferModal(item) {
+        window.COCKPIT_MODAL.open({
+            title: 'Modifier l\'offre',
+            body: buildOfferFormFields(item),
+            footer: buildModalFooterButtons([makeCancelButton('Annuler'), makeSaveButton('Enregistrer')])
+        });
+    }
+
+    function openPaymentModalitiesModal(item) {
+        var body = document.createElement('div');
+        body.appendChild(makeEl('p', 'modal-text', 'Offre : ' + item.nom));
+
+        var list = document.createElement('div');
+        list.className = 'modal-checkbox-list';
+        var currentModalites = item.modalitesPaiement || [];
+        (window.COCKPIT_PRODUCT_PAYMENT_MODALITIES || []).forEach(function (modality, index) {
+            var checkboxLabel = makeEl('label', 'modal-checkbox-item');
+            var checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = 'payment-modal-' + index;
+            checkbox.value = modality.value;
+            checkbox.checked = currentModalites.indexOf(modality.value) !== -1;
+            if (index === 0) {
+                checkbox.setAttribute('data-modal-autofocus', 'true');
+            }
+            checkboxLabel.appendChild(checkbox);
+            checkboxLabel.appendChild(document.createTextNode(modality.label));
+            list.appendChild(checkboxLabel);
+        });
+        body.appendChild(list);
+
+        body.appendChild(makeEl('p', 'modal-hint', 'Le Type (Produit ou Service) n\'est pas concerné par ces modalités de paiement. Ce changement ne sera pas encore enregistré.'));
+
+        window.COCKPIT_MODAL.open({
+            title: 'Modalités de paiement acceptées',
+            body: body,
+            footer: buildModalFooterButtons([makeCancelButton('Annuler'), makeSaveButton('Enregistrer')])
+        });
+    }
+
+    function openMarginDetailModal(item) {
+        var body = document.createElement('div');
+
+        var recap = document.createElement('div');
+        recap.className = 'info-grid';
+        recap.appendChild(makeEl('div', 'info-item'));
+        recap.lastChild.appendChild(makeEl('span', 'info-label', 'Coût estimé actuel'));
+        recap.lastChild.appendChild(makeEl('span', 'info-value', item.coutEstime || '—'));
+        recap.appendChild(makeEl('div', 'info-item'));
+        recap.lastChild.appendChild(makeEl('span', 'info-label', 'Marge estimée actuelle'));
+        recap.lastChild.appendChild(makeEl('span', 'info-value', item.margeEstimee || '—'));
+        body.appendChild(recap);
+
+        body.appendChild(makeEl('p', 'modal-hint', 'Futur outil de calcul de marge : familles de coûts prévues.'));
+
+        var families = ['Coût de production', 'Coût de mise en service', 'Coût commercial', 'Coût de sous-traitance', 'Frais variables', 'Marge cible'];
+        var familyGrid = document.createElement('div');
+        familyGrid.className = 'info-grid';
+        familyGrid.style.marginTop = '10px';
+        families.forEach(function (family) {
+            var item2 = makeEl('div', 'info-item');
+            item2.appendChild(makeEl('span', 'info-label', family));
+            item2.appendChild(makeEl('span', 'info-value', 'À définir'));
+            familyGrid.appendChild(item2);
+        });
+        body.appendChild(familyGrid);
+
+        body.appendChild(makeEl('p', 'modal-hint', 'Aucun calcul réel, aucune formule et aucune saisie ne sont encore actifs. Cette modale montre uniquement la future direction fonctionnelle.'));
+
+        window.COCKPIT_MODAL.open({
+            title: 'Détail de marge à venir',
+            body: body,
+            footer: buildModalFooterButtons([makeCancelButton('Fermer', true)])
+        });
+    }
+
+    function openEditNoteModal(item) {
+        var body = document.createElement('div');
+        body.appendChild(makeEl('p', 'modal-text', 'Offre : ' + item.nom));
+
+        var label = makeEl('label', 'modal-label', 'Note interne');
+        label.setAttribute('for', 'edit-note-textarea');
+        body.appendChild(label);
+
+        var textarea = document.createElement('textarea');
+        textarea.id = 'edit-note-textarea';
+        textarea.className = 'modal-textarea';
+        textarea.rows = 4;
+        textarea.value = item.noteInterne || '';
+        textarea.setAttribute('data-modal-autofocus', 'true');
+        body.appendChild(textarea);
+
+        window.COCKPIT_MODAL.open({
+            title: 'Modifier la note interne',
+            body: body,
+            footer: buildModalFooterButtons([makeCancelButton('Annuler'), makeSaveButton('Enregistrer')])
+        });
+    }
+
+    function openFullHistoryModal(item) {
+        var body = document.createElement('div');
+        var events = item.historique || [];
+
+        if (events.length === 0) {
+            body.appendChild(makeEl('p', 'empty-state-inline', 'Aucun historique enregistré pour cette offre.'));
+        } else {
+            body.appendChild(buildHistoryList(events));
+        }
+
+        window.COCKPIT_MODAL.open({
+            title: 'Historique complet de l\'offre',
+            body: body,
+            footer: buildModalFooterButtons([makeCancelButton('Fermer', true)])
         });
     }
 
@@ -1653,7 +2146,10 @@ document.addEventListener('DOMContentLoaded', function () {
         var statusInfo = findLabel(window.COCKPIT_PRODUCT_STATUSES, item.statut);
         if (statusEl) {
             statusEl.textContent = statusInfo ? statusInfo.label : item.statut;
-            statusEl.className = 'badge ' + (statusInfo ? statusInfo.badgeClass : 'badge-neutral');
+            statusEl.className = 'badge badge-clickable ' + (statusInfo ? statusInfo.badgeClass : 'badge-neutral');
+            statusEl.onclick = function () {
+                openChangeStatusModal(item);
+            };
         }
 
         var formattedPrice = formatPrice(item.prixHT) + ' € HT';
@@ -1728,6 +2224,32 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         renderHistory(item.historique);
+
+        if (editBtn) {
+            editBtn.onclick = function () {
+                openEditOfferModal(item);
+            };
+        }
+        if (marginDetailBtn) {
+            marginDetailBtn.onclick = function () {
+                openMarginDetailModal(item);
+            };
+        }
+        if (paymentEditBtn) {
+            paymentEditBtn.onclick = function () {
+                openPaymentModalitiesModal(item);
+            };
+        }
+        if (noteEditBtn) {
+            noteEditBtn.onclick = function () {
+                openEditNoteModal(item);
+            };
+        }
+        if (historyViewBtn) {
+            historyViewBtn.onclick = function () {
+                openFullHistoryModal(item);
+            };
+        }
     }
 
     var params = new URLSearchParams(window.location.search);

@@ -95,7 +95,7 @@
                                 <div class="client-identity-heading">
                                     <h2 id="item-name">Élément sélectionné</h2>
                                     <span class="badge badge-neutral" id="item-type">—</span>
-                                    <span class="badge badge-neutral" id="item-status">—</span>
+                                    <button type="button" class="badge badge-clickable badge-neutral" id="item-status" title="Modifier le statut de l'offre" aria-label="Modifier le statut de l'offre">—</button>
                                 </div>
                                 <p class="client-identity-company" id="item-description-header">—</p>
                                 <div class="client-identity-meta">
@@ -111,7 +111,7 @@
                             </div>
                         </div>
                         <div class="client-identity-actions">
-                            <button type="button" class="btn-secondary btn-wip">Modifier</button>
+                            <button type="button" class="btn-secondary" id="item-edit-btn">Modifier</button>
                         </div>
                     </div>
 
@@ -146,6 +146,7 @@
                                 <h2>Marge estimée</h2>
                                 <p class="kpi-value" id="kpi-item-marge">—</p>
                                 <p class="kpi-variation status-neutral">Estimation indicative</p>
+                                <button type="button" class="kpi-detail-link" id="kpi-item-marge-detail">Voir le détail →</button>
                             </div>
                         </div>
                         <div class="dashboard-card kpi-card">
@@ -186,6 +187,9 @@
                         <div class="dashboard-block">
                             <div class="dashboard-block-header">
                                 <h2>Paramètres de vente</h2>
+                                <button type="button" class="block-icon-btn" id="item-payment-edit-btn" title="Modifier les modalités" aria-label="Modifier les modalités">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                                </button>
                             </div>
                             <div class="info-grid">
                                 <div class="info-item"><span class="info-label">Prix HT par défaut</span><span class="info-value" id="item-param-prix">—</span></div>
@@ -216,6 +220,9 @@
                         <div class="dashboard-block">
                             <div class="dashboard-block-header">
                                 <h2>Note interne</h2>
+                                <button type="button" class="block-icon-btn" id="item-note-edit-btn" title="Modifier la note" aria-label="Modifier la note">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                                </button>
                             </div>
                             <p class="modal-hint" id="item-note-meta">—</p>
                             <div class="note-card" style="margin-top: 10px;">
@@ -227,6 +234,9 @@
                     <div class="dashboard-block">
                         <div class="dashboard-block-header">
                             <h2>Historique de l'offre</h2>
+                            <button type="button" class="block-icon-btn" id="item-history-view-btn" title="Voir l'historique complet" aria-label="Voir l'historique complet">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            </button>
                         </div>
                         <div class="history-list" id="item-history-list"></div>
                     </div>
