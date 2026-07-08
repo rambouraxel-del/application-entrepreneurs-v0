@@ -44,8 +44,17 @@ Ce document regroupe les idées et pistes identifiées au fil du projet, non tra
 - Synchronisation bancaire (hors périmètre tant qu'une vraie base de données n'existe pas).
 
 ## Produits / Services
-- Page placeholder ajoutée à la navigation en V0.2 ; développement fonctionnel réel (vrai catalogue, création/modification) prévu en V0.8 sur la roadmap.
-- Gestion des stocks.
+- Page placeholder ajoutée à la navigation en V0.2 ; catalogue consultable (recherche, filtres, accès fiche) construit en V0.5.1.
+- Vraie création, modification et suppression de produits/services (bouton "Ajouter un produit / service" reste en Work in progress).
+- Fiche produit/service détaillée (V0.5.2, non cadrée) : description enrichie, historique d'utilisation dans les devis/factures, options avancées. La page `fiche-produit-service.html` créée en V0.5.1 n'est qu'un premier placeholder (nom, type, prix HT, TVA, statut).
+- **`PRODUCT_DETAILS` (V0.5.1) reste une source statique en mémoire**, limitée aux 8 éléments fictifs du catalogue : à remplacer par une vraie source de données le jour où le projet en aura une.
+- Catégories / familles de produits/services : volontairement absentes du tableau en V0.5.1 pour ne pas alourdir le catalogue ; à réévaluer plus tard si le volume le justifie.
+- Unités personnalisables, gestion des stocks.
+- Modalités de vente/paiement (comptant, plusieurs fois, récurrent) et notions de forfait/abonnement réel : à traiter plus tard, probablement dans la fiche produit/service (V0.5.2) ou dans la Facturation — volontairement écartées des "types" du catalogue (V0.5.1).
+- Vrai calcul de TVA (dépendant du type de société, du régime fiscal, des Paramètres), affichage d'un prix TTC : la TVA reste indicative en V0.5.1.
+- Calcul de marge, historique de ventes, statistiques de performance par produit/service.
+- Vraie intégration dans les devis/factures (lignes de devis/facture alimentées par le catalogue) : prévue une fois la Facturation construite (V0.6).
+- Tri et pagination du catalogue (non traités en V0.5.1, qui se limite à la recherche, aux filtres type/statut et au compteur).
 
 ## Finance
 - Page placeholder ajoutée à la navigation en V0.2 ; développement fonctionnel réel (bilan, compte de résultat, calculs) prévu en V0.9 sur la roadmap.

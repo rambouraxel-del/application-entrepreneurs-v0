@@ -48,7 +48,7 @@
             <header class="topbar">
                 <div class="topbar-greeting">
                     <h1>Produits / Services</h1>
-                    <p class="page-subtitle">Gérez votre catalogue de produits et services.</p>
+                    <p class="page-subtitle">Consultez, recherchez et filtrez les produits et services proposés par votre entreprise.</p>
                 </div>
                 <div class="topbar-actions">
                     <div class="topbar-search">
@@ -67,55 +67,102 @@
 
             <main class="page-content">
                 <div class="page-toolbar">
-                    <button type="button" class="btn-primary btn-wip">Ajouter un produit</button>
+                    <div class="search-bar page-toolbar-search">
+                        <span class="search-bar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg></span>
+                        <input type="text" id="products-search" placeholder="Rechercher un produit ou service...">
+                    </div>
+                    <div class="table-filters">
+                        <select id="products-type-filter" class="table-select" aria-label="Filtrer par type">
+                            <option value="">Tous les types</option>
+                        </select>
+                        <select id="products-status-filter" class="table-select" aria-label="Filtrer par statut">
+                            <option value="">Tous les statuts</option>
+                        </select>
+                        <button type="button" id="products-reset-filters" class="btn-secondary">Réinitialiser</button>
+                    </div>
+                    <button type="button" class="btn-primary btn-wip">Ajouter un produit / service</button>
                 </div>
 
-                <table class="data-table">
+                <p class="table-counter" id="products-counter"></p>
+
+                <table class="data-table" id="products-table">
                     <thead>
                         <tr>
                             <th>Nom</th>
                             <th>Type</th>
-                            <th>Prix</th>
-                            <th>Marge estimée</th>
-                            <th>Ventes</th>
+                            <th>Prix HT</th>
+                            <th>TVA par défaut</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>Prestation de conseil</td>
-                            <td>Service</td>
-                            <td>450 €</td>
-                            <td>68 %</td>
-                            <td>9</td>
+                        <tr data-type="service" data-status="actif" data-search="audit stratégique service actif 750 20">
+                            <td>Audit stratégique</td>
+                            <td><span class="badge badge-info">Service</span></td>
+                            <td>750 € HT</td>
+                            <td>20 %</td>
+                            <td><span class="badge badge-success">Actif</span></td>
+                            <td><a href="fiche-produit-service.html?item=audit-strategique" class="btn-table-action">Voir la fiche</a></td>
                         </tr>
-                        <tr>
-                            <td>Installation standard</td>
-                            <td>Service</td>
-                            <td>320 €</td>
-                            <td>45 %</td>
-                            <td>14</td>
+                        <tr data-type="service" data-status="actif" data-search="création site vitrine service actif 1800 20">
+                            <td>Création site vitrine</td>
+                            <td><span class="badge badge-info">Service</span></td>
+                            <td>1 800 € HT</td>
+                            <td>20 %</td>
+                            <td><span class="badge badge-success">Actif</span></td>
+                            <td><a href="fiche-produit-service.html?item=creation-site-vitrine" class="btn-table-action">Voir la fiche</a></td>
                         </tr>
-                        <tr>
-                            <td>Pack entretien annuel</td>
-                            <td>Produit</td>
-                            <td>180 €</td>
-                            <td>52 %</td>
-                            <td>6</td>
+                        <tr data-type="service" data-status="actif" data-search="maintenance mensuelle service actif 250 20">
+                            <td>Maintenance mensuelle</td>
+                            <td><span class="badge badge-info">Service</span></td>
+                            <td>250 € HT</td>
+                            <td>20 %</td>
+                            <td><span class="badge badge-success">Actif</span></td>
+                            <td><a href="fiche-produit-service.html?item=maintenance-mensuelle" class="btn-table-action">Voir la fiche</a></td>
                         </tr>
-                        <tr>
-                            <td>Accessoire complémentaire</td>
-                            <td>Produit</td>
-                            <td>35 €</td>
-                            <td>30 %</td>
-                            <td>22</td>
+                        <tr data-type="service" data-status="actif" data-search="formation personnalisée service actif 950 10">
+                            <td>Formation personnalisée</td>
+                            <td><span class="badge badge-info">Service</span></td>
+                            <td>950 € HT</td>
+                            <td>10 %</td>
+                            <td><span class="badge badge-success">Actif</span></td>
+                            <td><a href="fiche-produit-service.html?item=formation-personnalisee" class="btn-table-action">Voir la fiche</a></td>
+                        </tr>
+                        <tr data-type="service" data-status="brouillon" data-search="pack accompagnement dirigeant service brouillon 1200 20">
+                            <td>Pack accompagnement dirigeant</td>
+                            <td><span class="badge badge-info">Service</span></td>
+                            <td>1 200 € HT</td>
+                            <td>20 %</td>
+                            <td><span class="badge badge-warning">Brouillon</span></td>
+                            <td><a href="fiche-produit-service.html?item=pack-accompagnement-dirigeant" class="btn-table-action">Voir la fiche</a></td>
+                        </tr>
+                        <tr data-type="produit" data-status="actif" data-search="kit démarrage digital produit actif 129 20">
+                            <td>Kit de démarrage digital</td>
+                            <td><span class="badge badge-neutral">Produit</span></td>
+                            <td>129 € HT</td>
+                            <td>20 %</td>
+                            <td><span class="badge badge-success">Actif</span></td>
+                            <td><a href="fiche-produit-service.html?item=kit-demarrage-digital" class="btn-table-action">Voir la fiche</a></td>
+                        </tr>
+                        <tr data-type="produit" data-status="inactif" data-search="accessoire premium produit inactif 89 20">
+                            <td>Accessoire premium</td>
+                            <td><span class="badge badge-neutral">Produit</span></td>
+                            <td>89 € HT</td>
+                            <td>20 %</td>
+                            <td><span class="badge badge-neutral">Inactif</span></td>
+                            <td><a href="fiche-produit-service.html?item=accessoire-premium" class="btn-table-action">Voir la fiche</a></td>
+                        </tr>
+                        <tr data-type="service" data-status="archive" data-search="ancienne offre découverte service archivé 300 20">
+                            <td>Ancienne offre découverte</td>
+                            <td><span class="badge badge-info">Service</span></td>
+                            <td>300 € HT</td>
+                            <td>20 %</td>
+                            <td><span class="badge badge-info">Archivé</span></td>
+                            <td><a href="fiche-produit-service.html?item=ancienne-offre-decouverte" class="btn-table-action">Voir la fiche</a></td>
                         </tr>
                     </tbody>
                 </table>
-
-                <div class="construction-banner">
-                    <span class="construction-banner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg></span>
-                    <p><strong>Module en construction.</strong> Cette page présente la future organisation du catalogue Produits / Services. Les données affichées sont fictives ; la création et la modification réelles d'un produit ou service seront développées dans une prochaine version.</p>
-                </div>
             </main>
         </div>
     </div>

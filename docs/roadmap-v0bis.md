@@ -14,12 +14,14 @@ Cette roadmap présente les phases prévues après la V0 initiale (livrée à l'
 | V0.4.1 | Liste clients CRM : recherche, filtre par statut, accès fiche client | Validée |
 | V0.4.2 | Fiche client CRM complète, visuelle et ergonomique | Validée |
 | V0.4.2.1 | Ajustements UX de la fiche client (correction intégrée à la V0.4.2 avant sa validation finale) | Validée |
-| V0.4.3 | Interactions CRM préparatoires : modales placeholder (statut client, personnalisation des statuts, notes commerciales) | En cours |
-| V0.5 | Page Agenda | À venir |
-| V0.6 | Page Facturation | À venir |
+| V0.4.3 | Interactions CRM préparatoires : modales placeholder (statut client, personnalisation des statuts, notes commerciales) | Validée |
+| V0.4.3.1 | Ajustements de parcours (retour contextuel Agenda/Facturation, statut cliquable) | Validée |
+| V0.5.1 | Catalogue Produits / Services : recherche, filtres type/statut, accès fiche produit/service | En cours |
+| V0.6 | Page Facturation / Devis / Factures | À venir |
 | V0.7 | Page Trésorerie | À venir |
-| V0.8 | Produits / Services | À venir |
-| V0.9 | Finance | À venir |
+| V0.8 | Page Agenda | À venir |
+| V0.9 | Finance / Pilotage avancé | À venir |
+| V0.10 | Cohérence globale des parcours / Dashboard | À venir |
 | V1 | Version fonctionnelle stable | À venir |
 
 ## Principes
@@ -39,3 +41,11 @@ Le module **Statistiques / Pilotage** n'est volontairement pas ajouté à la sid
 ## Précision importante — découpage de la V0.4
 
 La V0.4 (Clients / fiche client / socle CRM) est découpée en trois sous-versions plutôt que traitée en un seul bloc, la fiche client étant centrale pour construire un vrai CRM : **V0.4.1** pose la liste Clients améliorée (recherche, filtre, accès à la fiche) ; **V0.4.2** construit la fiche client complète (historique, rendez-vous, devis, factures, notes) ; **V0.4.3** ajoute des interactions préparatoires sous forme de modales placeholder (changement de statut, personnalisation des statuts, gestion des notes) — aucune de ces actions ne modifie durablement les données ; la vraie logique (persistance, CRUD réel) reste à construire dans une phase ultérieure.
+
+## Précision importante — réordonnancement V0.5 à V0.10
+
+L'ordre initial des phases après la V0.4 (Agenda en V0.5, Facturation en V0.6, Trésorerie en V0.7, Produits/Services en V0.8, Finance en V0.9) a été révisé par le chef de projet : **Produits / Services passe désormais en V0.5**, avant Facturation, Trésorerie et Agenda, car il constitue le référentiel de ce que l'entreprise vend — les produits et services alimenteront plus tard les lignes de devis et factures, il est donc logique de le construire avant le module Facturation. L'ordre devient : V0.5 Produits/Services, V0.6 Facturation, V0.7 Trésorerie, V0.8 Agenda, V0.9 Finance/Pilotage avancé, V0.10 Cohérence globale des parcours/Dashboard. Comme précisé au principe général de cette roadmap, cet ordre reste indicatif et pourra être réévalué selon les priorités du chef de projet.
+
+## Précision importante — découpage de la V0.5
+
+Comme pour la V0.4, la V0.5 (Produits / Services) est découpée en sous-versions plutôt que traitée en un seul bloc : **V0.5.1** construit le catalogue Produits / Services (recherche, filtres type/statut, compteur, accès à une fiche produit/service placeholder) sur le même principe que la V0.4.1 pour les clients. La fiche produit/service détaillée (description enrichie, historique d'utilisation dans les devis/factures, options avancées) sera construite dans une sous-version ultérieure (V0.5.2), non encore cadrée.

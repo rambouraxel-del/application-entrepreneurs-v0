@@ -646,7 +646,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         var select = document.createElement('select');
         select.id = 'status-modal-select';
-        select.className = 'clients-status-select modal-select';
+        select.className = 'table-select modal-select';
         select.setAttribute('data-modal-autofocus', 'true');
         (window.COCKPIT_CLIENT_STATUSES || []).forEach(function (status) {
             var option = document.createElement('option');
@@ -1216,4 +1216,184 @@ document.addEventListener('DOMContentLoaded', function () {
     link.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg> ' + label;
 
     pageContent.insertBefore(link, pageContent.firstChild);
+})();
+
+// Page Produits / Services : catalogue avec recherche, filtres type/statut et
+// compteur dynamique (V0.5.1). PRODUCT_TYPES, PRODUCT_STATUSES et
+// PRODUCT_DETAILS sont les seules sources à modifier pour faire évoluer le
+// référentiel produits/services ; PRODUCT_DETAILS prépare la fiche détaillée
+// de la V0.5.2 sans la construire ici.
+
+(function () {
+    var PRODUCT_TYPES = [
+        { value: 'produit', label: 'Produit', badgeClass: 'badge-neutral' },
+        { value: 'service', label: 'Service', badgeClass: 'badge-info' }
+    ];
+
+    var PRODUCT_STATUSES = [
+        { value: 'actif', label: 'Actif', badgeClass: 'badge-success' },
+        { value: 'brouillon', label: 'Brouillon', badgeClass: 'badge-warning' },
+        { value: 'inactif', label: 'Inactif', badgeClass: 'badge-neutral' },
+        { value: 'archive', label: 'Archivé', badgeClass: 'badge-info' }
+    ];
+
+    var PRODUCT_DETAILS = {
+        'audit-strategique': { nom: 'Audit stratégique', type: 'service', prixHT: 750, tva: 20, statut: 'actif' },
+        'creation-site-vitrine': { nom: 'Création site vitrine', type: 'service', prixHT: 1800, tva: 20, statut: 'actif' },
+        'maintenance-mensuelle': { nom: 'Maintenance mensuelle', type: 'service', prixHT: 250, tva: 20, statut: 'actif' },
+        'formation-personnalisee': { nom: 'Formation personnalisée', type: 'service', prixHT: 950, tva: 10, statut: 'actif' },
+        'pack-accompagnement-dirigeant': { nom: 'Pack accompagnement dirigeant', type: 'service', prixHT: 1200, tva: 20, statut: 'brouillon' },
+        'kit-demarrage-digital': { nom: 'Kit de démarrage digital', type: 'produit', prixHT: 129, tva: 20, statut: 'actif' },
+        'accessoire-premium': { nom: 'Accessoire premium', type: 'produit', prixHT: 89, tva: 20, statut: 'inactif' },
+        'ancienne-offre-decouverte': { nom: 'Ancienne offre découverte', type: 'service', prixHT: 300, tva: 20, statut: 'archive' }
+    };
+
+    window.COCKPIT_PRODUCT_TYPES = PRODUCT_TYPES;
+    window.COCKPIT_PRODUCT_STATUSES = PRODUCT_STATUSES;
+    window.COCKPIT_PRODUCT_DETAILS = PRODUCT_DETAILS;
+
+    var table = document.getElementById('products-table');
+    var searchInput = document.getElementById('products-search');
+    var typeFilter = document.getElementById('products-type-filter');
+    var statusFilter = document.getElementById('products-status-filter');
+    var resetButton = document.getElementById('products-reset-filters');
+    var counter = document.getElementById('products-counter');
+
+    if (!table || !searchInput || !typeFilter || !statusFilter || !counter) {
+        return;
+    }
+
+    PRODUCT_TYPES.forEach(function (type) {
+        var option = document.createElement('option');
+        option.value = type.value;
+        option.textContent = type.label;
+        typeFilter.appendChild(option);
+    });
+
+    PRODUCT_STATUSES.forEach(function (status) {
+        var option = document.createElement('option');
+        option.value = status.value;
+        option.textContent = status.label;
+        statusFilter.appendChild(option);
+    });
+
+    var rows = table.querySelectorAll('tbody tr');
+    var totalCount = rows.length;
+
+    function updateCounter(visibleCount) {
+        var suffix = visibleCount > 1 ? 's' : '';
+        counter.textContent = visibleCount + ' élément' + suffix + ' affiché' + suffix + ' sur ' + totalCount;
+    }
+
+    function applyFilters() {
+        var searchValue = searchInput.value.trim().toLowerCase();
+        var typeValue = typeFilter.value;
+        var statusValue = statusFilter.value;
+        var visibleCount = 0;
+
+        rows.forEach(function (row) {
+            var matchesSearch = !searchValue || (row.dataset.search || '').indexOf(searchValue) !== -1;
+            var matchesType = !typeValue || row.dataset.type === typeValue;
+            var matchesStatus = !statusValue || row.dataset.status === statusValue;
+            var visible = matchesSearch && matchesType && matchesStatus;
+            row.style.display = visible ? '' : 'none';
+            if (visible) {
+                visibleCount++;
+            }
+        });
+
+        updateCounter(visibleCount);
+    }
+
+    searchInput.addEventListener('input', applyFilters);
+    typeFilter.addEventListener('change', applyFilters);
+    statusFilter.addEventListener('change', applyFilters);
+
+    if (resetButton) {
+        resetButton.addEventListener('click', function () {
+            searchInput.value = '';
+            typeFilter.value = '';
+            statusFilter.value = '';
+            applyFilters();
+        });
+    }
+
+    applyFilters();
+})();
+
+// Page Fiche produit / service : première page placeholder à partir de
+// données statiques (V0.5.1). La fiche détaillée (description, historique
+// d'utilisation dans les devis/factures, options avancées) sera construite
+// en V0.5.2 ; cette page ne fait qu'afficher les informations déjà connues
+// depuis le catalogue.
+
+(function () {
+    var nameEl = document.getElementById('item-name');
+    if (!nameEl) {
+        return;
+    }
+
+    var notFoundEl = document.getElementById('item-not-found');
+    var contentEl = document.getElementById('item-profile-content');
+    var statusEl = document.getElementById('item-status');
+    var typeEl = document.getElementById('item-type');
+    var priceEl = document.getElementById('item-price');
+    var vatEl = document.getElementById('item-vat');
+
+    function findLabel(list, value) {
+        var match = (list || []).filter(function (entry) {
+            return entry.value === value;
+        })[0];
+        return match || null;
+    }
+
+    function formatPrice(value) {
+        return String(value).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    }
+
+    function renderItem(slug) {
+        var details = window.COCKPIT_PRODUCT_DETAILS || {};
+        var item = slug ? details[slug] : null;
+
+        if (!item) {
+            if (notFoundEl) {
+                notFoundEl.style.display = '';
+            }
+            if (contentEl) {
+                contentEl.style.display = 'none';
+            }
+            return;
+        }
+
+        if (notFoundEl) {
+            notFoundEl.style.display = 'none';
+        }
+        if (contentEl) {
+            contentEl.style.display = '';
+        }
+
+        nameEl.textContent = item.nom;
+
+        var typeInfo = findLabel(window.COCKPIT_PRODUCT_TYPES, item.type);
+        if (typeEl) {
+            typeEl.textContent = typeInfo ? typeInfo.label : item.type;
+            typeEl.className = 'badge ' + (typeInfo ? typeInfo.badgeClass : 'badge-neutral');
+        }
+
+        var statusInfo = findLabel(window.COCKPIT_PRODUCT_STATUSES, item.statut);
+        if (statusEl) {
+            statusEl.textContent = statusInfo ? statusInfo.label : item.statut;
+            statusEl.className = 'badge ' + (statusInfo ? statusInfo.badgeClass : 'badge-neutral');
+        }
+
+        if (priceEl) {
+            priceEl.textContent = formatPrice(item.prixHT) + ' € HT';
+        }
+        if (vatEl) {
+            vatEl.textContent = item.tva + ' %';
+        }
+    }
+
+    var params = new URLSearchParams(window.location.search);
+    renderItem(params.get('item'));
 })();

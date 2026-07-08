@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Clients — Cockpit Entrepreneur</title>
+    <title>Fiche produit / service — Cockpit Entrepreneur</title>
     <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
@@ -17,7 +17,7 @@
                     <span class="sidebar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg></span>
                     <span>Tableau de bord</span>
                 </a>
-                <a href="clients.html" class="sidebar-link sidebar-link-active">
+                <a href="clients.html" class="sidebar-link">
                     <span class="sidebar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path><circle cx="10" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></span>
                     <span>Clients</span>
                 </a>
@@ -33,7 +33,7 @@
                     <span class="sidebar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4z"></path></svg></span>
                     <span>Trésorerie</span>
                 </a>
-                <a href="produits-services.html" class="sidebar-link">
+                <a href="produits-services.html" class="sidebar-link sidebar-link-active">
                     <span class="sidebar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg></span>
                     <span>Produits / Services</span>
                 </a>
@@ -47,8 +47,8 @@
         <div class="main">
             <header class="topbar">
                 <div class="topbar-greeting">
-                    <h1>Clients</h1>
-                    <p class="page-subtitle">Retrouvez et gérez l'ensemble de vos clients.</p>
+                    <h1>Fiche produit / service</h1>
+                    <p class="page-subtitle">Consultez les informations essentielles de cet élément du catalogue.</p>
                 </div>
                 <div class="topbar-actions">
                     <div class="topbar-search">
@@ -66,91 +66,56 @@
             </header>
 
             <main class="page-content">
-                <div class="page-toolbar">
-                    <div class="search-bar page-toolbar-search">
-                        <span class="search-bar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg></span>
-                        <input type="text" id="clients-search" placeholder="Rechercher un client...">
-                    </div>
-                    <div class="table-filters">
-                        <select id="clients-status-filter" class="table-select" aria-label="Filtrer par statut">
-                            <option value="">Tous les statuts</option>
-                        </select>
-                        <button type="button" id="clients-reset-filters" class="btn-secondary">Réinitialiser</button>
-                    </div>
-                    <button type="button" class="btn-primary btn-wip">Ajouter un client</button>
+                <div class="fiche-top-row">
+                    <nav class="breadcrumb" aria-label="Fil d'Ariane">
+                        <a href="produits-services.html">Produits / Services</a>
+                        <span>›</span>
+                        <span class="breadcrumb-current">Fiche produit / service</span>
+                    </nav>
+                    <a href="produits-services.html" class="fiche-back-link">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg>
+                        Retour au catalogue
+                    </a>
                 </div>
 
-                <p class="table-counter" id="clients-counter"></p>
+                <div id="item-not-found" class="empty-state" style="display: none;">
+                    <span class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path><line x1="8" y1="8" x2="14" y2="14"></line><line x1="14" y1="8" x2="8" y2="14"></line></svg></span>
+                    <h2>Produit ou service introuvable</h2>
+                    <p>Aucun élément du catalogue ne correspond à ce lien. Il a peut-être été supprimé, ou l'adresse est incorrecte.</p>
+                    <a href="produits-services.html" class="btn-secondary">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg>
+                        Retour au catalogue
+                    </a>
+                </div>
 
-                <table class="data-table" id="clients-table">
-                    <thead>
-                        <tr>
-                            <th>Nom</th>
-                            <th>Entreprise</th>
-                            <th>Téléphone</th>
-                            <th>E-mail</th>
-                            <th>Dernier contact</th>
-                            <th>Statut</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr data-status="client-actif" data-search="martin dupont 01 23 45 67 89 martin.dupont@example.com">
-                            <td>Martin Dupont</td>
-                            <td>—</td>
-                            <td>01 23 45 67 89</td>
-                            <td>martin.dupont@example.com</td>
-                            <td>02/07/2026</td>
-                            <td><span class="badge badge-success">Client actif</span></td>
-                            <td><a href="fiche-client.html?client=martin-dupont" class="btn-table-action">Voir la fiche</a></td>
-                        </tr>
-                        <tr data-status="fidele" data-search="sophie bernard 02 34 56 78 90 sophie.bernard@example.com">
-                            <td>Sophie Bernard</td>
-                            <td>—</td>
-                            <td>02 34 56 78 90</td>
-                            <td>sophie.bernard@example.com</td>
-                            <td>28/06/2026</td>
-                            <td><span class="badge badge-info">Fidèle</span></td>
-                            <td><a href="fiche-client.html?client=sophie-bernard" class="btn-table-action">Voir la fiche</a></td>
-                        </tr>
-                        <tr data-status="a-relancer" data-search="atelier leroy 03 45 67 89 01 contact@atelierleroy.example.com">
-                            <td>Atelier Leroy</td>
-                            <td>Atelier Leroy</td>
-                            <td>03 45 67 89 01</td>
-                            <td>contact@atelierleroy.example.com</td>
-                            <td>15/06/2026</td>
-                            <td><span class="badge badge-warning">À relancer</span></td>
-                            <td><a href="fiche-client.html?client=atelier-leroy" class="btn-table-action">Voir la fiche</a></td>
-                        </tr>
-                        <tr data-status="inactif" data-search="boucherie morel 04 56 78 90 12 contact@boucheriemorel.example.com">
-                            <td>Boucherie Morel</td>
-                            <td>Boucherie Morel</td>
-                            <td>04 56 78 90 12</td>
-                            <td>contact@boucheriemorel.example.com</td>
-                            <td>01/06/2026</td>
-                            <td><span class="badge badge-neutral">Inactif</span></td>
-                            <td><a href="fiche-client.html?client=boucherie-morel" class="btn-table-action">Voir la fiche</a></td>
-                        </tr>
-                        <tr data-status="prospect" data-search="julien petit 05 67 89 01 23 julien.petit@example.com">
-                            <td>Julien Petit</td>
-                            <td>—</td>
-                            <td>05 67 89 01 23</td>
-                            <td>julien.petit@example.com</td>
-                            <td>20/06/2026</td>
-                            <td><span class="badge badge-neutral">Prospect</span></td>
-                            <td><a href="fiche-client.html?client=julien-petit" class="btn-table-action">Voir la fiche</a></td>
-                        </tr>
-                        <tr data-status="litige" data-search="techni-bois sarl 06 78 90 12 34 contact@technibois.example.com">
-                            <td>Techni-Bois SARL</td>
-                            <td>Techni-Bois SARL</td>
-                            <td>06 78 90 12 34</td>
-                            <td>contact@technibois.example.com</td>
-                            <td>10/06/2026</td>
-                            <td><span class="badge badge-danger">Litige</span></td>
-                            <td><a href="fiche-client.html?client=techni-bois-sarl" class="btn-table-action">Voir la fiche</a></td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div id="item-profile-content">
+                    <div class="client-identity-card">
+                        <div class="client-identity-main">
+                            <div class="client-identity-body">
+                                <div class="client-identity-heading">
+                                    <h2 id="item-name">Élément sélectionné</h2>
+                                    <span class="badge badge-neutral" id="item-status">—</span>
+                                </div>
+                                <div class="client-identity-meta">
+                                    <span class="client-identity-meta-item">
+                                        Type <span class="badge badge-neutral" id="item-type">—</span>
+                                    </span>
+                                    <span class="client-identity-meta-item">
+                                        Prix HT <span id="item-price">—</span>
+                                    </span>
+                                    <span class="client-identity-meta-item">
+                                        TVA par défaut <span id="item-vat">—</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="construction-banner">
+                        <span class="construction-banner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg></span>
+                        <p><strong>Fiche en construction.</strong> Cette fiche produit / service sera enrichie en V0.5.2 (description détaillée, historique d'utilisation dans les devis et factures, options avancées). Les informations affichées ici sont indicatives et statiques.</p>
+                    </div>
+                </div>
             </main>
         </div>
     </div>
