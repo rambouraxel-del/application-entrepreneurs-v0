@@ -83,7 +83,19 @@
                     <button type="button" class="btn-primary" id="products-add-btn">Ajouter un produit / service</button>
                 </div>
 
-                <p class="table-counter" id="products-counter"></p>
+                <div class="list-pagination-bar">
+                    <p class="table-counter" id="products-counter"></p>
+                    <div class="pagination-controls">
+                        <select id="products-page-size" class="table-select" aria-label="Éléments par page">
+                            <option value="5">Afficher 5</option>
+                            <option value="10">Afficher 10</option>
+                            <option value="25">Afficher 25</option>
+                        </select>
+                        <button type="button" class="btn-secondary" id="products-prev-page" aria-label="Page précédente">Précédent</button>
+                        <span class="pagination-page-indicator" id="products-page-indicator">Page 1 sur 1</span>
+                        <button type="button" class="btn-secondary" id="products-next-page" aria-label="Page suivante">Suivant</button>
+                    </div>
+                </div>
 
                 <table class="data-table" id="products-table">
                     <thead>

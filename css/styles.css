@@ -141,6 +141,12 @@ svg {
     background-color: var(--color-primary-soft);
 }
 
+.btn-secondary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #ffffff;
+}
+
 .login-link {
     display: inline-block;
     margin-top: 20px;
@@ -1036,6 +1042,32 @@ svg {
     margin: 0 0 16px;
     font-size: 13px;
     color: var(--color-text-secondary);
+}
+
+.list-pagination-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.list-pagination-bar .table-counter {
+    margin: 0;
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.pagination-page-indicator {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    white-space: nowrap;
 }
 
 .btn-table-action {

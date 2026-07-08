@@ -204,7 +204,118 @@ document.addEventListener('DOMContentLoaded', function () {
     window.COCKPIT_MODAL = { open: open, close: close };
 })();
 
-// Page Clients : recherche, filtre par statut et compteur dynamique (V0.4.1)
+// Pagination générique de listes (V0.5.4)
+// Réutilisable par n'importe quelle page listant des lignes de tableau
+// (Clients, Produits/Services, et les futures listes Devis/Factures/Trésorerie
+// en V0.6+). Le helper ignore tout des filtres métier : chaque page lui fournit
+// ses propres éléments DOM et une fonction matchRow(row, searchValue) qui
+// referme sur ses filtres spécifiques (un seul filtre statut pour Clients,
+// deux filtres type+statut pour Produits/Services, etc.).
+
+(function () {
+    function init(config) {
+        var currentPage = 1;
+
+        function getPageSize() {
+            var value = parseInt(config.pageSizeSelect.value, 10);
+            return value > 0 ? value : 5;
+        }
+
+        function render() {
+            var searchValue = config.searchInput.value.trim().toLowerCase();
+            var filtered = config.rows.filter(function (row) {
+                return config.matchRow(row, searchValue);
+            });
+
+            var pageSize = getPageSize();
+            var totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+            if (currentPage > totalPages) {
+                currentPage = totalPages;
+            }
+            if (currentPage < 1) {
+                currentPage = 1;
+            }
+
+            var start = (currentPage - 1) * pageSize;
+            var pageRows = filtered.slice(start, start + pageSize);
+
+            config.rows.forEach(function (row) {
+                row.style.display = pageRows.indexOf(row) !== -1 ? '' : 'none';
+            });
+
+            if (filtered.length === 0) {
+                config.counterEl.textContent = config.labelEmpty;
+            } else {
+                var rangeStart = start + 1;
+                var rangeEnd = Math.min(start + pageSize, filtered.length);
+                var label = filtered.length > 1 ? config.labelPlural : config.labelSingular;
+                config.counterEl.textContent = rangeStart + '–' + rangeEnd + ' sur ' + filtered.length + ' ' + label;
+            }
+
+            if (config.pageIndicatorEl) {
+                config.pageIndicatorEl.textContent = 'Page ' + currentPage + ' sur ' + totalPages;
+            }
+            if (config.prevButton) {
+                config.prevButton.disabled = currentPage <= 1;
+            }
+            if (config.nextButton) {
+                config.nextButton.disabled = currentPage >= totalPages;
+            }
+        }
+
+        config.searchInput.addEventListener('input', function () {
+            currentPage = 1;
+            render();
+        });
+
+        (config.filterSelects || []).forEach(function (select) {
+            select.addEventListener('change', function () {
+                currentPage = 1;
+                render();
+            });
+        });
+
+        config.pageSizeSelect.addEventListener('change', function () {
+            currentPage = 1;
+            render();
+        });
+
+        if (config.prevButton) {
+            config.prevButton.addEventListener('click', function () {
+                if (currentPage > 1) {
+                    currentPage--;
+                    render();
+                }
+            });
+        }
+
+        if (config.nextButton) {
+            config.nextButton.addEventListener('click', function () {
+                currentPage++;
+                render();
+            });
+        }
+
+        if (config.resetButton) {
+            config.resetButton.addEventListener('click', function () {
+                config.searchInput.value = '';
+                (config.filterSelects || []).forEach(function (select) {
+                    select.value = '';
+                });
+                config.pageSizeSelect.value = '5';
+                currentPage = 1;
+                render();
+            });
+        }
+
+        render();
+    }
+
+    window.COCKPIT_LIST_PAGINATION = { init: init };
+})();
+
+// Page Clients : recherche, filtre par statut, pagination et compteur
+// enrichi (V0.4.1, pagination ajoutée en V0.5.4 via COCKPIT_LIST_PAGINATION).
 // La liste des statuts est centralisée ici : c'est la seule source à modifier
 // pour faire évoluer les statuts disponibles (préparation de la V0.4.3).
 
@@ -225,8 +336,12 @@ document.addEventListener('DOMContentLoaded', function () {
     var statusFilter = document.getElementById('clients-status-filter');
     var resetButton = document.getElementById('clients-reset-filters');
     var counter = document.getElementById('clients-counter');
+    var pageSizeSelect = document.getElementById('clients-page-size');
+    var prevButton = document.getElementById('clients-prev-page');
+    var nextButton = document.getElementById('clients-next-page');
+    var pageIndicator = document.getElementById('clients-page-indicator');
 
-    if (!table || !searchInput || !statusFilter || !counter) {
+    if (!table || !searchInput || !statusFilter || !counter || !pageSizeSelect) {
         return;
     }
 
@@ -237,44 +352,27 @@ document.addEventListener('DOMContentLoaded', function () {
         statusFilter.appendChild(option);
     });
 
-    var rows = table.querySelectorAll('tbody tr');
-    var totalCount = rows.length;
+    var rows = Array.prototype.slice.call(table.querySelectorAll('tbody tr'));
 
-    function updateCounter(visibleCount) {
-        var suffix = visibleCount > 1 ? 's' : '';
-        counter.textContent = visibleCount + ' client' + suffix + ' affiché' + suffix + ' sur ' + totalCount;
-    }
-
-    function applyFilters() {
-        var searchValue = searchInput.value.trim().toLowerCase();
-        var statusValue = statusFilter.value;
-        var visibleCount = 0;
-
-        rows.forEach(function (row) {
+    window.COCKPIT_LIST_PAGINATION.init({
+        rows: rows,
+        searchInput: searchInput,
+        filterSelects: [statusFilter],
+        resetButton: resetButton,
+        counterEl: counter,
+        pageSizeSelect: pageSizeSelect,
+        prevButton: prevButton,
+        nextButton: nextButton,
+        pageIndicatorEl: pageIndicator,
+        labelSingular: 'client',
+        labelPlural: 'clients',
+        labelEmpty: 'Aucun client trouvé',
+        matchRow: function (row, searchValue) {
             var matchesSearch = !searchValue || (row.dataset.search || '').indexOf(searchValue) !== -1;
-            var matchesStatus = !statusValue || row.dataset.status === statusValue;
-            var visible = matchesSearch && matchesStatus;
-            row.style.display = visible ? '' : 'none';
-            if (visible) {
-                visibleCount++;
-            }
-        });
-
-        updateCounter(visibleCount);
-    }
-
-    searchInput.addEventListener('input', applyFilters);
-    statusFilter.addEventListener('change', applyFilters);
-
-    if (resetButton) {
-        resetButton.addEventListener('click', function () {
-            searchInput.value = '';
-            statusFilter.value = '';
-            applyFilters();
-        });
-    }
-
-    applyFilters();
+            var matchesStatus = !statusFilter.value || row.dataset.status === statusFilter.value;
+            return matchesSearch && matchesStatus;
+        }
+    });
 })();
 
 // Page Fiche client : fiche CRM complète à partir de données statiques (V0.4.2)
@@ -1603,8 +1701,12 @@ document.addEventListener('DOMContentLoaded', function () {
     var statusFilter = document.getElementById('products-status-filter');
     var resetButton = document.getElementById('products-reset-filters');
     var counter = document.getElementById('products-counter');
+    var pageSizeSelect = document.getElementById('products-page-size');
+    var prevButton = document.getElementById('products-prev-page');
+    var nextButton = document.getElementById('products-next-page');
+    var pageIndicator = document.getElementById('products-page-indicator');
 
-    if (!table || !searchInput || !typeFilter || !statusFilter || !counter) {
+    if (!table || !searchInput || !typeFilter || !statusFilter || !counter || !pageSizeSelect) {
         return;
     }
 
@@ -1622,48 +1724,28 @@ document.addEventListener('DOMContentLoaded', function () {
         statusFilter.appendChild(option);
     });
 
-    var rows = table.querySelectorAll('tbody tr');
-    var totalCount = rows.length;
+    var rows = Array.prototype.slice.call(table.querySelectorAll('tbody tr'));
 
-    function updateCounter(visibleCount) {
-        var suffix = visibleCount > 1 ? 's' : '';
-        counter.textContent = visibleCount + ' élément' + suffix + ' affiché' + suffix + ' sur ' + totalCount;
-    }
-
-    function applyFilters() {
-        var searchValue = searchInput.value.trim().toLowerCase();
-        var typeValue = typeFilter.value;
-        var statusValue = statusFilter.value;
-        var visibleCount = 0;
-
-        rows.forEach(function (row) {
+    window.COCKPIT_LIST_PAGINATION.init({
+        rows: rows,
+        searchInput: searchInput,
+        filterSelects: [typeFilter, statusFilter],
+        resetButton: resetButton,
+        counterEl: counter,
+        pageSizeSelect: pageSizeSelect,
+        prevButton: prevButton,
+        nextButton: nextButton,
+        pageIndicatorEl: pageIndicator,
+        labelSingular: 'élément',
+        labelPlural: 'éléments',
+        labelEmpty: 'Aucun produit ou service trouvé',
+        matchRow: function (row, searchValue) {
             var matchesSearch = !searchValue || (row.dataset.search || '').indexOf(searchValue) !== -1;
-            var matchesType = !typeValue || row.dataset.type === typeValue;
-            var matchesStatus = !statusValue || row.dataset.status === statusValue;
-            var visible = matchesSearch && matchesType && matchesStatus;
-            row.style.display = visible ? '' : 'none';
-            if (visible) {
-                visibleCount++;
-            }
-        });
-
-        updateCounter(visibleCount);
-    }
-
-    searchInput.addEventListener('input', applyFilters);
-    typeFilter.addEventListener('change', applyFilters);
-    statusFilter.addEventListener('change', applyFilters);
-
-    if (resetButton) {
-        resetButton.addEventListener('click', function () {
-            searchInput.value = '';
-            typeFilter.value = '';
-            statusFilter.value = '';
-            applyFilters();
-        });
-    }
-
-    applyFilters();
+            var matchesType = !typeFilter.value || row.dataset.type === typeFilter.value;
+            var matchesStatus = !statusFilter.value || row.dataset.status === statusFilter.value;
+            return matchesSearch && matchesType && matchesStatus;
+        }
+    });
 })();
 
 // Page Fiche produit / service : fiche complète à partir de données statiques

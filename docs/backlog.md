@@ -19,7 +19,8 @@ Ce document regroupe les idées et pistes identifiées au fil du projet, non tra
 - Création, modification et suppression réelles de clients (bouton "Ajouter un client" et "Modifier" toujours en Work in progress).
 - **Vrai changement de statut persistant** : la modale "Modifier le statut client" (V0.4.3) ouvre un vrai sélecteur, mais "Enregistrer" ne modifie rien durablement (ferme la modale + Work in progress).
 - **Vraie personnalisation des statuts** (ajout/modification/suppression) : la modale "Personnaliser les statuts clients" (V0.4.3) est un placeholder visuel complet (liste, icônes, bouton "Ajouter un statut") sans aucune logique réelle. La liste actuelle (Prospect, Client actif, À relancer, Inactif, Fidèle, Litige) reste centralisée dans `js/app.js` (`CLIENT_STATUSES`, exposée via `window.COCKPIT_CLIENT_STATUSES`).
-- Tri et pagination de la liste clients (non traités en V0.4.1/V0.4.2/V0.4.3, qui se limitent à la recherche, au filtre par statut et au compteur).
+- Tri des colonnes de la liste clients (non traité ; pagination ajoutée en V0.5.4 via `window.COCKPIT_LIST_PAGINATION`).
+- **Sauvegarde du nombre d'éléments par page choisi (V0.5.4)** : le sélecteur "Afficher X" repart toujours à 5 au rechargement de la page, aucune préférence n'est mémorisée (pas de `localStorage`, hors périmètre V0).
 - **`CLIENT_DETAILS` (V0.4.2, étendu en V0.4.3 avec `notesArchive`) reste une source statique en mémoire** : à remplacer par une vraie source de données (backend) le jour où le projet en aura une. Actuellement limitée aux 6 clients déjà présents dans `clients.html`.
 - Personnalisation réelle des champs du bloc Informations client (icône "Personnaliser les champs" en Work in progress depuis la V0.4.2).
 - **Vraie création/édition/suppression de notes commerciales** : les modales "Ajouter une note"/"Modifier la note"/"Supprimer cette note ?" (V0.4.3) s'ouvrent réellement (textarea pré-rempli pour l'édition, extrait pour la suppression) mais aucune validation n'est persistée. La modale "Toutes les notes commerciales" reste en lecture seule (pas d'icônes modifier/supprimer sur les notes archivées).
@@ -29,6 +30,7 @@ Ce document regroupe les idées et pistes identifiées au fil du projet, non tra
 - Vrai menu d'actions pour le bouton "…" de la fiche client (aucun composant de menu contextuel dans le projet à ce jour).
 - Vrai ciblage d'un rendez-vous précis dans l'agenda (le lien `agenda.html?rdv=<id>` ajouté en V0.4.2.1 n'est pas encore lu par `agenda.html`).
 - Le moteur de modale générique (`COCKPIT_MODAL`, V0.4.3) est réutilisable par d'autres pages si un besoin de modale apparaît ailleurs dans l'application.
+- Le helper de pagination générique (`COCKPIT_LIST_PAGINATION`, V0.5.4) est réutilisable tel quel pour toute future liste tabulaire (Devis/Factures en V0.6, Trésorerie en V0.7...) : il suffit de lui fournir les lignes, les champs de recherche/filtre/pagination et une fonction `matchRow` propre à la page.
 
 ## Agenda
 - Vraie gestion des rendez-vous (création, modification, suppression).
@@ -44,7 +46,7 @@ Ce document regroupe les idées et pistes identifiées au fil du projet, non tra
 - Synchronisation bancaire (hors périmètre tant qu'une vraie base de données n'existe pas).
 
 ## Produits / Services
-- Page placeholder ajoutée à la navigation en V0.2 ; catalogue consultable (recherche, filtres, accès fiche) construit en V0.5.1 ; fiche produit/service complète construite en V0.5.2 ; interactions préparatoires (modales) ajoutées en V0.5.3, corrigées et enrichies en V0.5.3.1 (bloc Coûts & marge, historique enrichi, badge Type cliquable, modifications bloc par bloc).
+- Page placeholder ajoutée à la navigation en V0.2 ; catalogue consultable (recherche, filtres, accès fiche) construit en V0.5.1 ; fiche produit/service complète construite en V0.5.2 ; interactions préparatoires (modales) ajoutées en V0.5.3, corrigées et enrichies en V0.5.3.1 (bloc Coûts & marge, historique enrichi, badge Type cliquable, modifications bloc par bloc) ; pagination ajoutée en V0.5.4.
 - **Vraie création, modification et suppression de produits/services** : les modales "Ajouter un produit / service" (catalogue), "Changer le type"/"Changer le statut"/"Modifier le nom"/"Modifier la description commerciale"/"Modifier les paramètres de vente"/"Modifier la note interne"/"Ajouter un coût" (fiche) s'ouvrent et se pré-remplissent réellement, mais aucune validation n'est persistée (`PRODUCT_DETAILS` reste inchangé).
 - **`PRODUCT_DETAILS` (V0.5.1, enrichi en V0.5.2/V0.5.3/V0.5.3.1) reste une source statique en mémoire**, limitée aux 8 éléments fictifs du catalogue : à remplacer par une vraie source de données le jour où le projet en aura une.
 - Catégories / familles de produits/services : volontairement absentes du tableau en V0.5.1 pour ne pas alourdir le catalogue ; à réévaluer plus tard si le volume le justifie.
@@ -57,8 +59,8 @@ Ce document regroupe les idées et pistes identifiées au fil du projet, non tra
 - **Bloc "Utilisation future en facturation" supprimé en V0.5.3.1** (jugé trop déclaratif) : la préparation de la Facturation V0.6 repose désormais uniquement sur la structure des données (`PRODUCT_DETAILS`) et non plus sur un bloc dédié de la fiche ; à revoir lors de la construction réelle de la V0.6.
 - **"Sélectionnable en devis/facture" et le champ `STATUS_AVAILABILITY`** (introduits en V0.5.2 pour ce bloc, devenu obsolète) ne sont plus affichés nulle part depuis la V0.5.3.1, mais restent dans `js/app.js` pour alimenter la carte KPI "Statut d'utilisation" — à réévaluer si un jour ces deux notions doivent pouvoir diverger du statut brut.
 - **Vraie personnalisation des statuts, des types et des modalités de paiement** (ajout/modification/suppression des valeurs elles-mêmes) : contrairement à la fiche client (V0.4.3), aucune modale de personnalisation n'est proposée pour les produits/services — seule la sélection parmi les valeurs existantes est proposée.
-- **Pagination des listes Produits/Services et Clients** (sélecteur du nombre d'éléments par page, navigation Précédent/Suivant) : idée validée pour une version dédiée, volontairement non traitée en V0.5.3.1 car transversale à plusieurs listes.
-- Tri du catalogue (non traité, qui se limite à la recherche, aux filtres type/statut et au compteur).
+- Tri des colonnes du catalogue (non traité ; pagination ajoutée en V0.5.4 via `window.COCKPIT_LIST_PAGINATION`, partagé avec la liste Clients).
+- **Sauvegarde du nombre d'éléments par page choisi (V0.5.4)** : repart toujours à 5 au rechargement, aucune préférence n'est mémorisée (pas de `localStorage`).
 
 ## Finance
 - Page placeholder ajoutée à la navigation en V0.2 ; développement fonctionnel réel (bilan, compte de résultat, calculs) prévu en V0.9 sur la roadmap.

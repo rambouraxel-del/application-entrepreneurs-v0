@@ -80,7 +80,19 @@
                     <button type="button" class="btn-primary btn-wip">Ajouter un client</button>
                 </div>
 
-                <p class="table-counter" id="clients-counter"></p>
+                <div class="list-pagination-bar">
+                    <p class="table-counter" id="clients-counter"></p>
+                    <div class="pagination-controls">
+                        <select id="clients-page-size" class="table-select" aria-label="Éléments par page">
+                            <option value="5">Afficher 5</option>
+                            <option value="10">Afficher 10</option>
+                            <option value="25">Afficher 25</option>
+                        </select>
+                        <button type="button" class="btn-secondary" id="clients-prev-page" aria-label="Page précédente">Précédent</button>
+                        <span class="pagination-page-indicator" id="clients-page-indicator">Page 1 sur 1</span>
+                        <button type="button" class="btn-secondary" id="clients-next-page" aria-label="Page suivante">Suivant</button>
+                    </div>
+                </div>
 
                 <table class="data-table" id="clients-table">
                     <thead>
