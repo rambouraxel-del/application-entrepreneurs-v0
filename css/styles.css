@@ -1199,6 +1199,10 @@ svg {
     grid-template-columns: repeat(5, 1fr);
 }
 
+.kpis-5 {
+    grid-template-columns: repeat(5, 1fr);
+}
+
 .dashboard-block-actions {
     display: flex;
     align-items: center;
@@ -1280,6 +1284,32 @@ svg {
     font-size: 14px;
     color: var(--color-text);
     font-weight: 500;
+}
+
+.info-grid-wide {
+    grid-template-columns: 1fr;
+    gap: 16px;
+}
+
+.info-grid-wide .info-value {
+    font-weight: 400;
+    line-height: 1.5;
+}
+
+.simple-list {
+    margin: 0;
+    padding-left: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 14px;
+    color: var(--color-text);
+}
+
+.badge-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
 }
 
 .notes-list,
@@ -1385,6 +1415,10 @@ svg {
     font-size: 13px;
     color: var(--color-text-secondary);
     white-space: nowrap;
+}
+
+.history-item-compact {
+    grid-template-columns: 140px auto 1fr;
 }
 
 .appointment-item {

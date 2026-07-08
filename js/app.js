@@ -1238,14 +1238,170 @@ document.addEventListener('DOMContentLoaded', function () {
     ];
 
     var PRODUCT_DETAILS = {
-        'audit-strategique': { nom: 'Audit stratégique', type: 'service', prixHT: 750, tva: 20, statut: 'actif' },
-        'creation-site-vitrine': { nom: 'Création site vitrine', type: 'service', prixHT: 1800, tva: 20, statut: 'actif' },
-        'maintenance-mensuelle': { nom: 'Maintenance mensuelle', type: 'service', prixHT: 250, tva: 20, statut: 'actif' },
-        'formation-personnalisee': { nom: 'Formation personnalisée', type: 'service', prixHT: 950, tva: 10, statut: 'actif' },
-        'pack-accompagnement-dirigeant': { nom: 'Pack accompagnement dirigeant', type: 'service', prixHT: 1200, tva: 20, statut: 'brouillon' },
-        'kit-demarrage-digital': { nom: 'Kit de démarrage digital', type: 'produit', prixHT: 129, tva: 20, statut: 'actif' },
-        'accessoire-premium': { nom: 'Accessoire premium', type: 'produit', prixHT: 89, tva: 20, statut: 'inactif' },
-        'ancienne-offre-decouverte': { nom: 'Ancienne offre découverte', type: 'service', prixHT: 300, tva: 20, statut: 'archive' }
+        'audit-strategique': {
+            nom: 'Audit stratégique', type: 'service', prixHT: 750, tva: 20, statut: 'actif',
+            descriptionCourte: 'Diagnostic complet de la situation de l\'entreprise et recommandations stratégiques.',
+            descriptionDetaillee: 'Un audit complet en trois temps : analyse de l\'activité actuelle, identification des leviers de croissance prioritaires, restitution sous forme de plan d\'action synthétique. Destiné aux dirigeants souhaitant prendre du recul sur leur stratégie.',
+            beneficesClient: ['Vision claire des priorités à court terme', 'Plan d\'action concret et hiérarchisé'],
+            limitesConditions: ['Prestation ponctuelle, non reconductible automatiquement', 'Restitution limitée à un document de synthèse'],
+            coutEstime: '280 € HT',
+            margeEstimee: '≈ 63 %',
+            modalitesPaiement: ['comptant', 'plusieurs-fois'],
+            prixModifiable: true,
+            conditionsParticulieres: 'Facturable en une fois ou en deux échéances sur demande.',
+            referenceInterne: 'SRV-AUD-001',
+            dateCreation: '14/01/2025',
+            derniereMiseAJour: '03/06/2026',
+            noteInterne: 'Bien cadrer le périmètre avec le client avant le premier rendez-vous pour éviter les dérives de champ.',
+            historique: [
+                { date: '14/01/2025', type: 'creation', resume: 'Création de l\'offre.' },
+                { date: '20/01/2025', type: 'passage-actif', resume: 'Passage en statut Actif.' },
+                { date: '03/06/2026', type: 'modification-prix', resume: 'Prix ajusté de 690 € à 750 € HT.' }
+            ]
+        },
+        'creation-site-vitrine': {
+            nom: 'Création site vitrine', type: 'service', prixHT: 1800, tva: 20, statut: 'actif',
+            descriptionCourte: 'Conception et mise en ligne d\'un site vitrine professionnel clé en main.',
+            descriptionDetaillee: 'Site vitrine responsive de 5 pages incluant maquette, rédaction assistée, mise en ligne et formation de prise en main. Livré avec hébergement configuré pour la première année.',
+            beneficesClient: ['Présence en ligne professionnelle rapide', 'Formation incluse pour l\'autonomie du client'],
+            limitesConditions: ['Limité à 5 pages, au-delà devis complémentaire', 'Contenus textuels à fournir par le client'],
+            coutEstime: '620 € HT',
+            margeEstimee: '≈ 66 %',
+            modalitesPaiement: ['comptant', 'plusieurs-fois'],
+            prixModifiable: true,
+            conditionsParticulieres: 'Acompte de 30 % à la commande.',
+            referenceInterne: 'SRV-SITE-002',
+            dateCreation: '02/03/2025',
+            derniereMiseAJour: '15/05/2026',
+            noteInterne: 'Vérifier la disponibilité du nom de domaine avant de confirmer le devis.',
+            historique: [
+                { date: '02/03/2025', type: 'creation', resume: 'Création de l\'offre.' },
+                { date: '10/03/2025', type: 'passage-actif', resume: 'Passage en statut Actif.' },
+                { date: '15/05/2026', type: 'modification-prix', resume: 'Prix ajusté de 1 650 € à 1 800 € HT.' }
+            ]
+        },
+        'maintenance-mensuelle': {
+            nom: 'Maintenance mensuelle', type: 'service', prixHT: 250, tva: 20, statut: 'actif',
+            descriptionCourte: 'Suivi technique mensuel et mises à jour de sécurité pour un site existant.',
+            descriptionDetaillee: 'Abonnement mensuel incluant mises à jour techniques, sauvegardes régulières et un créneau de petites modifications. Reconduit tacitement chaque mois.',
+            beneficesClient: ['Site maintenu à jour sans intervention du client', 'Tranquillité d\'esprit sur la sécurité'],
+            limitesConditions: ['Modifications limitées à 1h par mois', 'Hors refonte ou évolution majeure'],
+            coutEstime: '95 € HT',
+            margeEstimee: '≈ 62 %',
+            modalitesPaiement: ['recurrent', 'abonnement'],
+            prixModifiable: false,
+            conditionsParticulieres: 'Prélèvement mensuel automatique (mise en place réelle hors périmètre V0).',
+            referenceInterne: 'SRV-MAINT-003',
+            dateCreation: '18/04/2025',
+            derniereMiseAJour: '18/04/2025',
+            noteInterne: 'Offre standardisée : éviter les exceptions de prix pour ne pas complexifier le suivi des abonnements.',
+            historique: [
+                { date: '18/04/2025', type: 'creation', resume: 'Création de l\'offre.' },
+                { date: '25/04/2025', type: 'passage-actif', resume: 'Passage en statut Actif.' }
+            ]
+        },
+        'formation-personnalisee': {
+            nom: 'Formation personnalisée', type: 'service', prixHT: 950, tva: 10, statut: 'actif',
+            descriptionCourte: 'Session de formation individuelle adaptée aux besoins du client.',
+            descriptionDetaillee: 'Journée de formation sur mesure (7h), présentiel ou distanciel, avec support pédagogique remis en fin de session. Le programme est ajusté après un court échange préalable.',
+            beneficesClient: ['Contenu adapté au niveau réel du participant', 'Support pédagogique conservé après la session'],
+            limitesConditions: ['Limité à un seul participant par session', 'Programme à valider une semaine avant la date'],
+            coutEstime: '310 € HT',
+            margeEstimee: '≈ 67 %',
+            modalitesPaiement: ['comptant', 'forfait'],
+            prixModifiable: true,
+            conditionsParticulieres: 'TVA à taux réduit applicable selon éligibilité de l\'action de formation.',
+            referenceInterne: 'SRV-FORM-004',
+            dateCreation: '05/09/2025',
+            derniereMiseAJour: '12/02/2026',
+            noteInterne: 'Vérifier l\'éligibilité au taux de TVA réduit avant émission du devis final.',
+            historique: [
+                { date: '05/09/2025', type: 'creation', resume: 'Création de l\'offre.' },
+                { date: '09/09/2025', type: 'passage-actif', resume: 'Passage en statut Actif.' },
+                { date: '12/02/2026', type: 'modification-tva', resume: 'TVA indicative ajustée de 20 % à 10 %.' }
+            ]
+        },
+        'pack-accompagnement-dirigeant': {
+            nom: 'Pack accompagnement dirigeant', type: 'service', prixHT: 1200, tva: 20, statut: 'brouillon',
+            descriptionCourte: 'Accompagnement mensuel du dirigeant sur trois mois, en cours de cadrage.',
+            descriptionDetaillee: 'Offre en cours de construction : accompagnement resserré du dirigeant (points réguliers, suivi d\'objectifs) sur une durée de trois mois. Le contenu précis reste à finaliser avant activation.',
+            beneficesClient: ['Suivi resserré et personnalisé', 'Objectifs suivis dans la durée'],
+            limitesConditions: ['Offre non finalisée, contenu susceptible d\'évoluer', 'Non disponible à la vente tant qu\'elle reste en Brouillon'],
+            coutEstime: '410 € HT',
+            margeEstimee: '≈ 66 %',
+            modalitesPaiement: ['forfait', 'plusieurs-fois'],
+            prixModifiable: true,
+            conditionsParticulieres: 'Conditions à finaliser avant passage en statut Actif.',
+            referenceInterne: 'SRV-PACK-005',
+            dateCreation: '20/05/2026',
+            derniereMiseAJour: '20/05/2026',
+            noteInterne: 'En attente de validation du contenu détaillé avant activation ; ne pas proposer aux clients dans l\'état actuel.',
+            historique: [
+                { date: '20/05/2026', type: 'creation', resume: 'Création de l\'offre en statut Brouillon.' }
+            ]
+        },
+        'kit-demarrage-digital': {
+            nom: 'Kit de démarrage digital', type: 'produit', prixHT: 129, tva: 20, statut: 'actif',
+            descriptionCourte: 'Kit prêt à l\'emploi pour démarrer sa présence digitale.',
+            descriptionDetaillee: 'Pack comprenant un guide pratique, des modèles de visuels réseaux sociaux et une checklist de mise en ligne. Livré au format numérique après commande.',
+            beneficesClient: ['Démarrage rapide sans compétence technique', 'Modèles réutilisables immédiatement'],
+            limitesConditions: ['Contenu générique, non personnalisé', 'Pas d\'accompagnement humain inclus'],
+            coutEstime: '35 € HT',
+            margeEstimee: '≈ 73 %',
+            modalitesPaiement: ['comptant'],
+            prixModifiable: false,
+            conditionsParticulieres: 'Prix fixe catalogue, non négociable en l\'état.',
+            referenceInterne: 'PRD-KIT-006',
+            dateCreation: '11/11/2025',
+            derniereMiseAJour: '11/11/2025',
+            noteInterne: 'Produit numérique standardisé : ne pas proposer de remise individuelle.',
+            historique: [
+                { date: '11/11/2025', type: 'creation', resume: 'Création de l\'offre.' },
+                { date: '15/11/2025', type: 'passage-actif', resume: 'Passage en statut Actif.' }
+            ]
+        },
+        'accessoire-premium': {
+            nom: 'Accessoire premium', type: 'produit', prixHT: 89, tva: 20, statut: 'inactif',
+            descriptionCourte: 'Accessoire complémentaire, retiré temporairement de la vente.',
+            descriptionDetaillee: 'Accessoire physique proposé en complément d\'une prestation. Actuellement en rupture d\'approvisionnement fournisseur, la vente est suspendue jusqu\'à nouvel ordre.',
+            beneficesClient: ['Complète efficacement l\'offre principale'],
+            limitesConditions: ['Non disponible actuellement (rupture fournisseur)', 'Délai de réapprovisionnement inconnu à ce jour'],
+            coutEstime: '42 € HT',
+            margeEstimee: '≈ 53 %',
+            modalitesPaiement: ['comptant'],
+            prixModifiable: false,
+            conditionsParticulieres: 'Vente suspendue jusqu\'à réapprovisionnement.',
+            referenceInterne: 'PRD-ACC-007',
+            dateCreation: '02/02/2025',
+            derniereMiseAJour: '28/06/2026',
+            noteInterne: 'Relancer le fournisseur avant de réactiver cette offre.',
+            historique: [
+                { date: '02/02/2025', type: 'creation', resume: 'Création de l\'offre.' },
+                { date: '08/02/2025', type: 'passage-actif', resume: 'Passage en statut Actif.' },
+                { date: '28/06/2026', type: 'modification-prix', resume: 'Prix ajusté de 79 € à 89 € HT.' }
+            ]
+        },
+        'ancienne-offre-decouverte': {
+            nom: 'Ancienne offre découverte', type: 'service', prixHT: 300, tva: 20, statut: 'archive',
+            descriptionCourte: 'Ancienne offre de découverte, conservée pour historique.',
+            descriptionDetaillee: 'Offre d\'entrée de gamme proposée les premières années d\'activité, remplacée depuis par des prestations plus adaptées. Conservée uniquement à titre d\'historique commercial.',
+            beneficesClient: ['Offre historique, non proposée aux nouveaux clients'],
+            limitesConditions: ['Archivée, non disponible à la vente', 'Conditions d\'origine non garanties si réactivée'],
+            coutEstime: '140 € HT',
+            margeEstimee: '≈ 53 %',
+            modalitesPaiement: ['comptant'],
+            prixModifiable: false,
+            conditionsParticulieres: 'Aucune, offre archivée.',
+            referenceInterne: 'SRV-DECOUV-008',
+            dateCreation: '03/06/2024',
+            derniereMiseAJour: '10/01/2026',
+            noteInterne: 'Conservée pour référence uniquement, ne plus proposer aux prospects.',
+            historique: [
+                { date: '03/06/2024', type: 'creation', resume: 'Création de l\'offre.' },
+                { date: '10/06/2024', type: 'passage-actif', resume: 'Passage en statut Actif.' },
+                { date: '10/01/2026', type: 'archivage', resume: 'Archivage de l\'offre.' }
+            ]
+        }
     };
 
     window.COCKPIT_PRODUCT_TYPES = PRODUCT_TYPES;
@@ -1321,11 +1477,11 @@ document.addEventListener('DOMContentLoaded', function () {
     applyFilters();
 })();
 
-// Page Fiche produit / service : première page placeholder à partir de
-// données statiques (V0.5.1). La fiche détaillée (description, historique
-// d'utilisation dans les devis/factures, options avancées) sera construite
-// en V0.5.2 ; cette page ne fait qu'afficher les informations déjà connues
-// depuis le catalogue.
+// Page Fiche produit / service : fiche complète à partir de données statiques
+// (V0.5.2). PRODUCT_PAYMENT_MODALITIES et OFFER_HISTORY_TYPES sont propres à
+// cette page (comme HISTORY_TYPES pour la fiche client) ; STATUS_AVAILABILITY
+// dérive automatiquement la disponibilité en devis/facture à partir du statut,
+// sans construire de vraie règle métier de facturation.
 
 (function () {
     var nameEl = document.getElementById('item-name');
@@ -1333,12 +1489,61 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
     }
 
+    var PRODUCT_PAYMENT_MODALITIES = [
+        { value: 'comptant', label: 'Comptant' },
+        { value: 'forfait', label: 'Forfait' },
+        { value: 'abonnement', label: 'Abonnement' },
+        { value: 'plusieurs-fois', label: 'Plusieurs fois' },
+        { value: 'recurrent', label: 'Récurrent' }
+    ];
+
+    var OFFER_HISTORY_TYPES = {
+        'creation': { label: 'Création de l\'offre', badgeClass: 'badge-info' },
+        'passage-actif': { label: 'Passage en actif', badgeClass: 'badge-success' },
+        'modification-prix': { label: 'Modification du prix', badgeClass: 'badge-warning' },
+        'modification-tva': { label: 'Modification de la TVA indicative', badgeClass: 'badge-neutral' },
+        'archivage': { label: 'Archivage', badgeClass: 'badge-info' }
+    };
+
+    var STATUS_AVAILABILITY = {
+        'actif': { label: 'Disponible', caption: 'Sélectionnable dans devis et factures', selectionnable: true },
+        'brouillon': { label: 'Non disponible', caption: 'En préparation, non sélectionnable', selectionnable: false },
+        'inactif': { label: 'Non disponible', caption: 'Non proposé actuellement', selectionnable: false },
+        'archive': { label: 'Non disponible', caption: 'Archivé, conservé pour historique', selectionnable: false }
+    };
+
     var notFoundEl = document.getElementById('item-not-found');
     var contentEl = document.getElementById('item-profile-content');
     var statusEl = document.getElementById('item-status');
     var typeEl = document.getElementById('item-type');
     var priceEl = document.getElementById('item-price');
     var vatEl = document.getElementById('item-vat');
+    var descriptionHeaderEl = document.getElementById('item-description-header');
+
+    var kpiPrixEl = document.getElementById('kpi-item-prix');
+    var kpiTvaEl = document.getElementById('kpi-item-tva');
+    var kpiCoutEl = document.getElementById('kpi-item-cout');
+    var kpiMargeEl = document.getElementById('kpi-item-marge');
+    var kpiDisponibiliteEl = document.getElementById('kpi-item-disponibilite');
+    var kpiDisponibiliteCaptionEl = document.getElementById('kpi-item-disponibilite-caption');
+
+    var descriptionCourteEl = document.getElementById('item-description-courte');
+    var descriptionDetailleeEl = document.getElementById('item-description-detaillee');
+    var beneficesListEl = document.getElementById('item-benefices-list');
+    var limitesListEl = document.getElementById('item-limites-list');
+
+    var paramPrixEl = document.getElementById('item-param-prix');
+    var paramTvaEl = document.getElementById('item-param-tva');
+    var paramPrixModifiableEl = document.getElementById('item-param-prix-modifiable');
+    var paramConditionsEl = document.getElementById('item-param-conditions');
+    var paymentBadgesEl = document.getElementById('item-payment-badges');
+
+    var selectionnableDevisEl = document.getElementById('item-selectionnable-devis');
+    var selectionnableFactureEl = document.getElementById('item-selectionnable-facture');
+
+    var noteMetaEl = document.getElementById('item-note-meta');
+    var noteInterneEl = document.getElementById('item-note-interne');
+    var historyListEl = document.getElementById('item-history-list');
 
     function findLabel(list, value) {
         var match = (list || []).filter(function (entry) {
@@ -1349,6 +1554,71 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function formatPrice(value) {
         return String(value).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    }
+
+    function renderSimpleList(listEl, items) {
+        if (!listEl) {
+            return;
+        }
+        listEl.innerHTML = '';
+        (items || []).forEach(function (text) {
+            var li = document.createElement('li');
+            li.textContent = text;
+            listEl.appendChild(li);
+        });
+    }
+
+    function renderPaymentBadges(modalites) {
+        if (!paymentBadgesEl) {
+            return;
+        }
+        paymentBadgesEl.innerHTML = '';
+        (modalites || []).forEach(function (value) {
+            var modality = findLabel(PRODUCT_PAYMENT_MODALITIES, value);
+            var badge = document.createElement('span');
+            badge.className = 'badge badge-neutral';
+            badge.textContent = modality ? modality.label : value;
+            paymentBadgesEl.appendChild(badge);
+        });
+    }
+
+    function renderHistory(events) {
+        if (!historyListEl) {
+            return;
+        }
+        historyListEl.innerHTML = '';
+
+        if (!events || events.length === 0) {
+            var empty = document.createElement('p');
+            empty.className = 'empty-state-inline';
+            empty.textContent = 'Aucun historique enregistré pour cette offre.';
+            historyListEl.appendChild(empty);
+            return;
+        }
+
+        events.forEach(function (event) {
+            var typeInfo = OFFER_HISTORY_TYPES[event.type] || { label: event.type, badgeClass: 'badge-neutral' };
+
+            var item = document.createElement('div');
+            item.className = 'history-item history-item-compact';
+
+            var dateEl = document.createElement('div');
+            dateEl.className = 'history-date';
+            dateEl.textContent = event.date;
+
+            var typeEl2 = document.createElement('span');
+            typeEl2.className = 'badge ' + typeInfo.badgeClass;
+            typeEl2.textContent = typeInfo.label;
+
+            var resumeEl = document.createElement('p');
+            resumeEl.className = 'history-resume';
+            resumeEl.textContent = event.resume;
+
+            item.appendChild(dateEl);
+            item.appendChild(typeEl2);
+            item.appendChild(resumeEl);
+            historyListEl.appendChild(item);
+        });
     }
 
     function renderItem(slug) {
@@ -1386,12 +1656,78 @@ document.addEventListener('DOMContentLoaded', function () {
             statusEl.className = 'badge ' + (statusInfo ? statusInfo.badgeClass : 'badge-neutral');
         }
 
+        var formattedPrice = formatPrice(item.prixHT) + ' € HT';
+        var formattedVat = item.tva + ' %';
+
         if (priceEl) {
-            priceEl.textContent = formatPrice(item.prixHT) + ' € HT';
+            priceEl.textContent = formattedPrice;
         }
         if (vatEl) {
-            vatEl.textContent = item.tva + ' %';
+            vatEl.textContent = formattedVat;
         }
+        if (descriptionHeaderEl) {
+            descriptionHeaderEl.textContent = item.descriptionCourte || '—';
+        }
+
+        if (kpiPrixEl) {
+            kpiPrixEl.textContent = formattedPrice;
+        }
+        if (kpiTvaEl) {
+            kpiTvaEl.textContent = formattedVat;
+        }
+        if (kpiCoutEl) {
+            kpiCoutEl.textContent = item.coutEstime || '—';
+        }
+        if (kpiMargeEl) {
+            kpiMargeEl.textContent = item.margeEstimee || '—';
+        }
+
+        var availability = STATUS_AVAILABILITY[item.statut] || { label: '—', caption: '—', selectionnable: false };
+        if (kpiDisponibiliteEl) {
+            kpiDisponibiliteEl.textContent = availability.label;
+        }
+        if (kpiDisponibiliteCaptionEl) {
+            kpiDisponibiliteCaptionEl.textContent = availability.caption;
+        }
+
+        if (descriptionCourteEl) {
+            descriptionCourteEl.textContent = item.descriptionCourte || '—';
+        }
+        if (descriptionDetailleeEl) {
+            descriptionDetailleeEl.textContent = item.descriptionDetaillee || '—';
+        }
+        renderSimpleList(beneficesListEl, item.beneficesClient);
+        renderSimpleList(limitesListEl, item.limitesConditions);
+
+        if (paramPrixEl) {
+            paramPrixEl.textContent = formattedPrice;
+        }
+        if (paramTvaEl) {
+            paramTvaEl.textContent = formattedVat;
+        }
+        if (paramPrixModifiableEl) {
+            paramPrixModifiableEl.textContent = item.prixModifiable ? 'Oui' : 'Non';
+        }
+        if (paramConditionsEl) {
+            paramConditionsEl.textContent = item.conditionsParticulieres || '—';
+        }
+        renderPaymentBadges(item.modalitesPaiement);
+
+        if (selectionnableDevisEl) {
+            selectionnableDevisEl.textContent = availability.selectionnable ? 'Oui' : 'Non';
+        }
+        if (selectionnableFactureEl) {
+            selectionnableFactureEl.textContent = availability.selectionnable ? 'Oui' : 'Non';
+        }
+
+        if (noteMetaEl) {
+            noteMetaEl.textContent = 'Réf. ' + (item.referenceInterne || '—') + ' · Créée le ' + (item.dateCreation || '—') + ' · Mise à jour le ' + (item.derniereMiseAJour || '—');
+        }
+        if (noteInterneEl) {
+            noteInterneEl.textContent = item.noteInterne || '—';
+        }
+
+        renderHistory(item.historique);
     }
 
     var params = new URLSearchParams(window.location.search);

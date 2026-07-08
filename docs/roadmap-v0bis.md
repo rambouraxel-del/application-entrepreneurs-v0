@@ -16,7 +16,8 @@ Cette roadmap présente les phases prévues après la V0 initiale (livrée à l'
 | V0.4.2.1 | Ajustements UX de la fiche client (correction intégrée à la V0.4.2 avant sa validation finale) | Validée |
 | V0.4.3 | Interactions CRM préparatoires : modales placeholder (statut client, personnalisation des statuts, notes commerciales) | Validée |
 | V0.4.3.1 | Ajustements de parcours (retour contextuel Agenda/Facturation, statut cliquable) | Validée |
-| V0.5.1 | Catalogue Produits / Services : recherche, filtres type/statut, accès fiche produit/service | En cours |
+| V0.5.1 | Catalogue Produits / Services : recherche, filtres type/statut, accès fiche produit/service | Validée |
+| V0.5.2 | Fiche Produit / Service complète (en-tête, résumé commercial, description commerciale, paramètres de vente, utilisation future en facturation, note interne, historique de l'offre) | En cours |
 | V0.6 | Page Facturation / Devis / Factures | À venir |
 | V0.7 | Page Trésorerie | À venir |
 | V0.8 | Page Agenda | À venir |
@@ -48,4 +49,4 @@ L'ordre initial des phases après la V0.4 (Agenda en V0.5, Facturation en V0.6, 
 
 ## Précision importante — découpage de la V0.5
 
-Comme pour la V0.4, la V0.5 (Produits / Services) est découpée en sous-versions plutôt que traitée en un seul bloc : **V0.5.1** construit le catalogue Produits / Services (recherche, filtres type/statut, compteur, accès à une fiche produit/service placeholder) sur le même principe que la V0.4.1 pour les clients. La fiche produit/service détaillée (description enrichie, historique d'utilisation dans les devis/factures, options avancées) sera construite dans une sous-version ultérieure (V0.5.2), non encore cadrée.
+Comme pour la V0.4, la V0.5 (Produits / Services) est découpée en sous-versions plutôt que traitée en un seul bloc : **V0.5.1** construit le catalogue Produits / Services (recherche, filtres type/statut, compteur, accès à une fiche produit/service placeholder) sur le même principe que la V0.4.1 pour les clients ; **V0.5.2** construit la fiche produit/service complète (en-tête, résumé commercial, description commerciale, paramètres de vente, utilisation future en facturation, note interne, historique de l'offre) sur le même principe que la V0.4.2 pour la fiche client — données statiques, aucune interaction réelle. Des interactions préparatoires sous forme de modales placeholder (sur le modèle de la V0.4.3) pourront faire l'objet d'une éventuelle V0.5.3, non encore cadrée.
