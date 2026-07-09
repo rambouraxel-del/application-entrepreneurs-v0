@@ -25,16 +25,17 @@ Ce document regroupe les idées et pistes identifiées au fil du projet, non tra
 - Personnalisation réelle des champs du bloc Informations client (icône "Personnaliser les champs" en Work in progress depuis la V0.4.2).
 - **Vraie création/édition/suppression de notes commerciales** : les modales "Ajouter une note"/"Modifier la note"/"Supprimer cette note ?" (V0.4.3) s'ouvrent réellement (textarea pré-rempli pour l'édition, extrait pour la suppression) mais aucune validation n'est persistée. La modale "Toutes les notes commerciales" reste en lecture seule (pas d'icônes modifier/supprimer sur les notes archivées).
 - Page ou panneau complet "Voir tout l'historique" des échanges (reste en Work in progress ; historique limité à 5 événements par client sur la fiche).
-- Vraie liaison dynamique fiche client ↔ Agenda et fiche client ↔ Facturation : les liens "Voir dans l'agenda"/"Voir dans Facturation" (V0.4.2) pointent vers les pages génériques, sans filtrage par client.
 - Téléchargement PDF réel des documents liés à un client (bouton "Télécharger PDF" en Work in progress).
 - Vrai menu d'actions pour le bouton "…" de la fiche client (aucun composant de menu contextuel dans le projet à ce jour).
-- Vrai ciblage d'un rendez-vous précis dans l'agenda (le lien `agenda.html?rdv=<id>` ajouté en V0.4.2.1 n'est pas encore lu par `agenda.html`).
 - Le moteur de modale générique (`COCKPIT_MODAL`, V0.4.3) est réutilisable par d'autres pages si un besoin de modale apparaît ailleurs dans l'application.
-- Le helper de pagination générique (`COCKPIT_LIST_PAGINATION`, V0.5.4) est réutilisable tel quel pour toute future liste tabulaire (Devis/Factures en V0.6, Trésorerie en V0.7...) : il suffit de lui fournir les lignes, les champs de recherche/filtre/pagination et une fonction `matchRow` propre à la page.
+- Le helper de pagination générique (`COCKPIT_LIST_PAGINATION`, V0.5.4) est réutilisable tel quel pour toute future liste tabulaire (Devis/Factures en V0.6, Agenda en V0.7, Trésorerie en V0.8...) : il suffit de lui fournir les lignes, les champs de recherche/filtre/pagination et une fonction `matchRow` propre à la page.
 
 ## Agenda
-- Vraie gestion des rendez-vous (création, modification, suppression).
-- Vues jour/semaine/mois interactives.
+- Résolu en V0.7 : liaison dynamique fiche client ↔ Agenda (bloc "Rendez-vous liés" réel, `agenda.html?client=slug`), ciblage d'un rendez-vous précis (`fiche-rdv.html?rdv=<id>`) et gestion réelle des rendez-vous (création, modification, suppression, en mémoire de page).
+- Vue semaine ou calendrier visuel interactif : volontairement non développée en V0.7 (priorité donnée à une vue liste fiable plutôt qu'à un calendrier jugé fragile pour cette version) ; à réévaluer si le besoin se confirme.
+- Bouton "Dupliquer ce rendez-vous" : proposé en analyse V0.7 mais explicitement non développé (décision du chef de projet), pourrait être utile pour les rendez-vous récurrents avec un même client.
+- **`RDV_DETAILS` (V0.7) reste une source statique en mémoire**, limitée à 6 rendez-vous fictifs : mêmes limites que `CLIENT_DETAILS`/`DEVIS_DETAILS`/`FACTURE_DETAILS`, à remplacer par une vraie source de données le jour où le projet en aura une.
+- **Limite assumée de la persistance en mémoire de page** : un rendez-vous (et son devis brouillon auto-créé) créé en direct pendant une session n'existe que dans la page courante ; ouvrir son devis lié dans un nouvel onglet ou après un rechargement affiche l'état "Document introuvable" déjà géré proprement — comportement identique à celui de toute création réelle ailleurs dans l'application, pas une limite propre à l'Agenda.
 
 ## Facturation
 - Page placeholder ajoutée à la navigation en V0.2 ; devenue la vraie liste des devis en V0.6.1 (recherche, filtre statut, pagination), avec un éditeur de devis complet (`pages/devis-edition.html`) ; l'onglet Factures est devenu réel en V0.6.2 (`pages/facture-edition.html`) ; documents imprimables/PDF ajoutés en V0.6.3 (`pages/devis-document.html`, `pages/facture-document.html`).

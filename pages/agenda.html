@@ -47,8 +47,8 @@
         <div class="main">
             <header class="topbar">
                 <div class="topbar-greeting">
-                    <h1>Agenda</h1>
-                    <p class="page-subtitle">Visualisez vos rendez-vous à venir.</p>
+                    <h1>Agenda commercial</h1>
+                    <p class="page-subtitle">Préparez et suivez vos rendez-vous commerciaux.</p>
                 </div>
                 <div class="topbar-actions">
                     <div class="topbar-search">
@@ -67,18 +67,122 @@
 
             <main class="page-content">
                 <div class="page-toolbar">
-                    <button type="button" class="btn-primary btn-wip">Ajouter un rendez-vous</button>
+                    <div class="search-bar page-toolbar-search">
+                        <span class="search-bar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg></span>
+                        <input type="text" id="agenda-search" placeholder="Rechercher un rendez-vous...">
+                    </div>
+                    <div class="table-filters">
+                        <select id="agenda-filter" class="table-select" aria-label="Filtrer les rendez-vous">
+                            <option value="">Tous</option>
+                            <option value="aujourd-hui">Aujourd'hui</option>
+                            <option value="cette-semaine">Cette semaine</option>
+                            <option value="a-confirmer">À confirmer</option>
+                            <option value="reporte">Reportés</option>
+                            <option value="realise">Réalisés</option>
+                            <option value="sans_suite">Sans suite</option>
+                        </select>
+                        <button type="button" id="agenda-reset-filters" class="btn-secondary">Réinitialiser</button>
+                    </div>
+                    <a href="fiche-rdv.html" class="btn-primary">Ajouter un rendez-vous</a>
                 </div>
 
-                <div class="dashboard-block">
-                    <h2>Aujourd'hui</h2>
-                    <ul class="agenda-list">
-                        <li><span class="agenda-time">09h30</span> Rendez-vous client Martin</li>
-                        <li><span class="agenda-time">11h00</span> Appel fournisseur</li>
-                        <li><span class="agenda-time">14h00</span> Préparation devis</li>
-                        <li><span class="agenda-time">16h30</span> Point administratif</li>
-                    </ul>
+                <div class="list-pagination-bar">
+                    <p class="table-counter" id="agenda-counter"></p>
+                    <div class="pagination-controls">
+                        <select id="agenda-page-size" class="table-select" aria-label="Éléments par page">
+                            <option value="5">Afficher 5</option>
+                            <option value="10">Afficher 10</option>
+                            <option value="25">Afficher 25</option>
+                        </select>
+                        <button type="button" class="btn-secondary" id="agenda-prev-page" aria-label="Page précédente">Précédent</button>
+                        <span class="pagination-page-indicator" id="agenda-page-indicator">Page 1 sur 1</span>
+                        <button type="button" class="btn-secondary" id="agenda-next-page" aria-label="Page suivante">Suivant</button>
+                    </div>
                 </div>
+
+                <table class="data-table" id="agenda-table">
+                    <thead>
+                        <tr>
+                            <th>Rendez-vous</th>
+                            <th>Client</th>
+                            <th>Date</th>
+                            <th>Horaire</th>
+                            <th>Lieu</th>
+                            <th>Statut</th>
+                            <th>Priorité</th>
+                            <th>Opportunité</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr data-id="rdv-0001" data-status="prevu" data-confirmation="a-confirmer" data-date="09/07/2026" data-client="julien-petit" data-search="point de suivi mensuel julien petit visioconférence">
+                            <td>Point de suivi mensuel</td>
+                            <td><a href="fiche-client.html?client=julien-petit" class="table-action-secondary">Julien Petit</a></td>
+                            <td>09/07/2026</td>
+                            <td>09:30 – 10:15</td>
+                            <td>Visioconférence</td>
+                            <td><span class="badge badge-neutral">Prévu</span></td>
+                            <td><span class="badge badge-info">Normale</span></td>
+                            <td><span class="badge badge-warning">Moyen</span></td>
+                            <td><a href="fiche-rdv.html?rdv=rdv-0001" class="btn-table-action">Voir la fiche</a></td>
+                        </tr>
+                        <tr data-id="rdv-0002" data-status="confirme" data-confirmation="confirme" data-date="11/07/2026" data-client="atelier-leroy" data-search="présentation site vitrine atelier leroy chez le client">
+                            <td>Présentation site vitrine</td>
+                            <td><a href="fiche-client.html?client=atelier-leroy" class="table-action-secondary">Atelier Leroy</a></td>
+                            <td>11/07/2026</td>
+                            <td>14:00 – 15:00</td>
+                            <td>Chez le client</td>
+                            <td><span class="badge badge-info">Confirmé</span></td>
+                            <td><span class="badge badge-danger">Haute</span></td>
+                            <td><span class="badge badge-success">Fort</span></td>
+                            <td><a href="fiche-rdv.html?rdv=rdv-0002" class="btn-table-action">Voir la fiche</a></td>
+                        </tr>
+                        <tr data-id="rdv-0003" data-status="reporte" data-confirmation="a-confirmer" data-date="16/07/2026" data-client="boucherie-morel" data-search="renégociation contrat annuel boucherie morel téléphone">
+                            <td>Renégociation contrat annuel</td>
+                            <td><a href="fiche-client.html?client=boucherie-morel" class="table-action-secondary">Boucherie Morel</a></td>
+                            <td>16/07/2026</td>
+                            <td>11:00 – 11:45</td>
+                            <td>Téléphone</td>
+                            <td><span class="badge badge-warning">Reporté</span></td>
+                            <td><span class="badge badge-info">Normale</span></td>
+                            <td><span class="badge badge-warning">Moyen</span></td>
+                            <td><a href="fiche-rdv.html?rdv=rdv-0003" class="btn-table-action">Voir la fiche</a></td>
+                        </tr>
+                        <tr data-id="rdv-0004" data-status="realise" data-confirmation="confirme" data-date="15/03/2026" data-client="martin-dupont" data-search="signature devis site vitrine audit martin dupont chez le client">
+                            <td>Signature devis site vitrine + audit</td>
+                            <td><a href="fiche-client.html?client=martin-dupont" class="table-action-secondary">Martin Dupont</a></td>
+                            <td>15/03/2026</td>
+                            <td>10:00 – 11:00</td>
+                            <td>Chez le client</td>
+                            <td><span class="badge badge-success">Réalisé</span></td>
+                            <td><span class="badge badge-danger">Haute</span></td>
+                            <td><span class="badge badge-success">Fort</span></td>
+                            <td><a href="fiche-rdv.html?rdv=rdv-0004" class="btn-table-action">Voir la fiche</a></td>
+                        </tr>
+                        <tr data-id="rdv-0005" data-status="sans_suite" data-confirmation="confirme" data-date="20/06/2026" data-client="sophie-bernard" data-search="découverte besoin formation sophie bernard visioconférence">
+                            <td>Découverte besoin formation</td>
+                            <td><a href="fiche-client.html?client=sophie-bernard" class="table-action-secondary">Sophie Bernard</a></td>
+                            <td>20/06/2026</td>
+                            <td>15:30 – 16:00</td>
+                            <td>Visioconférence</td>
+                            <td><span class="badge badge-neutral">Sans suite</span></td>
+                            <td><span class="badge badge-neutral">Basse</span></td>
+                            <td><span class="badge badge-neutral">Faible</span></td>
+                            <td><a href="fiche-rdv.html?rdv=rdv-0005" class="btn-table-action">Voir la fiche</a></td>
+                        </tr>
+                        <tr data-id="rdv-0006" data-status="prevu" data-confirmation="a-confirmer" data-date="10/07/2026" data-client="techni-bois-sarl" data-search="premier rendez-vous découverte techni-bois sarl chez le client">
+                            <td>Premier rendez-vous découverte</td>
+                            <td><a href="fiche-client.html?client=techni-bois-sarl" class="table-action-secondary">Techni-Bois SARL</a></td>
+                            <td>10/07/2026</td>
+                            <td>11:00 – 11:30</td>
+                            <td>Chez le client</td>
+                            <td><span class="badge badge-neutral">Prévu</span></td>
+                            <td><span class="badge badge-info">Normale</span></td>
+                            <td><span class="badge badge-warning">Moyen</span></td>
+                            <td><a href="fiche-rdv.html?rdv=rdv-0006" class="btn-table-action">Voir la fiche</a></td>
+                        </tr>
+                    </tbody>
+                </table>
             </main>
         </div>
     </div>

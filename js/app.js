@@ -727,7 +727,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     lignes: [
                         { designation: 'Audit stratégique', description: 'Diagnostic complet de la situation de l\'entreprise et recommandations stratégiques.', quantite: 1, prixUnitaireHT: 750, tauxTVA: 20, remisePourcent: 0 }
                     ],
-                    conditionsPaiement: { delai: 'Paiement à réception', acompte: '', fractionne: '', note: '' }
+                    conditionsPaiement: { delai: 'Paiement à réception', acompte: '', fractionne: '', note: '' },
+                    rdvRef: { id: 'rdv-0001' }
                 }
             ]
         },
@@ -836,7 +837,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         { designation: 'Création site vitrine', description: 'Conception et mise en ligne d\'un site vitrine professionnel clé en main.', quantite: 1, prixUnitaireHT: 1800, tauxTVA: 20, remisePourcent: 10 },
                         { designation: 'Maintenance mensuelle', description: 'Suivi technique mensuel et mises à jour de sécurité pour un site existant.', quantite: 3, prixUnitaireHT: 250, tauxTVA: 20, remisePourcent: 0 }
                     ],
-                    conditionsPaiement: { delai: 'Paiement à 30 jours', acompte: 'Acompte de 30 % à la commande (site vitrine)', fractionne: 'Paiement en 3 fois pour la maintenance', note: 'Facturation de la maintenance mensuelle en 3 échéances trimestrielles.' }
+                    conditionsPaiement: { delai: 'Paiement à 30 jours', acompte: 'Acompte de 30 % à la commande (site vitrine)', fractionne: 'Paiement en 3 fois pour la maintenance', note: 'Facturation de la maintenance mensuelle en 3 échéances trimestrielles.' },
+                    rdvRef: { id: 'rdv-0004' }
                 }
             ]
         },
@@ -1155,6 +1157,476 @@ document.addEventListener('DOMContentLoaded', function () {
         computeStatutAffiche: computeStatutAffiche,
         computeNextFactureNumero: computeNextFactureNumero,
         parseDate: parseFrDate
+    };
+})();
+
+// Données Agenda commercial (V0.7)
+// Un rendez-vous (RDV_DETAILS) porte l'identité, une section "Préparation
+// commerciale" (contexte, proposition, prix cible/mini, arguments,
+// objections, prochaines étapes), un suivi "Communication client" et un
+// historique des changements importants. Positionné après les blocs
+// Devis/Factures car la création du devis brouillon lié à un RDV a besoin de
+// COCKPIT_DEVIS_CALC et COCKPIT_FACTURE_DETAILS (vérification qu'un devis n'a
+// jamais été converti en facture avant d'autoriser sa suppression).
+//
+// Règle centrale validée : un rendez-vous commercial est associé à un devis
+// brouillon (auto-créé). Ce devis brouillon ne peut être supprimé que s'il
+// est encore à statut brouillon, en une seule version, et jamais converti en
+// facture — sinon aucune suppression n'est proposée, pour ne jamais ouvrir de
+// suppression générale des devis dans l'application.
+(function () {
+    var RDV_STATUSES = [
+        { value: 'prevu', label: 'Prévu', badgeClass: 'badge-neutral' },
+        { value: 'confirme', label: 'Confirmé', badgeClass: 'badge-info' },
+        { value: 'reporte', label: 'Reporté', badgeClass: 'badge-warning' },
+        { value: 'realise', label: 'Réalisé', badgeClass: 'badge-success' },
+        { value: 'annule', label: 'Annulé', badgeClass: 'badge-danger' },
+        { value: 'sans_suite', label: 'Sans suite', badgeClass: 'badge-neutral' }
+    ];
+
+    var RDV_PRIORITES = [
+        { value: 'basse', label: 'Basse', badgeClass: 'badge-neutral' },
+        { value: 'normale', label: 'Normale', badgeClass: 'badge-info' },
+        { value: 'haute', label: 'Haute', badgeClass: 'badge-danger' }
+    ];
+
+    var RDV_OPPORTUNITES = [
+        { value: 'faible', label: 'Faible', badgeClass: 'badge-neutral' },
+        { value: 'moyen', label: 'Moyen', badgeClass: 'badge-warning' },
+        { value: 'fort', label: 'Fort', badgeClass: 'badge-success' }
+    ];
+
+    function pad2(n) {
+        return (n < 10 ? '0' : '') + n;
+    }
+
+    function formatDateFr(date) {
+        return pad2(date.getDate()) + '/' + pad2(date.getMonth() + 1) + '/' + date.getFullYear();
+    }
+
+    function parseDateFr(value) {
+        if (!value) {
+            return null;
+        }
+        var parts = value.split('/');
+        return new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
+    }
+
+    function computeNextRdvId() {
+        var maxSeq = 0;
+        Object.keys(RDV_DETAILS).forEach(function (id) {
+            var seq = parseInt(id.replace('rdv-', ''), 10);
+            if (!isNaN(seq) && seq > maxSeq) {
+                maxSeq = seq;
+            }
+        });
+        var padded = String(maxSeq + 1);
+        while (padded.length < 4) {
+            padded = '0' + padded;
+        }
+        return 'rdv-' + padded;
+    }
+
+    function pushHistorique(rdv, type, description) {
+        var now = new Date();
+        rdv.historique.push({
+            date: formatDateFr(now),
+            heure: pad2(now.getHours()) + ':' + pad2(now.getMinutes()),
+            auteur: 'Vous',
+            type: type,
+            description: description
+        });
+    }
+
+    function creerDevisBrouillonPourRdv(rdv) {
+        var devisCalc = window.COCKPIT_DEVIS_CALC;
+        var DEVIS_DETAILS = window.COCKPIT_DEVIS_DETAILS;
+        var numero = devisCalc.computeNextDevisNumero(new Date().getFullYear());
+        var aujourdhui = formatDateFr(new Date());
+        DEVIS_DETAILS[numero] = {
+            numero: numero,
+            versionActive: 1,
+            versions: [{
+                version: 1,
+                statut: 'brouillon',
+                dateCreation: aujourdhui,
+                dateModification: aujourdhui,
+                clientSlug: rdv.clientSlug,
+                clientSnapshot: devisCalc.snapshotClient(rdv.clientSlug),
+                companySnapshot: devisCalc.snapshotCompany(),
+                lignes: [],
+                conditionsPaiement: { delai: '', acompte: '', fractionne: '', note: '' },
+                rdvRef: { id: rdv.id }
+            }]
+        };
+        rdv.devisRef = { numero: numero, version: 1 };
+        pushHistorique(rdv, 'devis', 'Devis brouillon ' + numero + ' créé automatiquement.');
+        return numero;
+    }
+
+    function trouverDevisLie(rdv) {
+        if (!rdv.devisRef) {
+            return null;
+        }
+        var DEVIS_DETAILS = window.COCKPIT_DEVIS_DETAILS || {};
+        return DEVIS_DETAILS[rdv.devisRef.numero] || null;
+    }
+
+    function peutSupprimerDevisBrouillonLie(rdv) {
+        var devis = trouverDevisLie(rdv);
+        if (!devis || devis.versions.length !== 1) {
+            return false;
+        }
+        if (devis.versions[0].statut !== 'brouillon') {
+            return false;
+        }
+        var FACTURE_DETAILS = window.COCKPIT_FACTURE_DETAILS || {};
+        var dejaConvertiEnFacture = Object.keys(FACTURE_DETAILS).some(function (key) {
+            var f = FACTURE_DETAILS[key];
+            return f.devisRef && f.devisRef.numero === devis.numero;
+        });
+        return !dejaConvertiEnFacture;
+    }
+
+    function supprimerDevisBrouillonLie(rdv) {
+        if (!peutSupprimerDevisBrouillonLie(rdv)) {
+            return false;
+        }
+        var numero = rdv.devisRef.numero;
+        delete window.COCKPIT_DEVIS_DETAILS[numero];
+        rdv.devisRef = null;
+        pushHistorique(rdv, 'devis', 'Devis brouillon ' + numero + ' supprimé.');
+        return true;
+    }
+
+    function transformerDevisBrouillonEnClassique(rdv) {
+        var devis = trouverDevisLie(rdv);
+        if (!devis) {
+            return false;
+        }
+        var versionActive = devis.versions[devis.versions.length - 1];
+        if (versionActive.statut !== 'brouillon') {
+            return false;
+        }
+        versionActive.statut = 'envoye';
+        versionActive.dateModification = formatDateFr(new Date());
+        pushHistorique(rdv, 'devis', 'Devis ' + devis.numero + ' transformé en devis classique (envoyé).');
+        return true;
+    }
+
+    function compterReports(rdv) {
+        return (rdv.historique || []).filter(function (event) {
+            return event.type === 'report';
+        }).length;
+    }
+
+    function estReportePlusieursFois(rdv) {
+        return compterReports(rdv) >= 2;
+    }
+
+    function snapshotClient(slug) {
+        return (window.COCKPIT_DEVIS_CALC || {}).snapshotClient ? window.COCKPIT_DEVIS_CALC.snapshotClient(slug) : null;
+    }
+
+    var RDV_DETAILS = {
+        'rdv-0001': {
+            id: 'rdv-0001',
+            titre: 'Point de suivi mensuel',
+            date: '09/07/2026',
+            heureDebut: '09:30',
+            heureFin: '10:15',
+            clientSlug: 'julien-petit',
+            lieu: 'Visioconférence',
+            statut: 'prevu',
+            priorite: 'normale',
+            opportunite: 'moyen',
+            montantPotentiel: 750,
+            notesInternes: 'Client suivi régulièrement, apprécie les points courts.',
+            preparation: {
+                contexteBesoin: 'Julien souhaite faire le point sur l\'avancement de l\'audit stratégique et évoquer une éventuelle suite.',
+                notesDiverses: 'Prévoir de partager le calendrier prévisionnel des prochaines étapes.',
+                propositionEnvisagee: 'Poursuite de l\'accompagnement avec un forfait de suivi mensuel.',
+                prixCible: 900,
+                prixMinimum: 700,
+                argumentsCommerciaux: 'Résultats déjà obtenus sur le premier audit ; disponibilité immédiate.',
+                objectionsPossibles: 'Budget serré ce trimestre.',
+                prochainesEtapes: 'Envoyer une proposition chiffrée sous 48h si accord de principe.'
+            },
+            communication: {
+                confirme: false,
+                rappelsEffectues: 1,
+                relances: 0,
+                dateDerniereCommunication: '07/07/2026',
+                prochaineCommunicationPrevue: '09/07/2026',
+                commentaireSuivi: 'Rappel téléphonique effectué pour confirmer la disponibilité.'
+            },
+            devisRef: { numero: 'DEV-2026-00011', version: 1 },
+            historique: [
+                { date: '05/07/2026', heure: '10:00', auteur: 'Vous', type: 'creation', description: 'Rendez-vous créé, devis brouillon DEV-2026-00011 associé automatiquement.' },
+                { date: '07/07/2026', heure: '11:20', auteur: 'Vous', type: 'communication', description: 'Rappel téléphonique effectué.' }
+            ]
+        },
+        'rdv-0002': {
+            id: 'rdv-0002',
+            titre: 'Présentation site vitrine',
+            date: '11/07/2026',
+            heureDebut: '14:00',
+            heureFin: '15:00',
+            clientSlug: 'atelier-leroy',
+            lieu: 'Chez le client',
+            statut: 'confirme',
+            priorite: 'haute',
+            opportunite: 'fort',
+            montantPotentiel: 2200,
+            notesInternes: 'Décideur unique, prêt à avancer rapidement si le rendu visuel convainc.',
+            preparation: {
+                contexteBesoin: 'Refonte complète du site vitrine, forte attente sur le rendu mobile.',
+                notesDiverses: 'Apporter des exemples de réalisations similaires en atelier/artisanat.',
+                propositionEnvisagee: 'Site vitrine + maintenance mensuelle, sur le même modèle que le devis DEV-2026-00012 déjà envoyé.',
+                prixCible: 2400,
+                prixMinimum: 1900,
+                argumentsCommerciaux: 'Portfolio de sites similaires ; maintenance incluse la première année.',
+                objectionsPossibles: 'Délai de livraison jugé long par le client.',
+                prochainesEtapes: 'Confirmer le rétroplanning de livraison lors du rendez-vous.'
+            },
+            communication: {
+                confirme: true,
+                rappelsEffectues: 1,
+                relances: 1,
+                dateDerniereCommunication: '08/07/2026',
+                prochaineCommunicationPrevue: '11/07/2026',
+                commentaireSuivi: 'Confirmation reçue par email, aucune relance supplémentaire nécessaire.'
+            },
+            devisRef: null,
+            historique: [
+                { date: '28/06/2026', heure: '09:15', auteur: 'Vous', type: 'creation', description: 'Rendez-vous créé.' },
+                { date: '05/07/2026', heure: '16:40', auteur: 'Vous', type: 'communication', description: 'Relance envoyée par email pour confirmer la disponibilité.' },
+                { date: '08/07/2026', heure: '09:05', auteur: 'Vous', type: 'communication', description: 'Rendez-vous confirmé par le client.' }
+            ]
+        },
+        'rdv-0003': {
+            id: 'rdv-0003',
+            titre: 'Renégociation contrat annuel',
+            date: '16/07/2026',
+            heureDebut: '11:00',
+            heureFin: '11:45',
+            clientSlug: 'boucherie-morel',
+            lieu: 'Téléphone',
+            statut: 'reporte',
+            priorite: 'normale',
+            opportunite: 'moyen',
+            montantPotentiel: 1500,
+            notesInternes: 'Client difficile à joindre, déjà reporté deux fois.',
+            preparation: {
+                contexteBesoin: 'Renouvellement du contrat de maintenance digitale à des conditions à redéfinir.',
+                notesDiverses: '',
+                propositionEnvisagee: 'Reconduction avec ajustement tarifaire modéré.',
+                prixCible: 1600,
+                prixMinimum: 1300,
+                argumentsCommerciaux: 'Historique de collaboration sans incident depuis 2 ans.',
+                objectionsPossibles: 'Le client évoque la concurrence sur le prix.',
+                prochainesEtapes: 'Reconfirmer une date ferme par téléphone.'
+            },
+            communication: {
+                confirme: false,
+                rappelsEffectues: 2,
+                relances: 2,
+                dateDerniereCommunication: '08/07/2026',
+                prochaineCommunicationPrevue: '14/07/2026',
+                commentaireSuivi: 'Le client demande à reporter une nouvelle fois, en attente de confirmation d\'une nouvelle date.'
+            },
+            devisRef: null,
+            historique: [
+                { date: '20/06/2026', heure: '08:30', auteur: 'Vous', type: 'creation', description: 'Rendez-vous créé pour le 30/06/2026.' },
+                { date: '29/06/2026', heure: '17:00', auteur: 'Vous', type: 'report', description: 'Rendez-vous reporté du 30/06/2026 au 08/07/2026 à la demande du client.' },
+                { date: '07/07/2026', heure: '18:10', auteur: 'Vous', type: 'report', description: 'Rendez-vous reporté une seconde fois du 08/07/2026 au 16/07/2026.' }
+            ]
+        },
+        'rdv-0004': {
+            id: 'rdv-0004',
+            titre: 'Signature devis site vitrine + audit',
+            date: '15/03/2026',
+            heureDebut: '10:00',
+            heureFin: '11:00',
+            clientSlug: 'martin-dupont',
+            lieu: 'Chez le client',
+            statut: 'realise',
+            priorite: 'haute',
+            opportunite: 'fort',
+            montantPotentiel: 3744,
+            notesInternes: 'Rendez-vous concluant, devis accepté sur place.',
+            preparation: {
+                contexteBesoin: 'Audit stratégique déjà réalisé, extension vers un site vitrine et de la maintenance.',
+                notesDiverses: '',
+                propositionEnvisagee: 'Offre combinée audit + site vitrine + maintenance (voir devis DEV-2026-00015).',
+                prixCible: 3800,
+                prixMinimum: 3400,
+                argumentsCommerciaux: 'Résultats concrets du premier audit, offre packagée avantageuse.',
+                objectionsPossibles: 'Aucune objection majeure rencontrée.',
+                prochainesEtapes: 'Facturation selon l\'acompte prévu au devis.'
+            },
+            communication: {
+                confirme: true,
+                rappelsEffectues: 1,
+                relances: 0,
+                dateDerniereCommunication: '15/03/2026',
+                prochaineCommunicationPrevue: null,
+                commentaireSuivi: 'Rendez-vous réalisé, devis signé sur place.'
+            },
+            devisRef: { numero: 'DEV-2026-00015', version: 3 },
+            historique: [
+                { date: '10/03/2026', heure: '09:00', auteur: 'Vous', type: 'creation', description: 'Rendez-vous créé, devis brouillon associé.' },
+                { date: '15/03/2026', heure: '11:05', auteur: 'Vous', type: 'devis', description: 'Devis DEV-2026-00015 (v3) accepté par le client, converti en facture FAC-2026-00003.' },
+                { date: '15/03/2026', heure: '11:10', auteur: 'Vous', type: 'statut', description: 'Rendez-vous marqué comme réalisé.' }
+            ]
+        },
+        'rdv-0005': {
+            id: 'rdv-0005',
+            titre: 'Découverte besoin formation',
+            date: '20/06/2026',
+            heureDebut: '15:30',
+            heureFin: '16:00',
+            clientSlug: 'sophie-bernard',
+            lieu: 'Visioconférence',
+            statut: 'sans_suite',
+            priorite: 'basse',
+            opportunite: 'faible',
+            montantPotentiel: 950,
+            notesInternes: 'Besoin finalement pris en charge en interne par le client.',
+            preparation: {
+                contexteBesoin: 'Formation de l\'équipe interne sur un nouvel outil.',
+                notesDiverses: '',
+                propositionEnvisagee: 'Session de formation personnalisée.',
+                prixCible: 1000,
+                prixMinimum: 800,
+                argumentsCommerciaux: 'Disponibilité rapide, formation sur-mesure.',
+                objectionsPossibles: 'Le client hésite à externaliser la formation.',
+                prochainesEtapes: 'Aucune, projet abandonné côté client.'
+            },
+            communication: {
+                confirme: true,
+                rappelsEffectues: 1,
+                relances: 1,
+                dateDerniereCommunication: '22/06/2026',
+                prochaineCommunicationPrevue: null,
+                commentaireSuivi: 'Le client a annoncé traiter le besoin en interne, sans suite de notre côté.'
+            },
+            devisRef: null,
+            historique: [
+                { date: '15/06/2026', heure: '14:00', auteur: 'Vous', type: 'creation', description: 'Rendez-vous créé, devis brouillon associé automatiquement.' },
+                { date: '20/06/2026', heure: '16:05', auteur: 'Vous', type: 'devis', description: 'Devis brouillon supprimé, le rendez-vous n\'a mené à aucune proposition.' },
+                { date: '22/06/2026', heure: '09:30', auteur: 'Vous', type: 'statut', description: 'Rendez-vous marqué sans suite.' }
+            ]
+        },
+        'rdv-0006': {
+            id: 'rdv-0006',
+            titre: 'Premier rendez-vous découverte',
+            date: '10/07/2026',
+            heureDebut: '11:00',
+            heureFin: '11:30',
+            clientSlug: 'techni-bois-sarl',
+            lieu: 'Chez le client',
+            statut: 'prevu',
+            priorite: 'normale',
+            opportunite: 'moyen',
+            montantPotentiel: 1200,
+            notesInternes: 'Premier contact, à confirmer.',
+            preparation: {
+                contexteBesoin: 'Besoin encore mal défini, à qualifier lors du rendez-vous.',
+                notesDiverses: 'Client rencontré lors d\'un salon professionnel.',
+                propositionEnvisagee: 'À définir selon les besoins exprimés.',
+                prixCible: null,
+                prixMinimum: null,
+                argumentsCommerciaux: '',
+                objectionsPossibles: '',
+                prochainesEtapes: 'Qualifier le besoin et proposer un devis si pertinent.'
+            },
+            communication: {
+                confirme: false,
+                rappelsEffectues: 0,
+                relances: 0,
+                dateDerniereCommunication: null,
+                prochaineCommunicationPrevue: '09/07/2026',
+                commentaireSuivi: 'Confirmation du rendez-vous à obtenir avant le 09/07.'
+            },
+            devisRef: null,
+            historique: [
+                { date: '03/07/2026', heure: '10:00', auteur: 'Vous', type: 'creation', description: 'Rendez-vous créé.' }
+            ]
+        }
+    };
+
+    window.COCKPIT_RDV_STATUSES = RDV_STATUSES;
+    window.COCKPIT_RDV_PRIORITES = RDV_PRIORITES;
+    window.COCKPIT_RDV_OPPORTUNITES = RDV_OPPORTUNITES;
+    window.COCKPIT_RDV_DETAILS = RDV_DETAILS;
+    function computeDashboardStats() {
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        var rdvList = Object.keys(RDV_DETAILS).map(function (id) {
+            return RDV_DETAILS[id];
+        });
+
+        var actifs = rdvList.filter(function (rdv) {
+            return rdv.statut !== 'realise' && rdv.statut !== 'annule' && rdv.statut !== 'sans_suite';
+        });
+
+        var rdvAujourdhui = actifs.filter(function (rdv) {
+            var d = parseDateFr(rdv.date);
+            return d && d.getTime() === today.getTime();
+        }).sort(function (a, b) {
+            return (a.heureDebut || '').localeCompare(b.heureDebut || '');
+        });
+
+        var rdvProchains = actifs.filter(function (rdv) {
+            var d = parseDateFr(rdv.date);
+            return d && d.getTime() > today.getTime();
+        }).sort(function (a, b) {
+            return parseDateFr(a.date) - parseDateFr(b.date);
+        }).slice(0, 5);
+
+        var rdvNonConfirmes = actifs.filter(function (rdv) {
+            return !rdv.communication.confirme;
+        });
+
+        var rdvReportes = rdvList.filter(function (rdv) {
+            return rdv.statut === 'reporte';
+        });
+
+        var rdvDevisBrouillonEnAttente = rdvList.filter(function (rdv) {
+            var devis = trouverDevisLie(rdv);
+            return !!(devis && devis.versions[devis.versions.length - 1].statut === 'brouillon');
+        });
+
+        var rdvReportesPlusieurs = rdvList.filter(function (rdv) {
+            return estReportePlusieursFois(rdv);
+        });
+
+        return {
+            rdvAujourdhui: rdvAujourdhui,
+            rdvProchains: rdvProchains,
+            rdvNonConfirmes: rdvNonConfirmes,
+            rdvReportes: rdvReportes,
+            rdvDevisBrouillonEnAttente: rdvDevisBrouillonEnAttente,
+            rdvReportesPlusieurs: rdvReportesPlusieurs
+        };
+    }
+
+    window.COCKPIT_AGENDA_CALC = {
+        formatDateFr: formatDateFr,
+        parseDateFr: parseDateFr,
+        computeNextRdvId: computeNextRdvId,
+        pushHistorique: pushHistorique,
+        creerDevisBrouillonPourRdv: creerDevisBrouillonPourRdv,
+        trouverDevisLie: trouverDevisLie,
+        peutSupprimerDevisBrouillonLie: peutSupprimerDevisBrouillonLie,
+        supprimerDevisBrouillonLie: supprimerDevisBrouillonLie,
+        transformerDevisBrouillonEnClassique: transformerDevisBrouillonEnClassique,
+        compterReports: compterReports,
+        estReportePlusieursFois: estReportePlusieursFois,
+        snapshotClient: snapshotClient,
+        computeDashboardStats: computeDashboardStats
     };
 })();
 
@@ -1708,63 +2180,74 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function buildAgendaHref(rdvId, slug) {
-        var params = [];
         if (rdvId) {
-            params.push('rdv=' + encodeURIComponent(rdvId));
+            return 'fiche-rdv.html?rdv=' + encodeURIComponent(rdvId);
         }
-        if (slug) {
-            params.push('from=fiche-client');
-            params.push('client=' + encodeURIComponent(slug));
-        }
-        return 'agenda.html' + (params.length ? '?' + params.join('&') : '');
+        return slug ? 'agenda.html?client=' + encodeURIComponent(slug) : 'agenda.html';
     }
 
     function buildFacturationHref(slug) {
         return slug ? 'facturation.html?from=fiche-client&client=' + encodeURIComponent(slug) : 'facturation.html';
     }
 
-    function renderAppointments(appointments, slug) {
+    function renderAppointments(slug) {
         var list = document.getElementById('client-appointments-list');
         if (!list) {
             return;
         }
         list.innerHTML = '';
 
-        if (!appointments || appointments.length === 0) {
+        var RDV_DETAILS = window.COCKPIT_RDV_DETAILS || {};
+        var RDV_STATUSES = window.COCKPIT_RDV_STATUSES || [];
+        var agendaCalc = window.COCKPIT_AGENDA_CALC || {};
+
+        var appointments = Object.keys(RDV_DETAILS).map(function (id) {
+            return RDV_DETAILS[id];
+        }).filter(function (rdv) {
+            return rdv.clientSlug === slug;
+        }).sort(function (a, b) {
+            var dateA = agendaCalc.parseDateFr ? agendaCalc.parseDateFr(a.date) : null;
+            var dateB = agendaCalc.parseDateFr ? agendaCalc.parseDateFr(b.date) : null;
+            return (dateA ? dateA.getTime() : 0) - (dateB ? dateB.getTime() : 0);
+        });
+
+        if (appointments.length === 0) {
             var empty = document.createElement('p');
             empty.className = 'empty-state-inline';
-            empty.textContent = 'Aucun rendez-vous à venir pour ce client.';
+            empty.textContent = 'Aucun rendez-vous pour ce client.';
             list.appendChild(empty);
             return;
         }
 
-        appointments.slice(0, 3).forEach(function (appointment) {
+        appointments.slice(0, 3).forEach(function (rdv) {
+            var statusInfo = RDV_STATUSES.filter(function (s) { return s.value === rdv.statut; })[0];
+
             var item = document.createElement('a');
             item.className = 'appointment-item appointment-item-link';
-            item.href = buildAgendaHref(appointment.id, slug);
+            item.href = buildAgendaHref(rdv.id, slug);
 
             var infoEl = document.createElement('div');
             infoEl.className = 'appointment-info';
 
             var dateEl = document.createElement('p');
             dateEl.className = 'appointment-date';
-            dateEl.textContent = appointment.date + ' · ' + appointment.heure;
+            dateEl.textContent = rdv.date + ' · ' + rdv.heureDebut;
 
             var objetEl = document.createElement('p');
             objetEl.className = 'appointment-objet';
-            objetEl.textContent = appointment.objet;
+            objetEl.textContent = rdv.titre;
 
             var lieuEl = document.createElement('p');
             lieuEl.className = 'appointment-lieu';
-            lieuEl.textContent = appointment.lieu;
+            lieuEl.textContent = rdv.lieu;
 
             infoEl.appendChild(dateEl);
             infoEl.appendChild(objetEl);
             infoEl.appendChild(lieuEl);
 
             var statusEl = document.createElement('span');
-            statusEl.className = 'badge ' + appointment.badgeClass;
-            statusEl.textContent = appointment.statut;
+            statusEl.className = 'badge ' + (statusInfo ? statusInfo.badgeClass : 'badge-neutral');
+            statusEl.textContent = statusInfo ? statusInfo.label : rdv.statut;
 
             item.appendChild(infoEl);
             item.appendChild(statusEl);
@@ -1993,7 +2476,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         renderNotes(client.notes, client);
         renderHistory(client.historique);
-        renderAppointments(client.rendezVous, slug);
+        renderAppointments(slug);
         renderDocuments(client.documents, slug);
 
         var agendaLinkHeader = document.getElementById('agenda-link-header');
@@ -3858,6 +4341,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 container.appendChild(makeEl('p', null, line));
             }
         });
+        if (state.viewingVersion && state.viewingVersion.rdvRef) {
+            var rdvLink = document.createElement('a');
+            rdvLink.className = 'table-action-secondary';
+            rdvLink.style.display = 'inline-block';
+            rdvLink.style.marginTop = '6px';
+            rdvLink.href = 'fiche-rdv.html?rdv=' + encodeURIComponent(state.viewingVersion.rdvRef.id);
+            rdvLink.textContent = 'Voir le rendez-vous lié';
+            container.appendChild(rdvLink);
+        }
     }
 
     var clientSearchOutsideClickHandler = null;
@@ -5812,4 +6304,1135 @@ document.addEventListener('DOMContentLoaded', function () {
     if (devisEnvoyesValueEl) {
         devisEnvoyesValueEl.textContent = String(stats.devisEnvoyes);
     }
+})();
+
+// Page Tableau de bord : bloc "Agenda commercial" réel (V0.7). Remplace
+// l'ancienne liste statique "Agenda du jour" par un rendu calculé depuis
+// COCKPIT_AGENDA_CALC.computeDashboardStats() : rendez-vous du jour (liste),
+// puis prochains rendez-vous / non confirmés / reportés / devis brouillon en
+// attente / reportés plusieurs fois (compteurs), sans redesign du dashboard.
+
+(function () {
+    var todayListEl = document.getElementById('dashboard-agenda-today');
+    var statsEl = document.getElementById('dashboard-agenda-stats');
+    if (!todayListEl || !statsEl) {
+        return;
+    }
+
+    var agendaCalc = window.COCKPIT_AGENDA_CALC || {};
+    var stats = agendaCalc.computeDashboardStats ? agendaCalc.computeDashboardStats() : null;
+    if (!stats) {
+        return;
+    }
+
+    var CLASS_CYCLE = ['agenda-item-a', 'agenda-item-b', 'agenda-item-c'];
+
+    if (stats.rdvAujourdhui.length === 0) {
+        var emptyItem = document.createElement('li');
+        emptyItem.className = 'agenda-item-a';
+        emptyItem.textContent = 'Aucun rendez-vous prévu aujourd\'hui.';
+        todayListEl.appendChild(emptyItem);
+    } else {
+        stats.rdvAujourdhui.forEach(function (rdv, index) {
+            var item = document.createElement('li');
+            item.className = CLASS_CYCLE[index % CLASS_CYCLE.length];
+            var timeEl = document.createElement('span');
+            timeEl.className = 'agenda-time';
+            timeEl.textContent = rdv.heureDebut || '—';
+            item.appendChild(timeEl);
+            item.appendChild(document.createTextNode(rdv.titre));
+            todayListEl.appendChild(item);
+        });
+    }
+
+    function makeStatRow(label, value) {
+        var row = document.createElement('div');
+        row.className = 'devis-summary-row';
+        var labelEl = document.createElement('span');
+        labelEl.textContent = label;
+        var valueEl = document.createElement('span');
+        valueEl.textContent = value;
+        row.appendChild(labelEl);
+        row.appendChild(valueEl);
+        return row;
+    }
+
+    statsEl.appendChild(makeStatRow('Prochains rendez-vous', String(stats.rdvProchains.length)));
+    statsEl.appendChild(makeStatRow('Non confirmés', String(stats.rdvNonConfirmes.length)));
+    statsEl.appendChild(makeStatRow('Reportés', String(stats.rdvReportes.length)));
+    statsEl.appendChild(makeStatRow('Devis brouillon en attente', String(stats.rdvDevisBrouillonEnAttente.length)));
+    if (stats.rdvReportesPlusieurs.length > 0) {
+        var alertRow = makeStatRow('Reportés plusieurs fois', String(stats.rdvReportesPlusieurs.length));
+        alertRow.classList.add('devis-summary-row-total');
+        statsEl.appendChild(alertRow);
+    }
+})();
+
+// Page Agenda : liste des rendez-vous commerciaux, recherche/filtre/
+// pagination (V0.7) via COCKPIT_LIST_PAGINATION (V0.5.4) — même principe que
+// Clients/Produits/Devis/Factures : les lignes du tableau sont écrites en dur
+// dans agenda.html, cette IIFE calcule seulement les attributs de filtre
+// relatifs à la date (aujourd'hui / cette semaine, par rapport à la date du
+// jour réelle) puis délègue au helper commun. Le paramètre ?client=slug
+// (venant du bloc "Rendez-vous liés" de la fiche client) pré-remplit la
+// recherche sur ce client.
+
+(function () {
+    var table = document.getElementById('agenda-table');
+    var searchInput = document.getElementById('agenda-search');
+    var filterSelect = document.getElementById('agenda-filter');
+    var resetButton = document.getElementById('agenda-reset-filters');
+    var counter = document.getElementById('agenda-counter');
+    var pageSizeSelect = document.getElementById('agenda-page-size');
+    var prevButton = document.getElementById('agenda-prev-page');
+    var nextButton = document.getElementById('agenda-next-page');
+    var pageIndicator = document.getElementById('agenda-page-indicator');
+
+    if (!table || !searchInput || !filterSelect || !counter || !pageSizeSelect) {
+        return;
+    }
+
+    var agendaCalc = window.COCKPIT_AGENDA_CALC || {};
+    var rows = Array.prototype.slice.call(table.querySelectorAll('tbody tr'));
+
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+    var dayOfWeek = today.getDay();
+    var mondayOffset = (dayOfWeek === 0 ? -6 : 1 - dayOfWeek);
+    var monday = new Date(today);
+    monday.setDate(today.getDate() + mondayOffset);
+    var sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+
+    rows.forEach(function (row) {
+        var rowDate = agendaCalc.parseDateFr ? agendaCalc.parseDateFr(row.dataset.date) : null;
+        row.dataset.isToday = (rowDate && rowDate.getTime() === today.getTime()) ? '1' : '0';
+        row.dataset.isWeek = (rowDate && rowDate >= monday && rowDate <= sunday) ? '1' : '0';
+    });
+
+    var params = new URLSearchParams(window.location.search);
+    var clientParam = params.get('client');
+    if (clientParam) {
+        var client = (window.COCKPIT_CLIENT_DETAILS || {})[clientParam];
+        searchInput.value = client ? client.nom : clientParam;
+    }
+
+    window.COCKPIT_LIST_PAGINATION.init({
+        rows: rows,
+        searchInput: searchInput,
+        filterSelects: [filterSelect],
+        resetButton: resetButton,
+        counterEl: counter,
+        pageSizeSelect: pageSizeSelect,
+        prevButton: prevButton,
+        nextButton: nextButton,
+        pageIndicatorEl: pageIndicator,
+        labelSingular: 'rendez-vous',
+        labelPlural: 'rendez-vous',
+        labelEmpty: 'Aucun rendez-vous trouvé',
+        matchRow: function (row, searchValue) {
+            var matchesSearch = !searchValue || (row.dataset.search || '').indexOf(searchValue) !== -1;
+            var filterValue = filterSelect.value;
+            var matchesFilter = true;
+            if (filterValue === 'aujourd-hui') {
+                matchesFilter = row.dataset.isToday === '1';
+            } else if (filterValue === 'cette-semaine') {
+                matchesFilter = row.dataset.isWeek === '1';
+            } else if (filterValue === 'a-confirmer') {
+                matchesFilter = row.dataset.confirmation === 'a-confirmer';
+            } else if (filterValue) {
+                matchesFilter = row.dataset.status === filterValue;
+            }
+            return matchesSearch && matchesFilter;
+        }
+    });
+})();
+
+// Page Fiche rendez-vous (V0.7) : création, consultation et modification d'un
+// rendez-vous commercial. Sur le même principe que devis-edition.html : mode
+// 'new' (aucun ?rdv=) ou 'view' (?rdv=ID). En mode 'view', les actions
+// (modales d'édition, actions rapides, devis lié) s'appliquent directement à
+// l'objet partagé COCKPIT_RDV_DETAILS[id] : réelles en mémoire de page, comme
+// partout ailleurs dans l'application — rien ne survit à un rechargement.
+// Règle centrale : un rendez-vous commercial est associé à un devis
+// brouillon, auto-créé à la création du rendez-vous dès qu'un client est
+// renseigné (sinon un bouton très visible propose de le créer dès qu'un
+// client est associé).
+
+(function () {
+    var contentEl = document.getElementById('rdv-content');
+    var notFoundEl = document.getElementById('rdv-not-found');
+    if (!contentEl || !notFoundEl) {
+        return;
+    }
+
+    var agendaCalc = window.COCKPIT_AGENDA_CALC || {};
+    var devisCalc = window.COCKPIT_DEVIS_CALC;
+    var RDV_STATUSES = window.COCKPIT_RDV_STATUSES || [];
+    var RDV_PRIORITES = window.COCKPIT_RDV_PRIORITES || [];
+    var RDV_OPPORTUNITES = window.COCKPIT_RDV_OPPORTUNITES || [];
+    var CLIENT_DETAILS = window.COCKPIT_CLIENT_DETAILS || {};
+    var DEVIS_STATUSES = window.COCKPIT_DEVIS_STATUSES || [];
+
+    var RDV_HISTORY_TYPES = {
+        creation: { label: 'Création', badgeClass: 'badge-neutral' },
+        statut: { label: 'Statut', badgeClass: 'badge-info' },
+        report: { label: 'Report', badgeClass: 'badge-warning' },
+        devis: { label: 'Devis', badgeClass: 'badge-success' },
+        communication: { label: 'Communication', badgeClass: 'badge-info' },
+        preparation: { label: 'Préparation', badgeClass: 'badge-neutral' },
+        modification: { label: 'Modification', badgeClass: 'badge-neutral' }
+    };
+
+    var mode = 'view';
+    var rdv = null;
+
+    function makeEl(tag, className, text) {
+        var node = document.createElement(tag);
+        if (className) {
+            node.className = className;
+        }
+        if (text !== undefined) {
+            node.textContent = text;
+        }
+        return node;
+    }
+
+    function findInfo(list, value) {
+        return list.filter(function (item) {
+            return item.value === value;
+        })[0] || null;
+    }
+
+    function setText(id, value) {
+        var el = document.getElementById(id);
+        if (el) {
+            el.textContent = (value === '' || value === null || value === undefined) ? '—' : value;
+        }
+    }
+
+    function makeLabel(text, forId) {
+        var label = document.createElement('label');
+        label.className = 'modal-label';
+        label.textContent = text;
+        if (forId) {
+            label.setAttribute('for', forId);
+        }
+        return label;
+    }
+
+    function defaultRdv() {
+        return {
+            id: null,
+            titre: '',
+            date: '',
+            heureDebut: '',
+            heureFin: '',
+            clientSlug: null,
+            lieu: '',
+            statut: 'prevu',
+            priorite: 'normale',
+            opportunite: 'moyen',
+            montantPotentiel: null,
+            notesInternes: '',
+            preparation: {
+                contexteBesoin: '', notesDiverses: '', propositionEnvisagee: '',
+                prixCible: null, prixMinimum: null,
+                argumentsCommerciaux: '', objectionsPossibles: '', prochainesEtapes: ''
+            },
+            communication: {
+                confirme: false, rappelsEffectues: 0, relances: 0,
+                dateDerniereCommunication: null, prochaineCommunicationPrevue: null, commentaireSuivi: ''
+            },
+            devisRef: null,
+            historique: []
+        };
+    }
+
+    function loadFromParams() {
+        var params = new URLSearchParams(window.location.search);
+        var rdvParam = params.get('rdv');
+        if (rdvParam) {
+            var existing = (window.COCKPIT_RDV_DETAILS || {})[rdvParam];
+            if (!existing) {
+                return false;
+            }
+            mode = 'view';
+            rdv = existing;
+            return true;
+        }
+        mode = 'new';
+        rdv = defaultRdv();
+        return true;
+    }
+
+    var titreHeadingEl = document.getElementById('rdv-titre-heading');
+    var statusBadgeEl = document.getElementById('rdv-status-badge');
+    var prioriteBadgeEl = document.getElementById('rdv-priorite-badge');
+    var opportuniteBadgeEl = document.getElementById('rdv-opportunite-badge');
+    var clientLinkEl = document.getElementById('rdv-client-link');
+    var datetimeEl = document.getElementById('rdv-datetime');
+    var lieuEl = document.getElementById('rdv-lieu');
+    var montantPotentielEl = document.getElementById('rdv-montant-potentiel');
+    var notesInternesEl = document.getElementById('rdv-notes-internes');
+    var createBtn = document.getElementById('rdv-create-btn');
+    var editHeaderBtn = document.getElementById('rdv-edit-header-btn');
+    var deleteBtn = document.getElementById('rdv-delete-btn');
+    var pdfBtn = document.getElementById('rdv-pdf-btn');
+    var quickActionsBlock = document.getElementById('rdv-quick-actions-block');
+
+    function renderHeader() {
+        titreHeadingEl.textContent = rdv.titre || 'Nouveau rendez-vous';
+
+        var statusInfo = findInfo(RDV_STATUSES, rdv.statut);
+        statusBadgeEl.textContent = statusInfo ? statusInfo.label : rdv.statut;
+        statusBadgeEl.className = 'badge ' + (statusInfo ? statusInfo.badgeClass : 'badge-neutral');
+        statusBadgeEl.style.display = mode === 'new' ? 'none' : '';
+
+        var prioriteInfo = findInfo(RDV_PRIORITES, rdv.priorite);
+        prioriteBadgeEl.textContent = prioriteInfo ? prioriteInfo.label : rdv.priorite;
+        prioriteBadgeEl.className = 'badge ' + (prioriteInfo ? prioriteInfo.badgeClass : 'badge-neutral');
+        prioriteBadgeEl.style.display = mode === 'new' ? 'none' : '';
+
+        var opportuniteInfo = findInfo(RDV_OPPORTUNITES, rdv.opportunite);
+        opportuniteBadgeEl.textContent = opportuniteInfo ? opportuniteInfo.label : rdv.opportunite;
+        opportuniteBadgeEl.className = 'badge ' + (opportuniteInfo ? opportuniteInfo.badgeClass : 'badge-neutral');
+        opportuniteBadgeEl.style.display = mode === 'new' ? 'none' : '';
+
+        var reportedBadge = document.getElementById('rdv-reported-badge');
+        if (mode === 'view' && agendaCalc.estReportePlusieursFois && agendaCalc.estReportePlusieursFois(rdv)) {
+            var reportedText = 'Reporté ' + agendaCalc.compterReports(rdv) + ' fois';
+            if (!reportedBadge) {
+                reportedBadge = makeEl('span', 'badge badge-warning', reportedText);
+                reportedBadge.id = 'rdv-reported-badge';
+                statusBadgeEl.parentNode.appendChild(reportedBadge);
+            } else {
+                reportedBadge.textContent = reportedText;
+            }
+        } else if (reportedBadge) {
+            reportedBadge.remove();
+        }
+
+        if (rdv.clientSlug && CLIENT_DETAILS[rdv.clientSlug]) {
+            clientLinkEl.textContent = CLIENT_DETAILS[rdv.clientSlug].nom;
+            clientLinkEl.href = 'fiche-client.html?client=' + encodeURIComponent(rdv.clientSlug);
+        } else {
+            clientLinkEl.textContent = 'Aucun client associé';
+            clientLinkEl.href = '#';
+        }
+
+        datetimeEl.textContent = rdv.date
+            ? (rdv.date + (rdv.heureDebut ? ' · ' + rdv.heureDebut + (rdv.heureFin ? '–' + rdv.heureFin : '') : ''))
+            : '—';
+        lieuEl.textContent = rdv.lieu || '—';
+        montantPotentielEl.textContent = (rdv.montantPotentiel !== null && rdv.montantPotentiel !== undefined && devisCalc)
+            ? devisCalc.formatMoney(rdv.montantPotentiel) : '—';
+        notesInternesEl.textContent = rdv.notesInternes || '—';
+
+        createBtn.style.display = mode === 'new' ? '' : 'none';
+        editHeaderBtn.style.display = mode === 'new' ? 'none' : '';
+        deleteBtn.style.display = mode === 'new' ? 'none' : '';
+        pdfBtn.style.display = mode === 'new' ? 'none' : '';
+        if (mode === 'view') {
+            pdfBtn.href = 'rdv-document.html?rdv=' + encodeURIComponent(rdv.id);
+        }
+        quickActionsBlock.style.display = mode === 'new' ? 'none' : '';
+    }
+
+    function renderPreparation() {
+        setText('prep-contexte', rdv.preparation.contexteBesoin);
+        setText('prep-notes', rdv.preparation.notesDiverses);
+        setText('prep-proposition', rdv.preparation.propositionEnvisagee);
+        setText('prep-prix-cible', (rdv.preparation.prixCible !== null && rdv.preparation.prixCible !== undefined)
+            ? devisCalc.formatMoney(rdv.preparation.prixCible) : null);
+        setText('prep-prix-minimum', (rdv.preparation.prixMinimum !== null && rdv.preparation.prixMinimum !== undefined)
+            ? devisCalc.formatMoney(rdv.preparation.prixMinimum) : null);
+        var margeValue = (rdv.preparation.prixCible !== null && rdv.preparation.prixCible !== undefined &&
+            rdv.preparation.prixMinimum !== null && rdv.preparation.prixMinimum !== undefined)
+            ? devisCalc.formatMoney(rdv.preparation.prixCible - rdv.preparation.prixMinimum) : null;
+        setText('prep-marge', margeValue);
+        setText('prep-arguments', rdv.preparation.argumentsCommerciaux);
+        setText('prep-objections', rdv.preparation.objectionsPossibles);
+        setText('prep-etapes', rdv.preparation.prochainesEtapes);
+    }
+
+    function renderCommunication() {
+        setText('comm-confirme', rdv.communication.confirme ? 'Confirmé' : 'À confirmer');
+        setText('comm-rappels', String(rdv.communication.rappelsEffectues || 0));
+        setText('comm-relances', String(rdv.communication.relances || 0));
+        setText('comm-derniere', rdv.communication.dateDerniereCommunication);
+        setText('comm-prochaine', rdv.communication.prochaineCommunicationPrevue);
+        setText('comm-commentaire', rdv.communication.commentaireSuivi);
+    }
+
+    function renderHistorique() {
+        var list = document.getElementById('rdv-history-list');
+        list.innerHTML = '';
+        var events = (rdv.historique || []).slice().reverse();
+        if (events.length === 0) {
+            list.appendChild(makeEl('p', 'empty-state-inline', 'Aucun historique pour ce rendez-vous.'));
+            return;
+        }
+        events.forEach(function (event) {
+            var typeInfo = RDV_HISTORY_TYPES[event.type] || { label: event.type, badgeClass: 'badge-neutral' };
+            var item = makeEl('div', 'history-item');
+            item.appendChild(makeEl('div', 'history-date', event.date + ' · ' + event.heure));
+            item.appendChild(makeEl('span', 'badge ' + typeInfo.badgeClass, typeInfo.label));
+            item.appendChild(makeEl('p', 'history-resume', event.description));
+            item.appendChild(makeEl('span', 'history-author', event.auteur));
+            list.appendChild(item);
+        });
+    }
+
+    function findLinkedFactureKey(numero) {
+        var FACTURE_DETAILS = window.COCKPIT_FACTURE_DETAILS || {};
+        return Object.keys(FACTURE_DETAILS).filter(function (key) {
+            var f = FACTURE_DETAILS[key];
+            return f.devisRef && f.devisRef.numero === numero;
+        })[0] || null;
+    }
+
+    function openDeleteDevisBrouillonModal() {
+        var body = makeEl('p', 'modal-text', 'Voulez-vous vraiment supprimer ce devis brouillon ? Cette action ne peut pas être annulée.');
+
+        var cancelButton = document.createElement('button');
+        cancelButton.type = 'button';
+        cancelButton.className = 'btn-secondary';
+        cancelButton.setAttribute('data-modal-close', 'true');
+        cancelButton.setAttribute('data-modal-autofocus', 'true');
+        cancelButton.textContent = 'Annuler';
+
+        var confirmButton = document.createElement('button');
+        confirmButton.type = 'button';
+        confirmButton.className = 'btn-danger';
+        confirmButton.setAttribute('data-modal-close', 'true');
+        confirmButton.textContent = 'Supprimer';
+        confirmButton.addEventListener('click', function () {
+            agendaCalc.supprimerDevisBrouillonLie(rdv);
+            renderAll();
+        });
+
+        var footer = document.createDocumentFragment();
+        footer.appendChild(cancelButton);
+        footer.appendChild(confirmButton);
+
+        window.COCKPIT_MODAL.open({ title: 'Supprimer le devis brouillon', body: body, footer: footer });
+    }
+
+    function openMissingClientModal() {
+        var body = makeEl('p', 'modal-text', 'Associez un client à ce rendez-vous avant de créer le devis brouillon lié.');
+        var closeButton = document.createElement('button');
+        closeButton.type = 'button';
+        closeButton.className = 'btn-secondary';
+        closeButton.setAttribute('data-modal-close', 'true');
+        closeButton.setAttribute('data-modal-autofocus', 'true');
+        closeButton.textContent = 'Fermer';
+        window.COCKPIT_MODAL.open({ title: 'Client requis', body: body, footer: closeButton });
+    }
+
+    function renderDevisLie() {
+        var container = document.getElementById('rdv-devis-content');
+        container.innerHTML = '';
+
+        if (mode === 'new') {
+            container.appendChild(makeEl('p', 'empty-state-inline', 'Le devis brouillon lié sera proposé une fois le rendez-vous créé.'));
+            return;
+        }
+
+        var devis = agendaCalc.trouverDevisLie(rdv);
+
+        if (!devis) {
+            container.appendChild(makeEl('p', 'empty-state-inline', 'Aucun devis lié à ce rendez-vous pour le moment.'));
+            var createDevisBtn = document.createElement('button');
+            createDevisBtn.type = 'button';
+            createDevisBtn.className = 'btn-primary';
+            createDevisBtn.textContent = 'Créer le devis brouillon lié';
+            createDevisBtn.addEventListener('click', function () {
+                if (!rdv.clientSlug) {
+                    openMissingClientModal();
+                    return;
+                }
+                agendaCalc.creerDevisBrouillonPourRdv(rdv);
+                renderAll();
+            });
+            container.appendChild(createDevisBtn);
+            return;
+        }
+
+        var versionActive = devis.versions[devis.versions.length - 1];
+        var totals = devisCalc.computeDevisTotals(versionActive.lignes);
+        var statusInfo = findInfo(DEVIS_STATUSES, versionActive.statut);
+
+        var summary = makeEl('div', 'devis-summary');
+        var row1 = makeEl('div', 'devis-summary-row');
+        row1.appendChild(makeEl('span', null, 'Devis'));
+        var numeroWrap = document.createElement('span');
+        numeroWrap.appendChild(document.createTextNode(devis.numero + ' '));
+        numeroWrap.appendChild(makeEl('span', 'badge ' + (statusInfo ? statusInfo.badgeClass : 'badge-neutral'), statusInfo ? statusInfo.label : versionActive.statut));
+        row1.appendChild(numeroWrap);
+        summary.appendChild(row1);
+
+        var row2 = makeEl('div', 'devis-summary-row');
+        row2.appendChild(makeEl('span', null, 'Montant TTC'));
+        row2.appendChild(makeEl('span', null, devisCalc.formatMoney(totals.totalTTC)));
+        summary.appendChild(row2);
+        container.appendChild(summary);
+
+        var actions = makeEl('div', 'page-toolbar');
+        actions.style.justifyContent = 'flex-start';
+
+        var viewLink = document.createElement('a');
+        viewLink.className = 'btn-table-action';
+        viewLink.textContent = 'Voir le devis';
+        viewLink.href = 'devis-edition.html?devis=' + encodeURIComponent(devis.numero) + '&version=' + versionActive.version;
+        actions.appendChild(viewLink);
+
+        var docLink = document.createElement('a');
+        docLink.className = 'table-action-secondary';
+        docLink.textContent = 'Document';
+        docLink.href = 'devis-document.html?devis=' + encodeURIComponent(devis.numero) + '&version=' + versionActive.version;
+        actions.appendChild(docLink);
+
+        var factureKey = findLinkedFactureKey(devis.numero);
+        if (factureKey) {
+            var factureLink = document.createElement('a');
+            factureLink.className = 'table-action-secondary';
+            factureLink.textContent = 'Voir la facture';
+            factureLink.href = 'facture-edition.html?facture=' + encodeURIComponent(factureKey);
+            actions.appendChild(factureLink);
+        } else if (agendaCalc.peutSupprimerDevisBrouillonLie(rdv)) {
+            var transformBtn = document.createElement('button');
+            transformBtn.type = 'button';
+            transformBtn.className = 'btn-secondary';
+            transformBtn.textContent = 'Transformer en devis classique';
+            transformBtn.addEventListener('click', function () {
+                agendaCalc.transformerDevisBrouillonEnClassique(rdv);
+                renderAll();
+            });
+            actions.appendChild(transformBtn);
+
+            var deleteDevisBtn = document.createElement('button');
+            deleteDevisBtn.type = 'button';
+            deleteDevisBtn.className = 'btn-danger';
+            deleteDevisBtn.textContent = 'Supprimer le devis brouillon';
+            deleteDevisBtn.addEventListener('click', openDeleteDevisBrouillonModal);
+            actions.appendChild(deleteDevisBtn);
+        }
+
+        container.appendChild(actions);
+    }
+
+    function renderAll() {
+        renderHeader();
+        renderPreparation();
+        renderCommunication();
+        renderHistorique();
+        renderDevisLie();
+    }
+
+    function openEditHeaderModal() {
+        var body = document.createElement('div');
+
+        body.appendChild(makeLabel('Titre', 'rdv-form-titre'));
+        var titreInput = document.createElement('input');
+        titreInput.type = 'text';
+        titreInput.id = 'rdv-form-titre';
+        titreInput.className = 'modal-input';
+        titreInput.value = rdv.titre || '';
+        body.appendChild(titreInput);
+
+        var grid = makeEl('div', 'form-grid-2');
+        var dateWrap = document.createElement('div');
+        dateWrap.appendChild(makeLabel('Date (JJ/MM/AAAA)', 'rdv-form-date'));
+        var dateInput = document.createElement('input');
+        dateInput.type = 'text';
+        dateInput.id = 'rdv-form-date';
+        dateInput.className = 'modal-input';
+        dateInput.placeholder = 'JJ/MM/AAAA';
+        dateInput.value = rdv.date || '';
+        dateWrap.appendChild(dateInput);
+        grid.appendChild(dateWrap);
+
+        var lieuWrap = document.createElement('div');
+        lieuWrap.appendChild(makeLabel('Lieu / format', 'rdv-form-lieu'));
+        var lieuInput = document.createElement('input');
+        lieuInput.type = 'text';
+        lieuInput.id = 'rdv-form-lieu';
+        lieuInput.className = 'modal-input';
+        lieuInput.value = rdv.lieu || '';
+        lieuWrap.appendChild(lieuInput);
+        grid.appendChild(lieuWrap);
+        body.appendChild(grid);
+
+        var grid2 = makeEl('div', 'form-grid-2');
+        var debutWrap = document.createElement('div');
+        debutWrap.appendChild(makeLabel('Heure de début', 'rdv-form-heure-debut'));
+        var debutInput = document.createElement('input');
+        debutInput.type = 'text';
+        debutInput.id = 'rdv-form-heure-debut';
+        debutInput.className = 'modal-input';
+        debutInput.placeholder = '09:30';
+        debutInput.value = rdv.heureDebut || '';
+        debutWrap.appendChild(debutInput);
+        grid2.appendChild(debutWrap);
+
+        var finWrap = document.createElement('div');
+        finWrap.appendChild(makeLabel('Heure de fin', 'rdv-form-heure-fin'));
+        var finInput = document.createElement('input');
+        finInput.type = 'text';
+        finInput.id = 'rdv-form-heure-fin';
+        finInput.className = 'modal-input';
+        finInput.placeholder = '10:30';
+        finInput.value = rdv.heureFin || '';
+        finWrap.appendChild(finInput);
+        grid2.appendChild(finWrap);
+        body.appendChild(grid2);
+
+        body.appendChild(makeLabel('Client', 'rdv-form-client'));
+        var clientSelect = document.createElement('select');
+        clientSelect.id = 'rdv-form-client';
+        clientSelect.className = 'modal-select';
+        var emptyOption = document.createElement('option');
+        emptyOption.value = '';
+        emptyOption.textContent = 'Aucun client';
+        clientSelect.appendChild(emptyOption);
+        Object.keys(CLIENT_DETAILS).forEach(function (slug) {
+            var option = document.createElement('option');
+            option.value = slug;
+            option.textContent = CLIENT_DETAILS[slug].nom;
+            if (slug === rdv.clientSlug) {
+                option.selected = true;
+            }
+            clientSelect.appendChild(option);
+        });
+        body.appendChild(clientSelect);
+
+        var grid3 = makeEl('div', 'form-grid-2');
+        var prioriteWrap = document.createElement('div');
+        prioriteWrap.appendChild(makeLabel('Priorité', 'rdv-form-priorite'));
+        var prioriteSelect = document.createElement('select');
+        prioriteSelect.id = 'rdv-form-priorite';
+        prioriteSelect.className = 'modal-select';
+        RDV_PRIORITES.forEach(function (p) {
+            var option = document.createElement('option');
+            option.value = p.value;
+            option.textContent = p.label;
+            if (p.value === rdv.priorite) {
+                option.selected = true;
+            }
+            prioriteSelect.appendChild(option);
+        });
+        prioriteWrap.appendChild(prioriteSelect);
+        grid3.appendChild(prioriteWrap);
+
+        var opportuniteWrap = document.createElement('div');
+        opportuniteWrap.appendChild(makeLabel('Opportunité', 'rdv-form-opportunite'));
+        var opportuniteSelect = document.createElement('select');
+        opportuniteSelect.id = 'rdv-form-opportunite';
+        opportuniteSelect.className = 'modal-select';
+        RDV_OPPORTUNITES.forEach(function (o) {
+            var option = document.createElement('option');
+            option.value = o.value;
+            option.textContent = o.label;
+            if (o.value === rdv.opportunite) {
+                option.selected = true;
+            }
+            opportuniteSelect.appendChild(option);
+        });
+        opportuniteWrap.appendChild(opportuniteSelect);
+        grid3.appendChild(opportuniteWrap);
+        body.appendChild(grid3);
+
+        body.appendChild(makeLabel('Montant potentiel estimé (€)', 'rdv-form-montant'));
+        var montantInput = document.createElement('input');
+        montantInput.type = 'number';
+        montantInput.id = 'rdv-form-montant';
+        montantInput.className = 'modal-input';
+        montantInput.value = (rdv.montantPotentiel !== null && rdv.montantPotentiel !== undefined) ? rdv.montantPotentiel : '';
+        body.appendChild(montantInput);
+
+        body.appendChild(makeLabel('Notes internes', 'rdv-form-notes'));
+        var notesTextarea = document.createElement('textarea');
+        notesTextarea.id = 'rdv-form-notes';
+        notesTextarea.className = 'modal-textarea';
+        notesTextarea.rows = 3;
+        notesTextarea.value = rdv.notesInternes || '';
+        body.appendChild(notesTextarea);
+
+        var cancelButton = document.createElement('button');
+        cancelButton.type = 'button';
+        cancelButton.className = 'btn-secondary';
+        cancelButton.setAttribute('data-modal-close', 'true');
+        cancelButton.textContent = 'Annuler';
+
+        var saveButton = document.createElement('button');
+        saveButton.type = 'button';
+        saveButton.className = 'btn-primary';
+        saveButton.setAttribute('data-modal-close', 'true');
+        saveButton.textContent = mode === 'new' ? 'Créer le rendez-vous' : 'Enregistrer';
+
+        saveButton.addEventListener('click', function () {
+            var oldDate = rdv.date;
+            var oldHeureDebut = rdv.heureDebut;
+            var oldHeureFin = rdv.heureFin;
+            var oldStatut = rdv.statut;
+            var wasNew = mode === 'new';
+
+            rdv.titre = titreInput.value.trim() || 'Rendez-vous sans titre';
+            rdv.date = dateInput.value.trim();
+            rdv.heureDebut = debutInput.value.trim();
+            rdv.heureFin = finInput.value.trim();
+            rdv.lieu = lieuInput.value.trim();
+            rdv.clientSlug = clientSelect.value || null;
+            rdv.priorite = prioriteSelect.value;
+            rdv.opportunite = opportuniteSelect.value;
+            var montantValue = parseFloat(montantInput.value);
+            rdv.montantPotentiel = isNaN(montantValue) ? null : montantValue;
+            rdv.notesInternes = notesTextarea.value.trim();
+
+            if (wasNew) {
+                rdv.id = agendaCalc.computeNextRdvId();
+                window.COCKPIT_RDV_DETAILS[rdv.id] = rdv;
+                agendaCalc.pushHistorique(rdv, 'creation', 'Rendez-vous créé.');
+                if (rdv.clientSlug) {
+                    agendaCalc.creerDevisBrouillonPourRdv(rdv);
+                }
+                mode = 'view';
+            } else {
+                if (oldDate !== rdv.date) {
+                    agendaCalc.pushHistorique(rdv, 'modification', 'Date modifiée de ' + (oldDate || '—') + ' à ' + (rdv.date || '—') + '.');
+                }
+                if (oldHeureDebut !== rdv.heureDebut || oldHeureFin !== rdv.heureFin) {
+                    agendaCalc.pushHistorique(rdv, 'modification', 'Horaire modifié.');
+                }
+                if (oldStatut !== rdv.statut) {
+                    agendaCalc.pushHistorique(rdv, 'statut', 'Statut modifié.');
+                }
+            }
+
+            renderAll();
+        });
+
+        var footer = document.createDocumentFragment();
+        footer.appendChild(cancelButton);
+        footer.appendChild(saveButton);
+
+        window.COCKPIT_MODAL.open({
+            title: mode === 'new' ? 'Créer un rendez-vous' : 'Modifier les informations',
+            body: body,
+            footer: footer
+        });
+    }
+
+    function addModalTextarea(body, labelText, id, value, rows) {
+        body.appendChild(makeLabel(labelText, id));
+        var textarea = document.createElement('textarea');
+        textarea.id = id;
+        textarea.className = 'modal-textarea';
+        textarea.rows = rows || 2;
+        textarea.value = value || '';
+        body.appendChild(textarea);
+        return textarea;
+    }
+
+    function openEditPreparationModal() {
+        var body = document.createElement('div');
+
+        var contexteTa = addModalTextarea(body, 'Contexte du besoin', 'prep-form-contexte', rdv.preparation.contexteBesoin, 2);
+        var notesTa = addModalTextarea(body, 'Notes diverses', 'prep-form-notes', rdv.preparation.notesDiverses, 2);
+        var propositionTa = addModalTextarea(body, 'Proposition envisagée', 'prep-form-proposition', rdv.preparation.propositionEnvisagee, 2);
+
+        var grid = makeEl('div', 'form-grid-2');
+        var prixCibleWrap = document.createElement('div');
+        prixCibleWrap.appendChild(makeLabel('Prix cible (€)', 'prep-form-prix-cible'));
+        var prixCibleInput = document.createElement('input');
+        prixCibleInput.type = 'number';
+        prixCibleInput.id = 'prep-form-prix-cible';
+        prixCibleInput.className = 'modal-input';
+        prixCibleInput.value = (rdv.preparation.prixCible !== null && rdv.preparation.prixCible !== undefined) ? rdv.preparation.prixCible : '';
+        prixCibleWrap.appendChild(prixCibleInput);
+        grid.appendChild(prixCibleWrap);
+
+        var prixMinWrap = document.createElement('div');
+        prixMinWrap.appendChild(makeLabel('Prix minimum acceptable (€)', 'prep-form-prix-min'));
+        var prixMinInput = document.createElement('input');
+        prixMinInput.type = 'number';
+        prixMinInput.id = 'prep-form-prix-min';
+        prixMinInput.className = 'modal-input';
+        prixMinInput.value = (rdv.preparation.prixMinimum !== null && rdv.preparation.prixMinimum !== undefined) ? rdv.preparation.prixMinimum : '';
+        prixMinWrap.appendChild(prixMinInput);
+        grid.appendChild(prixMinWrap);
+        body.appendChild(grid);
+
+        var argumentsTa = addModalTextarea(body, 'Arguments commerciaux', 'prep-form-arguments', rdv.preparation.argumentsCommerciaux, 2);
+        var objectionsTa = addModalTextarea(body, 'Objections possibles', 'prep-form-objections', rdv.preparation.objectionsPossibles, 2);
+        var etapesTa = addModalTextarea(body, 'Prochaines étapes prévues', 'prep-form-etapes', rdv.preparation.prochainesEtapes, 2);
+
+        var cancelButton = document.createElement('button');
+        cancelButton.type = 'button';
+        cancelButton.className = 'btn-secondary';
+        cancelButton.setAttribute('data-modal-close', 'true');
+        cancelButton.textContent = 'Annuler';
+
+        var saveButton = document.createElement('button');
+        saveButton.type = 'button';
+        saveButton.className = 'btn-primary';
+        saveButton.setAttribute('data-modal-close', 'true');
+        saveButton.textContent = 'Enregistrer';
+        saveButton.addEventListener('click', function () {
+            rdv.preparation.contexteBesoin = contexteTa.value.trim();
+            rdv.preparation.notesDiverses = notesTa.value.trim();
+            rdv.preparation.propositionEnvisagee = propositionTa.value.trim();
+            var prixCibleValue = parseFloat(prixCibleInput.value);
+            rdv.preparation.prixCible = isNaN(prixCibleValue) ? null : prixCibleValue;
+            var prixMinValue = parseFloat(prixMinInput.value);
+            rdv.preparation.prixMinimum = isNaN(prixMinValue) ? null : prixMinValue;
+            rdv.preparation.argumentsCommerciaux = argumentsTa.value.trim();
+            rdv.preparation.objectionsPossibles = objectionsTa.value.trim();
+            rdv.preparation.prochainesEtapes = etapesTa.value.trim();
+            agendaCalc.pushHistorique(rdv, 'preparation', 'Préparation commerciale mise à jour.');
+            renderAll();
+        });
+
+        var footer = document.createDocumentFragment();
+        footer.appendChild(cancelButton);
+        footer.appendChild(saveButton);
+
+        window.COCKPIT_MODAL.open({ title: 'Modifier la préparation commerciale', body: body, footer: footer });
+    }
+
+    function openEditCommunicationModal() {
+        var body = document.createElement('div');
+
+        var confirmeLabel = document.createElement('label');
+        confirmeLabel.className = 'modal-checkbox-item';
+        var confirmeCheckbox = document.createElement('input');
+        confirmeCheckbox.type = 'checkbox';
+        confirmeCheckbox.checked = !!rdv.communication.confirme;
+        confirmeLabel.appendChild(confirmeCheckbox);
+        confirmeLabel.appendChild(document.createTextNode('Rendez-vous confirmé'));
+        body.appendChild(confirmeLabel);
+
+        var grid = makeEl('div', 'form-grid-2');
+        var rappelsWrap = document.createElement('div');
+        rappelsWrap.appendChild(makeLabel('Rappels effectués', 'comm-form-rappels'));
+        var rappelsInput = document.createElement('input');
+        rappelsInput.type = 'number';
+        rappelsInput.id = 'comm-form-rappels';
+        rappelsInput.className = 'modal-input';
+        rappelsInput.value = rdv.communication.rappelsEffectues || 0;
+        rappelsWrap.appendChild(rappelsInput);
+        grid.appendChild(rappelsWrap);
+
+        var relancesWrap = document.createElement('div');
+        relancesWrap.appendChild(makeLabel('Relances', 'comm-form-relances'));
+        var relancesInput = document.createElement('input');
+        relancesInput.type = 'number';
+        relancesInput.id = 'comm-form-relances';
+        relancesInput.className = 'modal-input';
+        relancesInput.value = rdv.communication.relances || 0;
+        relancesWrap.appendChild(relancesInput);
+        grid.appendChild(relancesWrap);
+        body.appendChild(grid);
+
+        var grid2 = makeEl('div', 'form-grid-2');
+        var derniereWrap = document.createElement('div');
+        derniereWrap.appendChild(makeLabel('Dernière communication (JJ/MM/AAAA)', 'comm-form-derniere'));
+        var derniereInput = document.createElement('input');
+        derniereInput.type = 'text';
+        derniereInput.id = 'comm-form-derniere';
+        derniereInput.className = 'modal-input';
+        derniereInput.placeholder = 'JJ/MM/AAAA';
+        derniereInput.value = rdv.communication.dateDerniereCommunication || '';
+        derniereWrap.appendChild(derniereInput);
+        grid2.appendChild(derniereWrap);
+
+        var prochaineWrap = document.createElement('div');
+        prochaineWrap.appendChild(makeLabel('Prochaine communication prévue (JJ/MM/AAAA)', 'comm-form-prochaine'));
+        var prochaineInput = document.createElement('input');
+        prochaineInput.type = 'text';
+        prochaineInput.id = 'comm-form-prochaine';
+        prochaineInput.className = 'modal-input';
+        prochaineInput.placeholder = 'JJ/MM/AAAA';
+        prochaineInput.value = rdv.communication.prochaineCommunicationPrevue || '';
+        prochaineWrap.appendChild(prochaineInput);
+        grid2.appendChild(prochaineWrap);
+        body.appendChild(grid2);
+
+        var commentaireTa = addModalTextarea(body, 'Commentaire de suivi', 'comm-form-commentaire', rdv.communication.commentaireSuivi, 3);
+
+        var cancelButton = document.createElement('button');
+        cancelButton.type = 'button';
+        cancelButton.className = 'btn-secondary';
+        cancelButton.setAttribute('data-modal-close', 'true');
+        cancelButton.textContent = 'Annuler';
+
+        var saveButton = document.createElement('button');
+        saveButton.type = 'button';
+        saveButton.className = 'btn-primary';
+        saveButton.setAttribute('data-modal-close', 'true');
+        saveButton.textContent = 'Enregistrer';
+        saveButton.addEventListener('click', function () {
+            rdv.communication.confirme = confirmeCheckbox.checked;
+            var rappelsValue = parseInt(rappelsInput.value, 10);
+            rdv.communication.rappelsEffectues = isNaN(rappelsValue) ? 0 : rappelsValue;
+            var relancesValue = parseInt(relancesInput.value, 10);
+            rdv.communication.relances = isNaN(relancesValue) ? 0 : relancesValue;
+            rdv.communication.dateDerniereCommunication = derniereInput.value.trim() || null;
+            rdv.communication.prochaineCommunicationPrevue = prochaineInput.value.trim() || null;
+            rdv.communication.commentaireSuivi = commentaireTa.value.trim();
+            agendaCalc.pushHistorique(rdv, 'communication', 'Suivi de communication mis à jour.');
+            renderAll();
+        });
+
+        var footer = document.createDocumentFragment();
+        footer.appendChild(cancelButton);
+        footer.appendChild(saveButton);
+
+        window.COCKPIT_MODAL.open({ title: 'Modifier le suivi de communication', body: body, footer: footer });
+    }
+
+    function openReporterModal() {
+        var body = document.createElement('div');
+        body.appendChild(makeLabel('Nouvelle date (JJ/MM/AAAA)', 'rdv-form-report-date'));
+        var dateInput = document.createElement('input');
+        dateInput.type = 'text';
+        dateInput.id = 'rdv-form-report-date';
+        dateInput.className = 'modal-input';
+        dateInput.placeholder = 'JJ/MM/AAAA';
+        body.appendChild(dateInput);
+
+        var cancelButton = document.createElement('button');
+        cancelButton.type = 'button';
+        cancelButton.className = 'btn-secondary';
+        cancelButton.setAttribute('data-modal-close', 'true');
+        cancelButton.textContent = 'Annuler';
+
+        var confirmButton = document.createElement('button');
+        confirmButton.type = 'button';
+        confirmButton.className = 'btn-primary';
+        confirmButton.setAttribute('data-modal-close', 'true');
+        confirmButton.textContent = 'Reporter';
+        confirmButton.addEventListener('click', function () {
+            var newDate = dateInput.value.trim();
+            if (!newDate) {
+                return;
+            }
+            var oldDate = rdv.date;
+            rdv.date = newDate;
+            rdv.statut = 'reporte';
+            rdv.communication.confirme = false;
+            agendaCalc.pushHistorique(rdv, 'report', 'Rendez-vous reporté du ' + (oldDate || '—') + ' au ' + newDate + '.');
+            renderAll();
+        });
+
+        var footer = document.createDocumentFragment();
+        footer.appendChild(cancelButton);
+        footer.appendChild(confirmButton);
+
+        window.COCKPIT_MODAL.open({ title: 'Reporter le rendez-vous', body: body, footer: footer });
+    }
+
+    function openSansSuiteModal() {
+        var body = makeEl('p', 'modal-text', 'Marquer ce rendez-vous comme sans suite ?');
+
+        var cancelButton = document.createElement('button');
+        cancelButton.type = 'button';
+        cancelButton.className = 'btn-secondary';
+        cancelButton.setAttribute('data-modal-close', 'true');
+        cancelButton.textContent = 'Annuler';
+
+        var confirmButton = document.createElement('button');
+        confirmButton.type = 'button';
+        confirmButton.className = 'btn-danger';
+        confirmButton.setAttribute('data-modal-close', 'true');
+        confirmButton.textContent = 'Sans suite';
+        confirmButton.addEventListener('click', function () {
+            rdv.statut = 'sans_suite';
+            agendaCalc.pushHistorique(rdv, 'statut', 'Rendez-vous marqué sans suite.');
+            renderAll();
+        });
+
+        var footer = document.createDocumentFragment();
+        footer.appendChild(cancelButton);
+        footer.appendChild(confirmButton);
+
+        window.COCKPIT_MODAL.open({ title: 'Marquer sans suite', body: body, footer: footer });
+    }
+
+    function openDeleteRdvModal() {
+        var body = makeEl('p', 'modal-text', 'Voulez-vous vraiment supprimer ce rendez-vous ? Cette action ne peut pas être annulée.');
+
+        var cancelButton = document.createElement('button');
+        cancelButton.type = 'button';
+        cancelButton.className = 'btn-secondary';
+        cancelButton.setAttribute('data-modal-close', 'true');
+        cancelButton.setAttribute('data-modal-autofocus', 'true');
+        cancelButton.textContent = 'Annuler';
+
+        var confirmButton = document.createElement('button');
+        confirmButton.type = 'button';
+        confirmButton.className = 'btn-danger';
+        confirmButton.setAttribute('data-modal-close', 'true');
+        confirmButton.textContent = 'Supprimer';
+        confirmButton.addEventListener('click', function () {
+            delete window.COCKPIT_RDV_DETAILS[rdv.id];
+            window.location.href = 'agenda.html';
+        });
+
+        var footer = document.createDocumentFragment();
+        footer.appendChild(cancelButton);
+        footer.appendChild(confirmButton);
+
+        window.COCKPIT_MODAL.open({ title: 'Supprimer le rendez-vous', body: body, footer: footer });
+    }
+
+    if (!loadFromParams()) {
+        notFoundEl.style.display = '';
+        contentEl.style.display = 'none';
+    } else {
+        notFoundEl.style.display = 'none';
+        contentEl.style.display = '';
+        renderAll();
+
+        editHeaderBtn.addEventListener('click', openEditHeaderModal);
+        createBtn.addEventListener('click', openEditHeaderModal);
+        deleteBtn.addEventListener('click', openDeleteRdvModal);
+
+        document.getElementById('rdv-edit-preparation-btn').addEventListener('click', openEditPreparationModal);
+        document.getElementById('rdv-edit-communication-btn').addEventListener('click', openEditCommunicationModal);
+
+        document.getElementById('rdv-action-confirmer').addEventListener('click', function () {
+            rdv.communication.confirme = true;
+            if (rdv.statut === 'prevu' || rdv.statut === 'reporte') {
+                rdv.statut = 'confirme';
+            }
+            agendaCalc.pushHistorique(rdv, 'statut', 'Rendez-vous confirmé.');
+            renderAll();
+        });
+
+        document.getElementById('rdv-action-relance').addEventListener('click', function () {
+            rdv.communication.relances = (rdv.communication.relances || 0) + 1;
+            rdv.communication.dateDerniereCommunication = agendaCalc.formatDateFr(new Date());
+            agendaCalc.pushHistorique(rdv, 'communication', 'Relance effectuée.');
+            renderAll();
+        });
+
+        document.getElementById('rdv-action-realise').addEventListener('click', function () {
+            rdv.statut = 'realise';
+            agendaCalc.pushHistorique(rdv, 'statut', 'Rendez-vous marqué comme réalisé.');
+            renderAll();
+        });
+
+        document.getElementById('rdv-action-reporter').addEventListener('click', openReporterModal);
+        document.getElementById('rdv-action-sans-suite').addEventListener('click', openSansSuiteModal);
+    }
+})();
+
+// Page Document RDV (V0.7) : export imprimable en lecture seule de la fiche
+// de préparation commerciale d'un rendez-vous (?rdv=ID). Même principe que
+// les documents devis/facture (V0.6.3) : lecture seule, aucun recalcul
+// indépendant, impression via window.print(), sans bibliothèque PDF.
+
+(function () {
+    var notFoundEl = document.getElementById('rdv-doc-not-found');
+    var contentEl = document.getElementById('rdv-doc-content');
+    if (!notFoundEl || !contentEl) {
+        return;
+    }
+
+    var devisCalc = window.COCKPIT_DEVIS_CALC;
+    var agendaCalc = window.COCKPIT_AGENDA_CALC || {};
+    var RDV_STATUSES = window.COCKPIT_RDV_STATUSES || [];
+    var CLIENT_DETAILS = window.COCKPIT_CLIENT_DETAILS || {};
+
+    var backLink = document.getElementById('rdv-doc-back-link');
+    var printBtn = document.getElementById('rdv-doc-print-btn');
+
+    function makeEl(tag, className, text) {
+        var node = document.createElement(tag);
+        if (className) {
+            node.className = className;
+        }
+        if (text !== undefined) {
+            node.textContent = text;
+        }
+        return node;
+    }
+
+    function makeInfoItem(label, value) {
+        var item = makeEl('div', 'info-item');
+        item.appendChild(makeEl('span', 'info-label', label));
+        item.appendChild(makeEl('span', 'info-value', (value === null || value === undefined || value === '') ? '—' : value));
+        return item;
+    }
+
+    var params = new URLSearchParams(window.location.search);
+    var rdvParam = params.get('rdv');
+    var rdv = rdvParam ? (window.COCKPIT_RDV_DETAILS || {})[rdvParam] : null;
+
+    if (!rdv) {
+        notFoundEl.style.display = '';
+        contentEl.style.display = 'none';
+        return;
+    }
+
+    notFoundEl.style.display = 'none';
+    contentEl.style.display = '';
+
+    backLink.href = 'fiche-rdv.html?rdv=' + encodeURIComponent(rdv.id);
+    printBtn.addEventListener('click', function () {
+        window.print();
+    });
+
+    document.getElementById('rdv-doc-titre').textContent = rdv.titre || '—';
+
+    var statusInfo = RDV_STATUSES.filter(function (s) { return s.value === rdv.statut; })[0];
+    var statusBadgeEl = document.getElementById('rdv-doc-status-badge');
+    statusBadgeEl.textContent = statusInfo ? statusInfo.label : rdv.statut;
+    statusBadgeEl.className = 'badge ' + (statusInfo ? statusInfo.badgeClass : 'badge-neutral');
+
+    document.getElementById('rdv-doc-meta').textContent = 'Document généré le ' + (agendaCalc.formatDateFr ? agendaCalc.formatDateFr(new Date()) : '—');
+
+    var rdvInfoEl = document.getElementById('rdv-doc-rdv-info');
+    rdvInfoEl.appendChild(makeInfoItem('Date', rdv.date));
+    rdvInfoEl.appendChild(makeInfoItem('Horaire', rdv.heureDebut ? (rdv.heureDebut + (rdv.heureFin ? ' – ' + rdv.heureFin : '')) : null));
+    rdvInfoEl.appendChild(makeInfoItem('Lieu / format', rdv.lieu));
+    rdvInfoEl.appendChild(makeInfoItem('Montant potentiel estimé', (rdv.montantPotentiel !== null && rdv.montantPotentiel !== undefined) ? devisCalc.formatMoney(rdv.montantPotentiel) : null));
+
+    var clientEl = document.getElementById('rdv-doc-client');
+    var client = rdv.clientSlug ? CLIENT_DETAILS[rdv.clientSlug] : null;
+    if (client) {
+        clientEl.appendChild(makeEl('p', 'document-party-name', client.nom));
+        if (client.entreprise && client.entreprise !== '—') {
+            clientEl.appendChild(makeEl('p', null, client.entreprise));
+        }
+        clientEl.appendChild(makeEl('p', null, client.telephone || '—'));
+        clientEl.appendChild(makeEl('p', null, client.email || '—'));
+        clientEl.appendChild(makeEl('p', null, client.adresse || '—'));
+    } else {
+        clientEl.appendChild(makeEl('p', 'empty-state-inline', 'Aucun client associé.'));
+    }
+
+    document.getElementById('rdv-doc-contexte').textContent = rdv.preparation.contexteBesoin || '—';
+    document.getElementById('rdv-doc-proposition').textContent = rdv.preparation.propositionEnvisagee || '—';
+
+    var prixInfoEl = document.getElementById('rdv-doc-prix-info');
+    prixInfoEl.appendChild(makeInfoItem('Prix cible', (rdv.preparation.prixCible !== null && rdv.preparation.prixCible !== undefined) ? devisCalc.formatMoney(rdv.preparation.prixCible) : null));
+    prixInfoEl.appendChild(makeInfoItem('Prix minimum acceptable', (rdv.preparation.prixMinimum !== null && rdv.preparation.prixMinimum !== undefined) ? devisCalc.formatMoney(rdv.preparation.prixMinimum) : null));
+    var margeValue = (rdv.preparation.prixCible !== null && rdv.preparation.prixCible !== undefined &&
+        rdv.preparation.prixMinimum !== null && rdv.preparation.prixMinimum !== undefined)
+        ? devisCalc.formatMoney(rdv.preparation.prixCible - rdv.preparation.prixMinimum) : null;
+    prixInfoEl.appendChild(makeInfoItem('Marge de négociation', margeValue));
+
+    document.getElementById('rdv-doc-arguments').textContent = rdv.preparation.argumentsCommerciaux || '—';
+    document.getElementById('rdv-doc-objections').textContent = rdv.preparation.objectionsPossibles || '—';
+
+    var commEl = document.getElementById('rdv-doc-communication');
+    commEl.appendChild(makeInfoItem('Confirmation', rdv.communication.confirme ? 'Confirmé' : 'À confirmer'));
+    commEl.appendChild(makeInfoItem('Dernière communication', rdv.communication.dateDerniereCommunication));
+    commEl.appendChild(makeInfoItem('Prochaine communication prévue', rdv.communication.prochaineCommunicationPrevue));
+    commEl.appendChild(makeInfoItem('Commentaire de suivi', rdv.communication.commentaireSuivi));
+
+    document.getElementById('rdv-doc-legal').textContent = 'Document interne de préparation commerciale — usage interne, non contractuel.';
 })();
