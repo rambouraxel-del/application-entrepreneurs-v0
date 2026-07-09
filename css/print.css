@@ -108,6 +108,13 @@ body.document-page {
     font-size: 13px;
 }
 
+.document-print-hint {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    margin: 0 auto 16px;
+    max-width: 820px;
+}
+
 /* Écran : le tableau des lignes et le récapitulatif gardent leur style
    d'origine (défini dans styles.css) — ce fichier ne change que la mise en
    page globale de la "feuille" et le comportement à l'impression. */
@@ -118,7 +125,8 @@ body.document-page {
         padding: 0;
     }
 
-    .document-page-actions {
+    .document-page-actions,
+    .document-print-hint {
         display: none;
     }
 
@@ -135,9 +143,13 @@ body.document-page {
         print-color-adjust: exact;
     }
 
+    /* Les en-têtes/pieds de page (date, titre, chemin file:///) sont ajoutés
+       par le navigateur lui-même, hors de portée du CSS : l'utilisateur doit
+       les désactiver dans la fenêtre d'impression (voir .document-print-hint,
+       affiché à l'écran juste au-dessus du bouton d'impression). */
     @page {
         size: A4;
-        margin: 16mm;
+        margin: 15mm 15mm 18mm;
     }
 
     .line-items-table thead {
@@ -149,5 +161,88 @@ body.document-page {
     .document-signature-zone,
     .document-parties {
         page-break-inside: avoid;
+        break-inside: avoid;
+    }
+
+    .document-conditions-block {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+
+    /* Tableau des lignes : colonnes fixes pour éviter que les montants et le
+       symbole € ne se cassent sur plusieurs lignes, police légèrement
+       réduite pour laisser de la place aux colonnes numériques. */
+    .document-sheet .line-items-table {
+        table-layout: fixed;
+        font-size: 10.5px;
+    }
+
+    .document-sheet .line-items-table th,
+    .document-sheet .line-items-table td {
+        padding: 6px 5px;
+        word-break: break-word;
+    }
+
+    .document-sheet .line-items-table th:nth-child(1),
+    .document-sheet .line-items-table td:nth-child(1) {
+        width: 16%;
+    }
+
+    .document-sheet .line-items-table th:nth-child(2),
+    .document-sheet .line-items-table td:nth-child(2) {
+        width: 26%;
+    }
+
+    .document-sheet .line-items-table th:nth-child(3),
+    .document-sheet .line-items-table td:nth-child(3) {
+        width: 8%;
+    }
+
+    .document-sheet .line-items-table th:nth-child(4),
+    .document-sheet .line-items-table td:nth-child(4) {
+        width: 15%;
+    }
+
+    .document-sheet .line-items-table th:nth-child(5),
+    .document-sheet .line-items-table td:nth-child(5) {
+        width: 9%;
+    }
+
+    .document-sheet .line-items-table th:nth-child(6),
+    .document-sheet .line-items-table td:nth-child(6) {
+        width: 9%;
+    }
+
+    .document-sheet .line-items-table th:nth-child(7),
+    .document-sheet .line-items-table td:nth-child(7) {
+        width: 17%;
+    }
+
+    .document-sheet .line-items-table th:nth-child(3),
+    .document-sheet .line-items-table td:nth-child(3),
+    .document-sheet .line-items-table th:nth-child(4),
+    .document-sheet .line-items-table td:nth-child(4),
+    .document-sheet .line-items-table th:nth-child(5),
+    .document-sheet .line-items-table td:nth-child(5),
+    .document-sheet .line-items-table th:nth-child(6),
+    .document-sheet .line-items-table td:nth-child(6),
+    .document-sheet .line-items-table th:nth-child(7),
+    .document-sheet .line-items-table td:nth-child(7) {
+        white-space: nowrap;
+        text-align: right;
+    }
+
+    /* Badges de statut : rendu plus sobre à l'impression (contour fin coloré
+       plutôt que fond plein "interface web"), toujours lisible grâce à la
+       couleur du texte conservée par statut. */
+    .document-sheet .badge {
+        background-color: #ffffff !important;
+        border: 1px solid currentColor;
+        border-radius: 4px;
+        padding: 3px 9px;
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
     }
 }

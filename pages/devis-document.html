@@ -16,6 +16,7 @@
             <button type="button" class="btn-primary" id="devis-doc-print-btn">Imprimer / Enregistrer en PDF</button>
         </div>
     </div>
+    <p class="document-print-hint">Dans la fenêtre d'impression, désactivez les en-têtes et pieds de page du navigateur pour obtenir un document propre.</p>
 
     <div id="devis-doc-not-found" class="empty-state" style="display: none;">
         <span class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path><line x1="8" y1="8" x2="14" y2="14"></line><line x1="14" y1="8" x2="8" y2="14"></line></svg></span>
@@ -70,7 +71,7 @@
             <div class="devis-summary" id="devis-doc-summary"></div>
         </div>
 
-        <div>
+        <div class="document-conditions-block">
             <p class="document-section-title">Conditions de paiement</p>
             <div id="devis-doc-payment-terms"></div>
         </div>
