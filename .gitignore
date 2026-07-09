@@ -17,3 +17,6 @@ desktop.ini
 
 # Dependances (si introduites dans une version future)
 node_modules/
+
+# Configuration locale d'outils de previsualisation (specifique a la machine)
+.claude/
