@@ -38,14 +38,13 @@ Ce document regroupe les idées et pistes identifiées au fil du projet, non tra
 
 ## Facturation
 - Page placeholder ajoutée à la navigation en V0.2 ; devenue la vraie liste des devis en V0.6.1 (recherche, filtre statut, pagination), avec un éditeur de devis complet (`pages/devis-edition.html`).
-- **Vraie création, modification, suppression de devis** : le générateur (client, lignes, calculs HT/TVA/TTC/remise) est entièrement fonctionnel en direct, mais "Enregistrer"/"Supprimer"/"Créer une nouvelle version" ne persistent rien (Work in progress).
+- **Vraie création, modification, suppression de devis** : le générateur (client, lignes, calculs HT/TVA/TTC/remise, conditions de paiement) est entièrement fonctionnel en direct, mais "Enregistrer" (menu brouillon/version définitive) et "Supprimer" ne persistent rien (Work in progress).
 - **`DEVIS_DETAILS` (V0.6.1) reste une source statique en mémoire**, limitée à 5 devis fictifs : à remplacer par une vraie source de données le jour où le projet en aura une.
 - **Vraie numérotation persistante** : `computeNextDevisNumero` calcule un numéro plausible par balayage des données fictives existantes, sans allocation réelle ni compteur qui survivrait à un rechargement.
-- **Vrai versionnement persistant** : le concept (plusieurs versions d'un même devis, une seule active, historique consultable) est démontré sur `DEV-2026-00015`, mais aucune nouvelle version ne peut réellement être créée et conservée.
-- Factures réelles, conversion devis → facture, paiements, échéances, avoirs : prévus dans une prochaine sous-version (V0.6.2), pour laquelle l'onglet "Factures" (actuellement `btn-wip` sur `facturation.html`) est déjà préparé.
+- **Vrai versionnement persistant** : "Créer une nouvelle version" (correctif de revue V0.6.1) ouvre désormais un brouillon éditable réel basé sur la dernière version, mais uniquement en mémoire de page — rien n'est conservé après rechargement, faute de persistance réelle.
+- Factures réelles, conversion devis → facture, paiements, échéances, avoirs : prévus dans une prochaine sous-version (V0.6.2), pour laquelle l'onglet "Factures" (actuellement `btn-wip` sur `facturation.html`) est déjà préparé. Le bloc "Conditions de paiement" du devis (correctif de revue V0.6.1) est pensé pour être réutilisable à cette occasion.
 - Export des documents (PDF notamment), impression.
 - Suivi réel des statuts de paiement.
-- Vraie sélection de client via une modale de recherche (plutôt qu'un simple `<select>`) si le volume de clients augmente significativement.
 - Remise en montant fixe par ligne, en complément de la remise en pourcentage actuelle.
 - Statistiques et tableau de bord liés à la facturation.
 

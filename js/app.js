@@ -2576,7 +2576,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     companySnapshot: snapshotCompany(),
                     lignes: [
                         { designation: 'Audit stratégique', description: 'Diagnostic complet de la situation de l\'entreprise et recommandations stratégiques.', quantite: 1, prixUnitaireHT: 750, tauxTVA: 20, remisePourcent: 0 }
-                    ]
+                    ],
+                    conditionsPaiement: { delai: 'Paiement à réception', acompte: '', fractionne: '', note: '' }
                 }
             ]
         },
@@ -2595,7 +2596,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     lignes: [
                         { designation: 'Création site vitrine', description: 'Conception et mise en ligne d\'un site vitrine professionnel clé en main.', quantite: 1, prixUnitaireHT: 1800, tauxTVA: 20, remisePourcent: 10 },
                         { designation: 'Maintenance mensuelle', description: 'Suivi technique mensuel et mises à jour de sécurité pour un site existant.', quantite: 3, prixUnitaireHT: 250, tauxTVA: 20, remisePourcent: 0 }
-                    ]
+                    ],
+                    conditionsPaiement: { delai: 'Paiement à 30 jours', acompte: 'Acompte de 30 % à la commande', fractionne: '', note: '' }
                 }
             ]
         },
@@ -2613,7 +2615,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     companySnapshot: snapshotCompany(),
                     lignes: [
                         { designation: 'Formation personnalisée', description: 'Session de formation individuelle adaptée aux besoins du client.', quantite: 2, prixUnitaireHT: 950, tauxTVA: 10, remisePourcent: 0 }
-                    ]
+                    ],
+                    conditionsPaiement: { delai: 'Paiement comptant', acompte: '', fractionne: '', note: '' }
                 }
             ]
         },
@@ -2632,7 +2635,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     lignes: [
                         { designation: 'Kit de démarrage digital', description: 'Kit prêt à l\'emploi pour démarrer sa présence digitale.', quantite: 5, prixUnitaireHT: 129, tauxTVA: 20, remisePourcent: 5 },
                         { designation: 'Accessoire premium', description: 'Accessoire complémentaire, retiré temporairement de la vente.', quantite: 2, prixUnitaireHT: 89, tauxTVA: 20, remisePourcent: 0 }
-                    ]
+                    ],
+                    conditionsPaiement: { delai: 'Paiement à 15 jours', acompte: '', fractionne: '', note: '' }
                 }
             ]
         },
@@ -2651,7 +2655,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     lignes: [
                         { designation: 'Audit stratégique', description: 'Diagnostic complet de la situation de l\'entreprise et recommandations stratégiques.', quantite: 1, prixUnitaireHT: 750, tauxTVA: 20, remisePourcent: 0 },
                         { designation: 'Maintenance mensuelle', description: 'Suivi technique mensuel et mises à jour de sécurité pour un site existant.', quantite: 1, prixUnitaireHT: 250, tauxTVA: 20, remisePourcent: 0 }
-                    ]
+                    ],
+                    conditionsPaiement: { delai: 'Paiement à 30 jours', acompte: '', fractionne: '', note: '' }
                 },
                 {
                     version: 2,
@@ -2665,7 +2670,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         { designation: 'Audit stratégique', description: 'Diagnostic complet de la situation de l\'entreprise et recommandations stratégiques.', quantite: 1, prixUnitaireHT: 750, tauxTVA: 20, remisePourcent: 0 },
                         { designation: 'Création site vitrine', description: 'Conception et mise en ligne d\'un site vitrine professionnel clé en main.', quantite: 1, prixUnitaireHT: 1800, tauxTVA: 20, remisePourcent: 10 },
                         { designation: 'Maintenance mensuelle', description: 'Suivi technique mensuel et mises à jour de sécurité pour un site existant.', quantite: 1, prixUnitaireHT: 250, tauxTVA: 20, remisePourcent: 0 }
-                    ]
+                    ],
+                    conditionsPaiement: { delai: 'Paiement à 30 jours', acompte: 'Acompte de 30 % à la commande (site vitrine)', fractionne: '', note: '' }
                 },
                 {
                     version: 3,
@@ -2679,7 +2685,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         { designation: 'Audit stratégique', description: 'Diagnostic complet de la situation de l\'entreprise et recommandations stratégiques.', quantite: 1, prixUnitaireHT: 750, tauxTVA: 20, remisePourcent: 0 },
                         { designation: 'Création site vitrine', description: 'Conception et mise en ligne d\'un site vitrine professionnel clé en main.', quantite: 1, prixUnitaireHT: 1800, tauxTVA: 20, remisePourcent: 10 },
                         { designation: 'Maintenance mensuelle', description: 'Suivi technique mensuel et mises à jour de sécurité pour un site existant.', quantite: 3, prixUnitaireHT: 250, tauxTVA: 20, remisePourcent: 0 }
-                    ]
+                    ],
+                    conditionsPaiement: { delai: 'Paiement à 30 jours', acompte: 'Acompte de 30 % à la commande (site vitrine)', fractionne: 'Paiement en 3 fois pour la maintenance', note: 'Facturation de la maintenance mensuelle en 3 échéances trimestrielles.' }
                 }
             ]
         }
@@ -2702,15 +2709,17 @@ document.addEventListener('DOMContentLoaded', function () {
         var prixUnitaireHT = parseFloat(line.prixUnitaireHT) || 0;
         var remisePourcent = parseFloat(line.remisePourcent) || 0;
         var tauxTVA = parseFloat(line.tauxTVA) || 0;
-        var brutHT = quantite * prixUnitaireHT;
-        var remiseMontant = brutHT * (remisePourcent / 100);
+        var brutHT = roundMoney(quantite * prixUnitaireHT);
+        var remiseMontant = roundMoney(brutHT * (remisePourcent / 100));
         var netHT = roundMoney(brutHT - remiseMontant);
         var montantTVA = roundMoney(netHT * (tauxTVA / 100));
         var totalTTC = roundMoney(netHT + montantTVA);
-        return { netHT: netHT, montantTVA: montantTVA, totalTTC: totalTTC, tauxTVA: tauxTVA };
+        return { brutHT: brutHT, remiseMontant: remiseMontant, netHT: netHT, montantTVA: montantTVA, totalTTC: totalTTC, tauxTVA: tauxTVA };
     }
 
     function computeDevisTotals(lignes) {
+        var totalBrutHT = 0;
+        var totalRemises = 0;
         var totalHT = 0;
         var totalTVA = 0;
         var totalTTC = 0;
@@ -2718,6 +2727,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         (lignes || []).forEach(function (line) {
             var computed = computeLine(line);
+            totalBrutHT = roundMoney(totalBrutHT + computed.brutHT);
+            totalRemises = roundMoney(totalRemises + computed.remiseMontant);
             totalHT = roundMoney(totalHT + computed.netHT);
             totalTVA = roundMoney(totalTVA + computed.montantTVA);
             totalTTC = roundMoney(totalTTC + computed.totalTTC);
@@ -2726,7 +2737,7 @@ document.addEventListener('DOMContentLoaded', function () {
             tvaParTaux[rateKey] = roundMoney((tvaParTaux[rateKey] || 0) + computed.montantTVA);
         });
 
-        return { totalHT: totalHT, totalTVA: totalTVA, totalTTC: totalTTC, tvaParTaux: tvaParTaux };
+        return { totalBrutHT: totalBrutHT, totalRemises: totalRemises, totalHT: totalHT, totalTVA: totalTVA, totalTTC: totalTTC, tvaParTaux: tvaParTaux };
     }
 
     function getActiveVersion(devis) {
@@ -2863,12 +2874,16 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 })();
 
-// Page Devis — édition (V0.6.1) : consultation, création, duplication.
-// "Enregistrer", "Supprimer" (après confirmation) et "Créer une nouvelle
-// version" déclenchent uniquement le pop-up Work in progress existant :
-// aucune sauvegarde réelle, conformément au reste du projet. En revanche,
-// tout le reste est fonctionnel en direct (client, lignes, calculs HT/TVA/
-// TTC/remise, verrouillage, navigation entre versions fictives).
+// Page Devis — édition (V0.6.1 + correctifs de revue) : consultation,
+// création, duplication. Le menu "Enregistrer" (brouillon / version
+// définitive) et "Supprimer" (après confirmation) déclenchent uniquement le
+// pop-up Work in progress existant : aucune sauvegarde réelle, conformément
+// au reste du projet. "Créer une nouvelle version" est en revanche réel mais
+// uniquement en mémoire de page : il ouvre un brouillon éditable basé sur la
+// dernière version, sans jamais modifier la version d'origine ni persister
+// quoi que ce soit. Tout le reste est fonctionnel en direct (recherche
+// client, lignes, calculs HT/TVA/TTC/remise, verrouillage, navigation entre
+// versions fictives, conditions de paiement).
 //
 // Le client est toujours une référence vivante vers CLIENT_DETAILS le temps
 // de la sélection, mais chaque version conserve un clientSnapshot figé : une
@@ -2904,7 +2919,10 @@ document.addEventListener('DOMContentLoaded', function () {
     var addLineBtn = document.getElementById('devis-add-line-btn');
     var addCatalogBtn = document.getElementById('devis-add-catalog-btn');
     var summaryEl = document.getElementById('devis-summary');
+    var paymentTermsEl = document.getElementById('devis-payment-terms');
+    var saveMenuEl = document.getElementById('devis-save-menu');
     var saveBtn = document.getElementById('devis-save-btn');
+    var saveDropdownEl = document.getElementById('devis-save-dropdown');
     var duplicateBtn = document.getElementById('devis-duplicate-btn');
     var newVersionBtn = document.getElementById('devis-new-version-btn');
     var deleteBtn = document.getElementById('devis-delete-btn');
@@ -2944,6 +2962,15 @@ document.addEventListener('DOMContentLoaded', function () {
         return (sourceLines || []).map(makeLine);
     }
 
+    function cloneConditionsPaiement(source) {
+        return {
+            delai: (source && source.delai) || '',
+            acompte: (source && source.acompte) || '',
+            fractionne: (source && source.fractionne) || '',
+            note: (source && source.note) || ''
+        };
+    }
+
     var state = {
         mode: 'new',
         numero: null,
@@ -2955,6 +2982,8 @@ document.addEventListener('DOMContentLoaded', function () {
         clientSnapshot: null,
         companySnapshot: null,
         lines: [],
+        conditionsPaiement: null,
+        basedOnVersion: null,
         sourceDevis: null,
         viewingVersion: null,
         editable: true
@@ -2989,6 +3018,8 @@ document.addEventListener('DOMContentLoaded', function () {
             state.clientSnapshot = versionData.clientSnapshot;
             state.companySnapshot = versionData.companySnapshot;
             state.lines = cloneLines(versionData.lignes);
+            state.conditionsPaiement = cloneConditionsPaiement(versionData.conditionsPaiement);
+            state.basedOnVersion = null;
             state.sourceDevis = devis;
             state.viewingVersion = versionData;
             state.editable = (versionData.version === devis.versionActive) && versionData.statut !== 'accepte';
@@ -3015,6 +3046,8 @@ document.addEventListener('DOMContentLoaded', function () {
             state.clientSnapshot = dupVersionData.clientSlug ? calc.snapshotClient(dupVersionData.clientSlug) : null;
             state.companySnapshot = calc.snapshotCompany();
             state.lines = cloneLines(dupVersionData.lignes);
+            state.conditionsPaiement = cloneConditionsPaiement(dupVersionData.conditionsPaiement);
+            state.basedOnVersion = null;
             state.sourceDevis = null;
             state.viewingVersion = null;
             state.editable = true;
@@ -3031,6 +3064,8 @@ document.addEventListener('DOMContentLoaded', function () {
         state.clientSnapshot = null;
         state.companySnapshot = calc.snapshotCompany();
         state.lines = [];
+        state.conditionsPaiement = cloneConditionsPaiement(null);
+        state.basedOnVersion = null;
         state.sourceDevis = null;
         state.viewingVersion = null;
         state.editable = true;
@@ -3045,7 +3080,9 @@ document.addEventListener('DOMContentLoaded', function () {
         statusBadgeEl.textContent = statusInfo ? statusInfo.label : state.statut;
         statusBadgeEl.className = 'badge ' + (statusInfo ? statusInfo.badgeClass : 'badge-neutral');
 
-        if (state.mode !== 'view') {
+        if (state.mode === 'new-version') {
+            metaEl.textContent = 'Nouvelle version v' + state.version + ' en préparation, basée sur la version v' + state.basedOnVersion + ' — non enregistrée.';
+        } else if (state.mode !== 'view') {
             metaEl.textContent = state.mode === 'duplicate'
                 ? 'Nouveau devis dupliqué, numéro attribué automatiquement à l\'enregistrement.'
                 : 'Numéro attribué automatiquement à l\'enregistrement.';
@@ -3061,16 +3098,24 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function renderVersionSwitch() {
         versionSwitchEl.innerHTML = '';
-        if (!state.sourceDevis || state.sourceDevis.versions.length <= 1) {
+        if (!state.sourceDevis) {
+            return;
+        }
+        var isDraft = state.mode === 'new-version';
+        if (state.sourceDevis.versions.length <= 1 && !isDraft) {
             return;
         }
         state.sourceDevis.versions.forEach(function (v) {
             var pill = document.createElement('a');
-            pill.className = 'version-pill' + (v.version === state.version ? ' version-pill-active' : '');
+            pill.className = 'version-pill' + (state.mode === 'view' && v.version === state.version ? ' version-pill-active' : '');
             pill.textContent = 'v' + v.version;
             pill.href = 'devis-edition.html?devis=' + encodeURIComponent(state.numero) + '&version=' + v.version;
             versionSwitchEl.appendChild(pill);
         });
+        if (isDraft) {
+            var draftPill = makeEl('span', 'version-pill version-pill-active version-pill-draft', 'v' + state.version + ' (brouillon, non enregistré)');
+            versionSwitchEl.appendChild(draftPill);
+        }
     }
 
     function renderCompanyParty() {
@@ -3099,45 +3144,100 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    var clientSearchOutsideClickHandler = null;
+
+    function matchesClientQuery(client, query) {
+        var haystack = [client.nom, client.entreprise, client.telephone, client.email, client.adresse]
+            .filter(function (value) { return !!value; })
+            .join(' ')
+            .toLowerCase();
+        return haystack.indexOf(query) !== -1;
+    }
+
     function renderClientParty() {
         clientContentEl.innerHTML = '';
+
+        if (clientSearchOutsideClickHandler) {
+            document.removeEventListener('click', clientSearchOutsideClickHandler);
+            clientSearchOutsideClickHandler = null;
+        }
 
         if (!state.editable) {
             renderClientInfoInto(clientContentEl);
             return;
         }
 
-        var select = document.createElement('select');
-        select.className = 'table-select modal-select';
-        select.id = 'devis-client-select';
-        select.setAttribute('aria-label', 'Choisir un client');
-
-        var placeholderOption = document.createElement('option');
-        placeholderOption.value = '';
-        placeholderOption.textContent = 'Choisir un client...';
-        select.appendChild(placeholderOption);
-
         var clientDetails = window.COCKPIT_CLIENT_DETAILS || {};
-        Object.keys(clientDetails).forEach(function (slug) {
-            var option = document.createElement('option');
-            option.value = slug;
-            option.textContent = clientDetails[slug].nom;
-            if (slug === state.clientSlug) {
-                option.selected = true;
-            }
-            select.appendChild(option);
-        });
+
+        var searchWrap = document.createElement('div');
+        searchWrap.className = 'client-search';
+
+        var searchInput = document.createElement('input');
+        searchInput.type = 'text';
+        searchInput.className = 'modal-input';
+        searchInput.placeholder = 'Rechercher un client (nom, société, tél., e-mail, adresse)...';
+        searchInput.setAttribute('aria-label', 'Rechercher un client');
+        if (state.clientSlug && clientDetails[state.clientSlug]) {
+            searchInput.value = clientDetails[state.clientSlug].nom;
+        }
+
+        var resultsEl = document.createElement('div');
+        resultsEl.className = 'client-search-results';
+        resultsEl.style.display = 'none';
 
         var infoWrap = document.createElement('div');
         infoWrap.style.marginTop = '10px';
 
-        select.addEventListener('change', function () {
-            state.clientSlug = select.value || null;
-            state.clientSnapshot = state.clientSlug ? calc.snapshotClient(state.clientSlug) : null;
-            renderClientInfoInto(infoWrap);
-        });
+        function renderResults() {
+            var query = searchInput.value.trim().toLowerCase();
+            resultsEl.innerHTML = '';
+            if (!query) {
+                resultsEl.style.display = 'none';
+                return;
+            }
+            var matches = Object.keys(clientDetails).filter(function (slug) {
+                return matchesClientQuery(clientDetails[slug], query);
+            });
+            if (matches.length === 0) {
+                resultsEl.appendChild(makeEl('p', 'empty-state-inline', 'Aucun client trouvé.'));
+            } else {
+                matches.forEach(function (slug) {
+                    var client = clientDetails[slug];
+                    var item = document.createElement('button');
+                    item.type = 'button';
+                    item.className = 'client-search-result-item';
+                    var nameEl = makeEl('span', 'client-search-result-name', client.nom + (client.entreprise && client.entreprise !== '—' ? ' — ' + client.entreprise : ''));
+                    var detailEl = makeEl('span', 'client-search-result-detail', [client.telephone, client.email, client.adresse].filter(function (v) { return !!v; }).join(' · '));
+                    item.appendChild(nameEl);
+                    item.appendChild(detailEl);
+                    item.addEventListener('click', function () {
+                        state.clientSlug = slug;
+                        state.clientSnapshot = calc.snapshotClient(slug);
+                        searchInput.value = client.nom;
+                        resultsEl.innerHTML = '';
+                        resultsEl.style.display = 'none';
+                        renderClientInfoInto(infoWrap);
+                    });
+                    resultsEl.appendChild(item);
+                });
+            }
+            resultsEl.style.display = '';
+        }
 
-        clientContentEl.appendChild(select);
+        searchInput.addEventListener('input', renderResults);
+        searchInput.addEventListener('focus', renderResults);
+
+        clientSearchOutsideClickHandler = function (evt) {
+            if (!searchWrap.contains(evt.target)) {
+                resultsEl.style.display = 'none';
+            }
+        };
+        document.addEventListener('click', clientSearchOutsideClickHandler);
+
+        searchWrap.appendChild(searchInput);
+        searchWrap.appendChild(resultsEl);
+
+        clientContentEl.appendChild(searchWrap);
         clientContentEl.appendChild(infoWrap);
         renderClientInfoInto(infoWrap);
     }
@@ -3164,6 +3264,71 @@ document.addEventListener('DOMContentLoaded', function () {
         return td;
     }
 
+    function openDescriptionModal(line, inlineInput) {
+        var body = document.createElement('div');
+        var textarea = document.createElement('textarea');
+        textarea.className = 'line-description-textarea';
+        textarea.value = line.description;
+        body.appendChild(textarea);
+
+        var cancelButton = document.createElement('button');
+        cancelButton.type = 'button';
+        cancelButton.className = 'btn-secondary';
+        cancelButton.setAttribute('data-modal-close', 'true');
+        cancelButton.textContent = 'Annuler';
+
+        var saveButton = document.createElement('button');
+        saveButton.type = 'button';
+        saveButton.className = 'btn-primary';
+        saveButton.setAttribute('data-modal-close', 'true');
+        saveButton.setAttribute('data-modal-autofocus', 'true');
+        saveButton.textContent = 'Valider';
+        saveButton.addEventListener('click', function () {
+            line.description = textarea.value;
+            if (inlineInput) {
+                inlineInput.value = textarea.value;
+            }
+        });
+
+        var footer = document.createDocumentFragment();
+        footer.appendChild(cancelButton);
+        footer.appendChild(saveButton);
+
+        window.COCKPIT_MODAL.open({
+            title: 'Description de la ligne',
+            body: body,
+            footer: footer
+        });
+    }
+
+    function makeDescriptionCell(line) {
+        var td = document.createElement('td');
+        var wrap = document.createElement('div');
+        wrap.className = 'line-description-cell';
+
+        var input = document.createElement('input');
+        input.type = 'text';
+        input.value = line.description;
+        input.addEventListener('input', function () {
+            line.description = input.value;
+        });
+
+        var expandBtn = document.createElement('button');
+        expandBtn.type = 'button';
+        expandBtn.className = 'line-expand-btn';
+        expandBtn.setAttribute('aria-label', 'Agrandir la description');
+        expandBtn.title = 'Agrandir la description';
+        expandBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"></path><path d="M9 21H3v-6"></path><path d="M21 3l-7 7"></path><path d="M3 21l7-7"></path></svg>';
+        expandBtn.addEventListener('click', function () {
+            openDescriptionModal(line, input);
+        });
+
+        wrap.appendChild(input);
+        wrap.appendChild(expandBtn);
+        td.appendChild(wrap);
+        return td;
+    }
+
     function renderLines() {
         linesBodyEl.innerHTML = '';
         linesEmptyEl.style.display = state.lines.length === 0 ? '' : 'none';
@@ -3174,7 +3339,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (state.editable) {
                 row.appendChild(makeInputCell(line, 'designation', 'text'));
-                row.appendChild(makeInputCell(line, 'description', 'text'));
+                row.appendChild(makeDescriptionCell(line));
                 row.appendChild(makeInputCell(line, 'quantite', 'number'));
                 row.appendChild(makeInputCell(line, 'prixUnitaireHT', 'number'));
                 row.appendChild(makeInputCell(line, 'tauxTVA', 'number'));
@@ -3222,7 +3387,9 @@ document.addEventListener('DOMContentLoaded', function () {
         var totals = calc.computeDevisTotals(state.lines);
         summaryEl.innerHTML = '';
 
-        summaryEl.appendChild(makeSummaryRow('Total HT', calc.formatMoney(totals.totalHT)));
+        summaryEl.appendChild(makeSummaryRow('Total HT avant remise', calc.formatMoney(totals.totalBrutHT)));
+        summaryEl.appendChild(makeSummaryRow('Remises', (totals.totalRemises > 0 ? '- ' : '') + calc.formatMoney(totals.totalRemises)));
+        summaryEl.appendChild(makeSummaryRow('Total HT net', calc.formatMoney(totals.totalHT)));
 
         Object.keys(totals.tvaParTaux).sort(function (a, b) {
             return parseFloat(a) - parseFloat(b);
@@ -3237,8 +3404,69 @@ document.addEventListener('DOMContentLoaded', function () {
         summaryEl.appendChild(ttcRow);
     }
 
+    function renderPaymentTerms() {
+        paymentTermsEl.innerHTML = '';
+        if (!state.conditionsPaiement) {
+            state.conditionsPaiement = cloneConditionsPaiement(null);
+        }
+        var terms = state.conditionsPaiement;
+
+        if (!state.editable) {
+            var lines = [
+                terms.delai ? ('Délai de paiement : ' + terms.delai) : null,
+                terms.acompte ? ('Acompte : ' + terms.acompte) : null,
+                terms.fractionne ? ('Paiement fractionné : ' + terms.fractionne) : null,
+                terms.note ? ('Note : ' + terms.note) : null
+            ].filter(function (line) { return !!line; });
+
+            if (lines.length === 0) {
+                paymentTermsEl.appendChild(makeEl('p', 'empty-state-inline', 'Aucune condition de paiement renseignée.'));
+            } else {
+                lines.forEach(function (line) {
+                    paymentTermsEl.appendChild(makeEl('p', null, line));
+                });
+            }
+            return;
+        }
+
+        function makeField(labelText, field, placeholder) {
+            var wrap = document.createElement('div');
+            var label = makeEl('label', 'modal-label', labelText);
+            var input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'modal-input';
+            input.value = terms[field];
+            input.placeholder = placeholder;
+            input.addEventListener('input', function () {
+                terms[field] = input.value;
+            });
+            wrap.appendChild(label);
+            wrap.appendChild(input);
+            return wrap;
+        }
+
+        var grid = document.createElement('div');
+        grid.className = 'form-grid-2';
+        grid.appendChild(makeField('Délai de paiement', 'delai', 'Ex. Paiement à 30 jours'));
+        grid.appendChild(makeField('Acompte demandé', 'acompte', 'Ex. Acompte de 30 % à la commande'));
+        paymentTermsEl.appendChild(grid);
+
+        paymentTermsEl.appendChild(makeField('Paiement en plusieurs fois', 'fractionne', 'Ex. Paiement en 3 fois'));
+
+        var noteLabel = makeEl('label', 'modal-label', 'Modalités particulières / note libre');
+        var noteTextarea = document.createElement('textarea');
+        noteTextarea.className = 'modal-textarea';
+        noteTextarea.rows = 3;
+        noteTextarea.value = terms.note;
+        noteTextarea.addEventListener('input', function () {
+            terms.note = noteTextarea.value;
+        });
+        paymentTermsEl.appendChild(noteLabel);
+        paymentTermsEl.appendChild(noteTextarea);
+    }
+
     function renderActions() {
-        saveBtn.style.display = state.editable ? '' : 'none';
+        saveMenuEl.style.display = state.editable ? '' : 'none';
         deleteBtn.style.display = (state.mode === 'view' && state.editable) ? '' : 'none';
         duplicateBtn.style.display = (state.mode === 'view') ? '' : 'none';
         newVersionBtn.style.display = (
@@ -3250,22 +3478,54 @@ document.addEventListener('DOMContentLoaded', function () {
         ) ? '' : 'none';
     }
 
+    function matchesProductQuery(item, typeLabel, query) {
+        var haystack = [item.nom, item.descriptionCourte, typeLabel, String(item.prixHT), item.statut]
+            .filter(function (value) { return !!value; })
+            .join(' ')
+            .toLowerCase();
+        return haystack.indexOf(query) !== -1;
+    }
+
     function openAddFromCatalogModal() {
         var body = document.createElement('div');
         var productDetails = window.COCKPIT_PRODUCT_DETAILS || {};
         var productTypes = window.COCKPIT_PRODUCT_TYPES || [];
 
-        var list = document.createElement('div');
-        list.className = 'modal-checkbox-list';
-
         var sellableSlugs = Object.keys(productDetails).filter(function (slug) {
             return productDetails[slug].statut === 'actif';
         });
 
-        if (sellableSlugs.length === 0) {
-            body.appendChild(makeEl('p', 'empty-state-inline', 'Aucun produit ou service Actif dans le catalogue.'));
-        } else {
-            sellableSlugs.forEach(function (slug) {
+        var searchInput = document.createElement('input');
+        searchInput.type = 'text';
+        searchInput.className = 'modal-input catalog-search';
+        searchInput.placeholder = 'Rechercher un produit ou service (nom, description, catégorie, prix)...';
+        searchInput.setAttribute('aria-label', 'Rechercher dans le catalogue');
+        searchInput.setAttribute('data-modal-autofocus', 'true');
+
+        var list = document.createElement('div');
+        list.className = 'modal-checkbox-list';
+
+        function renderList() {
+            var query = searchInput.value.trim().toLowerCase();
+            list.innerHTML = '';
+
+            if (sellableSlugs.length === 0) {
+                list.appendChild(makeEl('p', 'empty-state-inline', 'Aucun produit ou service Actif dans le catalogue.'));
+                return;
+            }
+
+            var matches = sellableSlugs.filter(function (slug) {
+                var item = productDetails[slug];
+                var typeInfo = productTypes.filter(function (t) { return t.value === item.type; })[0];
+                return !query || matchesProductQuery(item, typeInfo ? typeInfo.label : item.type, query);
+            });
+
+            if (matches.length === 0) {
+                list.appendChild(makeEl('p', 'empty-state-inline', 'Aucun résultat pour cette recherche.'));
+                return;
+            }
+
+            matches.forEach(function (slug) {
                 var item = productDetails[slug];
                 var typeInfo = productTypes.filter(function (t) { return t.value === item.type; })[0];
                 var option = document.createElement('button');
@@ -3289,8 +3549,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
                 list.appendChild(option);
             });
-            body.appendChild(list);
         }
+
+        searchInput.addEventListener('input', renderList);
+
+        body.appendChild(searchInput);
+        body.appendChild(list);
+        renderList();
 
         window.COCKPIT_MODAL.open({
             title: 'Ajouter depuis le catalogue',
@@ -3300,7 +3565,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 cancelButton.type = 'button';
                 cancelButton.className = 'btn-secondary';
                 cancelButton.setAttribute('data-modal-close', 'true');
-                cancelButton.setAttribute('data-modal-autofocus', 'true');
                 cancelButton.textContent = 'Fermer';
                 var fragment = document.createDocumentFragment();
                 fragment.appendChild(cancelButton);
@@ -3345,6 +3609,7 @@ document.addEventListener('DOMContentLoaded', function () {
         renderClientParty();
         renderLines();
         renderSummary();
+        renderPaymentTerms();
         renderActions();
     }
 
@@ -3372,5 +3637,64 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         deleteBtn.addEventListener('click', openDeleteDevisModal);
+
+        newVersionBtn.addEventListener('click', function () {
+            if (state.mode !== 'view' || state.statut !== 'accepte' || !state.sourceDevis) {
+                return;
+            }
+            var sourceDevisRef = state.sourceDevis;
+            var basedOnVersion = state.viewingVersion;
+            var maxVersion = sourceDevisRef.versions.reduce(function (m, v) {
+                return Math.max(m, v.version);
+            }, 0);
+
+            state.mode = 'new-version';
+            state.version = maxVersion + 1;
+            state.statut = 'brouillon';
+            state.dateCreation = null;
+            state.dateModification = null;
+            state.clientSlug = basedOnVersion.clientSlug;
+            state.clientSnapshot = basedOnVersion.clientSlug ? calc.snapshotClient(basedOnVersion.clientSlug) : basedOnVersion.clientSnapshot;
+            state.companySnapshot = calc.snapshotCompany();
+            state.lines = cloneLines(basedOnVersion.lignes);
+            state.conditionsPaiement = cloneConditionsPaiement(basedOnVersion.conditionsPaiement);
+            state.basedOnVersion = basedOnVersion.version;
+            state.viewingVersion = null;
+            state.editable = true;
+
+            renderAll();
+        });
+
+        function closeSaveMenu() {
+            saveDropdownEl.style.display = 'none';
+            saveBtn.setAttribute('aria-expanded', 'false');
+        }
+
+        saveBtn.addEventListener('click', function (evt) {
+            evt.stopPropagation();
+            var isOpen = saveDropdownEl.style.display !== 'none';
+            if (isOpen) {
+                closeSaveMenu();
+            } else {
+                saveDropdownEl.style.display = '';
+                saveBtn.setAttribute('aria-expanded', 'true');
+            }
+        });
+
+        document.addEventListener('click', function (evt) {
+            if (!saveMenuEl.contains(evt.target)) {
+                closeSaveMenu();
+            }
+        });
+
+        document.addEventListener('keydown', function (evt) {
+            if (evt.key === 'Escape') {
+                closeSaveMenu();
+            }
+        });
+
+        Array.prototype.slice.call(saveDropdownEl.querySelectorAll('.save-menu-item')).forEach(function (item) {
+            item.addEventListener('click', closeSaveMenu);
+        });
     }
 })();

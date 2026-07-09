@@ -150,10 +150,26 @@
                         <div class="devis-summary" id="devis-summary"></div>
                     </div>
 
+                    <div class="dashboard-block">
+                        <div class="dashboard-block-header">
+                            <h2>Conditions de paiement</h2>
+                        </div>
+                        <div id="devis-payment-terms"></div>
+                    </div>
+
                     <div class="page-toolbar" id="devis-actions-bar" style="justify-content: flex-start;">
-                        <button type="button" class="btn-primary btn-wip" id="devis-save-btn">Enregistrer</button>
+                        <div class="save-menu" id="devis-save-menu">
+                            <button type="button" class="btn-primary save-menu-toggle" id="devis-save-btn" aria-haspopup="true" aria-expanded="false">
+                                Enregistrer
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>
+                            </button>
+                            <div class="save-menu-dropdown" id="devis-save-dropdown" style="display: none;">
+                                <button type="button" class="save-menu-item btn-wip">Enregistrer comme brouillon</button>
+                                <button type="button" class="save-menu-item btn-wip">Enregistrer comme version définitive</button>
+                            </div>
+                        </div>
                         <button type="button" class="btn-secondary" id="devis-duplicate-btn">Dupliquer</button>
-                        <button type="button" class="btn-secondary btn-wip" id="devis-new-version-btn">Créer une nouvelle version</button>
+                        <button type="button" class="btn-secondary" id="devis-new-version-btn">Créer une nouvelle version</button>
                         <button type="button" class="btn-danger" id="devis-delete-btn">Supprimer</button>
                     </div>
                     <p class="modal-hint" id="devis-persistence-hint">Ce devis n'est pas encore enregistré durablement : la persistance sera ajoutée dans une prochaine version.</p>
