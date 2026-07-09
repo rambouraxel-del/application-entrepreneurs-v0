@@ -254,7 +254,7 @@
                         <div class="kpi-icon kpi-icon-2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg></div>
                         <div class="kpi-card-body">
                             <h2>Devis envoyés</h2>
-                            <p class="favorite-value">6</p>
+                            <p class="favorite-value" id="dashboard-devis-envoyes-value">6</p>
                         </div>
                     </a>
                     <a href="tresorerie.html" class="dashboard-card kpi-card dashboard-card-favorite kpi-card-link">
@@ -272,6 +272,16 @@
                         </div>
                     </div>
                 </section>
+
+                <div class="dashboard-block">
+                    <div class="dashboard-block-header">
+                        <h2>Aperçu Facturation</h2>
+                        <a href="facturation.html" class="block-icon-btn" title="Voir la Facturation" aria-label="Voir la Facturation">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M9 13h6"></path><path d="M9 17h6"></path></svg>
+                        </a>
+                    </div>
+                    <div class="devis-summary" id="dashboard-facturation-stats"></div>
+                </div>
             </main>
         </div>
     </div>

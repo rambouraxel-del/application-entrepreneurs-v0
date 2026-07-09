@@ -375,21 +375,15 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 })();
 
-// Page Fiche client : fiche CRM complète à partir de données statiques (V0.4.2)
-// CLIENT_DETAILS est une source temporaire et fictive, une entrée par slug déjà
-// présent dans pages/clients.html. Elle prépare une vraie source de données
-// (backend) sans en construire une dès maintenant.
+// Données Clients (V0.4.2, isolées en V0.6.4 pour être disponibles avant les
+// données Devis/Factures : la fiche client a désormais besoin de
+// DEVIS_DETAILS/FACTURE_DETAILS pour afficher les documents réellement liés
+// à un client, voir plus bas). CLIENT_DETAILS est une source temporaire et
+// fictive, une entrée par slug déjà présent dans pages/clients.html. Elle
+// prépare une vraie source de données (backend) sans en construire une dès
+// maintenant.
 
 (function () {
-    var HISTORY_TYPES = {
-        'appel-sortant': { label: 'Appel sortant', badgeClass: 'badge-success' },
-        'email-envoye': { label: 'E-mail envoyé', badgeClass: 'badge-info' },
-        'email-recu': { label: 'E-mail reçu', badgeClass: 'badge-neutral' },
-        'rdv-realise': { label: 'Rendez-vous réalisé', badgeClass: 'badge-success' },
-        'relance': { label: 'Relance', badgeClass: 'badge-warning' },
-        'commentaire-interne': { label: 'Commentaire interne', badgeClass: 'badge-neutral' }
-    };
-
     var CLIENT_DETAILS = {
         'martin-dupont': {
             nom: 'Martin Dupont',
@@ -656,6 +650,662 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     window.COCKPIT_CLIENT_DETAILS = CLIENT_DETAILS;
+})();
+
+// Données Facturation / Devis (V0.6.1)
+// COMPANY_SETTINGS est la source par défaut de l'émetteur pour tout nouveau
+// devis ; chaque version de devis conserve ensuite son propre companySnapshot
+// et clientSnapshot, figés au moment de leur création, pour ne jamais changer
+// rétroactivement un devis existant si les Paramètres entreprise ou la fiche
+// client évoluent plus tard. DEVIS_DETAILS est une source statique en mémoire,
+// comme CLIENT_DETAILS et PRODUCT_DETAILS : aucune persistance réelle, aucun
+// localStorage. Le versionnement et le verrouillage sont démontrés sur ce jeu
+// de données fictif ; ils ne sont pas reconstruits dynamiquement. Positionné
+// ici (avant la fiche client) pour que snapshotClient() puisse lire
+// CLIENT_DETAILS déjà exposé ci-dessus.
+
+(function () {
+    var COMPANY_SETTINGS = {
+        nom: 'Cockpit Entrepreneur SARL',
+        adresse: '10 rue de l\'Innovation, 75011 Paris',
+        telephone: '01 84 12 34 56',
+        email: 'contact@cockpit-entrepreneur.example.com',
+        siteInternet: 'www.cockpit-entrepreneur.example.com',
+        siren: '123 456 789',
+        siret: '123 456 789 00012',
+        tva: 'FR12 123456789',
+        iban: 'FR76 1234 5678 9012 3456 7890 123',
+        bic: 'ABCDEFGHXXX',
+        mentionsLegales: 'En cas de retard de paiement, une pénalité de 3 fois le taux d\'intérêt légal sera appliquée, ainsi qu\'une indemnité forfaitaire de 40 € pour frais de recouvrement (art. L441-10 du Code de commerce). Aucun escompte pour paiement anticipé.'
+    };
+
+    var DEVIS_STATUSES = [
+        { value: 'brouillon', label: 'Brouillon', badgeClass: 'badge-neutral' },
+        { value: 'envoye', label: 'Envoyé', badgeClass: 'badge-info' },
+        { value: 'accepte', label: 'Accepté', badgeClass: 'badge-success' },
+        { value: 'refuse', label: 'Refusé', badgeClass: 'badge-danger' }
+    ];
+
+    function snapshotClient(slug) {
+        var client = (window.COCKPIT_CLIENT_DETAILS || {})[slug];
+        if (!client) {
+            return null;
+        }
+        return {
+            nom: client.nom,
+            entreprise: client.entreprise,
+            adresse: client.adresse,
+            telephone: client.telephone,
+            email: client.email
+        };
+    }
+
+    function snapshotCompany() {
+        return {
+            nom: COMPANY_SETTINGS.nom,
+            adresse: COMPANY_SETTINGS.adresse,
+            telephone: COMPANY_SETTINGS.telephone,
+            email: COMPANY_SETTINGS.email,
+            siret: COMPANY_SETTINGS.siret,
+            tva: COMPANY_SETTINGS.tva
+        };
+    }
+
+    var DEVIS_DETAILS = {
+        'DEV-2026-00011': {
+            numero: 'DEV-2026-00011',
+            versionActive: 1,
+            versions: [
+                {
+                    version: 1,
+                    statut: 'brouillon',
+                    dateCreation: '05/07/2026',
+                    dateModification: '05/07/2026',
+                    clientSlug: 'julien-petit',
+                    clientSnapshot: snapshotClient('julien-petit'),
+                    companySnapshot: snapshotCompany(),
+                    lignes: [
+                        { designation: 'Audit stratégique', description: 'Diagnostic complet de la situation de l\'entreprise et recommandations stratégiques.', quantite: 1, prixUnitaireHT: 750, tauxTVA: 20, remisePourcent: 0 }
+                    ],
+                    conditionsPaiement: { delai: 'Paiement à réception', acompte: '', fractionne: '', note: '' }
+                }
+            ]
+        },
+        'DEV-2026-00012': {
+            numero: 'DEV-2026-00012',
+            versionActive: 1,
+            versions: [
+                {
+                    version: 1,
+                    statut: 'envoye',
+                    dateCreation: '22/06/2026',
+                    dateModification: '22/06/2026',
+                    clientSlug: 'atelier-leroy',
+                    clientSnapshot: snapshotClient('atelier-leroy'),
+                    companySnapshot: snapshotCompany(),
+                    lignes: [
+                        { designation: 'Création site vitrine', description: 'Conception et mise en ligne d\'un site vitrine professionnel clé en main.', quantite: 1, prixUnitaireHT: 1800, tauxTVA: 20, remisePourcent: 10 },
+                        { designation: 'Maintenance mensuelle', description: 'Suivi technique mensuel et mises à jour de sécurité pour un site existant.', quantite: 3, prixUnitaireHT: 250, tauxTVA: 20, remisePourcent: 0 }
+                    ],
+                    conditionsPaiement: { delai: 'Paiement à 30 jours', acompte: 'Acompte de 30 % à la commande', fractionne: '', note: '' }
+                }
+            ]
+        },
+        'DEV-2026-00013': {
+            numero: 'DEV-2026-00013',
+            versionActive: 1,
+            versions: [
+                {
+                    version: 1,
+                    statut: 'refuse',
+                    dateCreation: '15/05/2026',
+                    dateModification: '15/05/2026',
+                    clientSlug: 'techni-bois-sarl',
+                    clientSnapshot: snapshotClient('techni-bois-sarl'),
+                    companySnapshot: snapshotCompany(),
+                    lignes: [
+                        { designation: 'Formation personnalisée', description: 'Session de formation individuelle adaptée aux besoins du client.', quantite: 2, prixUnitaireHT: 950, tauxTVA: 10, remisePourcent: 0 }
+                    ],
+                    conditionsPaiement: { delai: 'Paiement comptant', acompte: '', fractionne: '', note: '' }
+                }
+            ]
+        },
+        'DEV-2026-00014': {
+            numero: 'DEV-2026-00014',
+            versionActive: 1,
+            versions: [
+                {
+                    version: 1,
+                    statut: 'envoye',
+                    dateCreation: '28/06/2026',
+                    dateModification: '28/06/2026',
+                    clientSlug: 'boucherie-morel',
+                    clientSnapshot: snapshotClient('boucherie-morel'),
+                    companySnapshot: snapshotCompany(),
+                    lignes: [
+                        { designation: 'Kit de démarrage digital', description: 'Kit prêt à l\'emploi pour démarrer sa présence digitale.', quantite: 5, prixUnitaireHT: 129, tauxTVA: 20, remisePourcent: 5 },
+                        { designation: 'Accessoire premium', description: 'Accessoire complémentaire, retiré temporairement de la vente.', quantite: 2, prixUnitaireHT: 89, tauxTVA: 20, remisePourcent: 0 }
+                    ],
+                    conditionsPaiement: { delai: 'Paiement à 15 jours', acompte: '', fractionne: '', note: '' }
+                }
+            ]
+        },
+        'DEV-2026-00015': {
+            numero: 'DEV-2026-00015',
+            versionActive: 3,
+            versions: [
+                {
+                    version: 1,
+                    statut: 'envoye',
+                    dateCreation: '14/02/2026',
+                    dateModification: '14/02/2026',
+                    clientSlug: 'martin-dupont',
+                    clientSnapshot: { nom: 'Martin Dupont', entreprise: '—', adresse: '8 rue des Artisans, 75011 Paris', telephone: '01 23 45 67 89', email: 'martin.dupont@example.com' },
+                    companySnapshot: snapshotCompany(),
+                    lignes: [
+                        { designation: 'Audit stratégique', description: 'Diagnostic complet de la situation de l\'entreprise et recommandations stratégiques.', quantite: 1, prixUnitaireHT: 750, tauxTVA: 20, remisePourcent: 0 },
+                        { designation: 'Maintenance mensuelle', description: 'Suivi technique mensuel et mises à jour de sécurité pour un site existant.', quantite: 1, prixUnitaireHT: 250, tauxTVA: 20, remisePourcent: 0 }
+                    ],
+                    conditionsPaiement: { delai: 'Paiement à 30 jours', acompte: '', fractionne: '', note: '' }
+                },
+                {
+                    version: 2,
+                    statut: 'envoye',
+                    dateCreation: '02/03/2026',
+                    dateModification: '02/03/2026',
+                    clientSlug: 'martin-dupont',
+                    clientSnapshot: snapshotClient('martin-dupont'),
+                    companySnapshot: snapshotCompany(),
+                    lignes: [
+                        { designation: 'Audit stratégique', description: 'Diagnostic complet de la situation de l\'entreprise et recommandations stratégiques.', quantite: 1, prixUnitaireHT: 750, tauxTVA: 20, remisePourcent: 0 },
+                        { designation: 'Création site vitrine', description: 'Conception et mise en ligne d\'un site vitrine professionnel clé en main.', quantite: 1, prixUnitaireHT: 1800, tauxTVA: 20, remisePourcent: 10 },
+                        { designation: 'Maintenance mensuelle', description: 'Suivi technique mensuel et mises à jour de sécurité pour un site existant.', quantite: 1, prixUnitaireHT: 250, tauxTVA: 20, remisePourcent: 0 }
+                    ],
+                    conditionsPaiement: { delai: 'Paiement à 30 jours', acompte: 'Acompte de 30 % à la commande (site vitrine)', fractionne: '', note: '' }
+                },
+                {
+                    version: 3,
+                    statut: 'accepte',
+                    dateCreation: '15/03/2026',
+                    dateModification: '15/03/2026',
+                    clientSlug: 'martin-dupont',
+                    clientSnapshot: snapshotClient('martin-dupont'),
+                    companySnapshot: snapshotCompany(),
+                    lignes: [
+                        { designation: 'Audit stratégique', description: 'Diagnostic complet de la situation de l\'entreprise et recommandations stratégiques.', quantite: 1, prixUnitaireHT: 750, tauxTVA: 20, remisePourcent: 0 },
+                        { designation: 'Création site vitrine', description: 'Conception et mise en ligne d\'un site vitrine professionnel clé en main.', quantite: 1, prixUnitaireHT: 1800, tauxTVA: 20, remisePourcent: 10 },
+                        { designation: 'Maintenance mensuelle', description: 'Suivi technique mensuel et mises à jour de sécurité pour un site existant.', quantite: 3, prixUnitaireHT: 250, tauxTVA: 20, remisePourcent: 0 }
+                    ],
+                    conditionsPaiement: { delai: 'Paiement à 30 jours', acompte: 'Acompte de 30 % à la commande (site vitrine)', fractionne: 'Paiement en 3 fois pour la maintenance', note: 'Facturation de la maintenance mensuelle en 3 échéances trimestrielles.' }
+                }
+            ]
+        },
+        'DEV-2026-00016': {
+            numero: 'DEV-2026-00016',
+            versionActive: 1,
+            versions: [
+                {
+                    version: 1,
+                    statut: 'accepte',
+                    dateCreation: '18/06/2026',
+                    dateModification: '18/06/2026',
+                    clientSlug: 'sophie-bernard',
+                    clientSnapshot: snapshotClient('sophie-bernard'),
+                    companySnapshot: snapshotCompany(),
+                    lignes: [
+                        { designation: 'Audit stratégique', description: 'Diagnostic complet de la situation de l\'entreprise et recommandations stratégiques.', quantite: 1, prixUnitaireHT: 750, tauxTVA: 20, remisePourcent: 0 }
+                    ],
+                    conditionsPaiement: { delai: 'Paiement à 30 jours', acompte: '', fractionne: '', note: '' }
+                }
+            ]
+        }
+    };
+
+    function roundMoney(value) {
+        return Math.round((value + Number.EPSILON) * 100) / 100;
+    }
+
+    function formatMoney(value) {
+        var rounded = roundMoney(value || 0);
+        var fixed = rounded.toFixed(2);
+        var parts = fixed.split('.');
+        var intPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+        return intPart + ',' + parts[1] + ' €';
+    }
+
+    function computeLine(line) {
+        var quantite = parseFloat(line.quantite) || 0;
+        var prixUnitaireHT = parseFloat(line.prixUnitaireHT) || 0;
+        var remisePourcent = parseFloat(line.remisePourcent) || 0;
+        var tauxTVA = parseFloat(line.tauxTVA) || 0;
+        var brutHT = roundMoney(quantite * prixUnitaireHT);
+        var remiseMontant = roundMoney(brutHT * (remisePourcent / 100));
+        var netHT = roundMoney(brutHT - remiseMontant);
+        var montantTVA = roundMoney(netHT * (tauxTVA / 100));
+        var totalTTC = roundMoney(netHT + montantTVA);
+        return { brutHT: brutHT, remiseMontant: remiseMontant, netHT: netHT, montantTVA: montantTVA, totalTTC: totalTTC, tauxTVA: tauxTVA };
+    }
+
+    function computeDevisTotals(lignes) {
+        var totalBrutHT = 0;
+        var totalRemises = 0;
+        var totalHT = 0;
+        var totalTVA = 0;
+        var totalTTC = 0;
+        var tvaParTaux = {};
+
+        (lignes || []).forEach(function (line) {
+            var computed = computeLine(line);
+            totalBrutHT = roundMoney(totalBrutHT + computed.brutHT);
+            totalRemises = roundMoney(totalRemises + computed.remiseMontant);
+            totalHT = roundMoney(totalHT + computed.netHT);
+            totalTVA = roundMoney(totalTVA + computed.montantTVA);
+            totalTTC = roundMoney(totalTTC + computed.totalTTC);
+
+            var rateKey = String(computed.tauxTVA);
+            tvaParTaux[rateKey] = roundMoney((tvaParTaux[rateKey] || 0) + computed.montantTVA);
+        });
+
+        return { totalBrutHT: totalBrutHT, totalRemises: totalRemises, totalHT: totalHT, totalTVA: totalTVA, totalTTC: totalTTC, tvaParTaux: tvaParTaux };
+    }
+
+    function getActiveVersion(devis) {
+        if (!devis) {
+            return null;
+        }
+        var match = devis.versions.filter(function (version) {
+            return version.version === devis.versionActive;
+        })[0];
+        return match || devis.versions[devis.versions.length - 1];
+    }
+
+    function computeNextDevisNumero(annee) {
+        var maxSeq = 0;
+        Object.keys(DEVIS_DETAILS).forEach(function (numero) {
+            var match = numero.match(/^DEV-(\d{4})-(\d{5})$/);
+            if (match && match[1] === String(annee)) {
+                var seq = parseInt(match[2], 10);
+                if (seq > maxSeq) {
+                    maxSeq = seq;
+                }
+            }
+        });
+        var nextSeq = maxSeq + 1;
+        var padded = String(nextSeq);
+        while (padded.length < 5) {
+            padded = '0' + padded;
+        }
+        return 'DEV-' + annee + '-' + padded;
+    }
+
+    window.COCKPIT_COMPANY_SETTINGS = COMPANY_SETTINGS;
+    window.COCKPIT_DEVIS_STATUSES = DEVIS_STATUSES;
+    window.COCKPIT_DEVIS_DETAILS = DEVIS_DETAILS;
+    window.COCKPIT_DEVIS_CALC = {
+        roundMoney: roundMoney,
+        formatMoney: formatMoney,
+        computeLine: computeLine,
+        computeDevisTotals: computeDevisTotals,
+        getActiveVersion: getActiveVersion,
+        computeNextDevisNumero: computeNextDevisNumero,
+        snapshotClient: snapshotClient,
+        snapshotCompany: snapshotCompany
+    };
+})();
+
+// Données Facturation / Factures (V0.6.2)
+// Réutilise directement COCKPIT_DEVIS_CALC pour tout ce qui est déjà correct :
+// roundMoney/formatMoney/computeLine/computeDevisTotals (les lignes de facture
+// ont exactement la même forme que les lignes de devis), snapshotClient/
+// snapshotCompany. COCKPIT_FACTURE_CALC n'ajoute que le spécifique aux
+// factures : paiements, statut affiché calculé, numérotation. FACTURE_DETAILS
+// est une source statique en mémoire, comme DEVIS_DETAILS : aucune
+// persistance réelle. Le statut affiché sépare volontairement un
+// statutEmission explicite (brouillon/emise/annulee) d'un statut de paiement
+// calculé (non-payee/partiellement-payee/payee/en-retard), pour ne jamais
+// pouvoir afficher un statut de paiement incohérent sur une facture non
+// émise.
+
+(function () {
+    var devisCalc = window.COCKPIT_DEVIS_CALC;
+
+    var FACTURE_STATUSES = [
+        { value: 'brouillon', label: 'Brouillon', badgeClass: 'badge-neutral' },
+        { value: 'non-payee', label: 'Émise', badgeClass: 'badge-info' },
+        { value: 'partiellement-payee', label: 'Partiellement payée', badgeClass: 'badge-warning' },
+        { value: 'payee', label: 'Payée', badgeClass: 'badge-success' },
+        { value: 'en-retard', label: 'En retard', badgeClass: 'badge-danger' },
+        { value: 'annulee', label: 'Annulée', badgeClass: 'badge-neutral' }
+    ];
+
+    var PAYMENT_METHODS = ['Virement bancaire', 'Carte bancaire', 'Chèque', 'Espèces', 'Prélèvement'];
+
+    function parseFrDate(value) {
+        if (!value) {
+            return null;
+        }
+        var parts = value.split('/');
+        return new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
+    }
+
+    function computePaiements(paiements, totalTTC) {
+        var totalPaye = 0;
+        (paiements || []).forEach(function (paiement) {
+            totalPaye = devisCalc.roundMoney(totalPaye + (parseFloat(paiement.montant) || 0));
+        });
+        var resteAPayer = devisCalc.roundMoney((totalTTC || 0) - totalPaye);
+        var pourcentagePaye = totalTTC ? Math.round((totalPaye / totalTTC) * 100) : 0;
+        return { totalPaye: totalPaye, resteAPayer: resteAPayer, pourcentagePaye: pourcentagePaye };
+    }
+
+    function computeStatutAffiche(params) {
+        if (params.statutEmission === 'brouillon') {
+            return 'brouillon';
+        }
+        if (params.statutEmission === 'annulee') {
+            return 'annulee';
+        }
+        var totals = computePaiements(params.paiements, params.totalTTC);
+        if (totals.resteAPayer <= 0) {
+            return 'payee';
+        }
+        var echeance = parseFrDate(params.dateEcheance);
+        if (echeance && echeance < new Date()) {
+            return 'en-retard';
+        }
+        if (totals.totalPaye > 0) {
+            return 'partiellement-payee';
+        }
+        return 'non-payee';
+    }
+
+    function computeNextFactureNumero(annee) {
+        var maxSeq = 0;
+        Object.keys(FACTURE_DETAILS).forEach(function (key) {
+            var match = key.match(/^FAC-(\d{4})-(\d{5})$/);
+            if (match && match[1] === String(annee)) {
+                var seq = parseInt(match[2], 10);
+                if (seq > maxSeq) {
+                    maxSeq = seq;
+                }
+            }
+        });
+        var nextSeq = maxSeq + 1;
+        var padded = String(nextSeq);
+        while (padded.length < 5) {
+            padded = '0' + padded;
+        }
+        return 'FAC-' + annee + '-' + padded;
+    }
+
+    var FACTURE_DETAILS = {
+        'FAC-2026-00001': {
+            numero: 'FAC-2026-00001',
+            statutEmission: 'emise',
+            dateCreation: '01/07/2026',
+            dateEmission: '01/07/2026',
+            dateEcheance: '31/07/2026',
+            clientSlug: 'sophie-bernard',
+            clientSnapshot: devisCalc.snapshotClient('sophie-bernard'),
+            companySnapshot: devisCalc.snapshotCompany(),
+            lignes: [
+                { designation: 'Audit stratégique', description: 'Diagnostic complet de la situation de l\'entreprise et recommandations stratégiques.', quantite: 1, prixUnitaireHT: 750, tauxTVA: 20, remisePourcent: 0 }
+            ],
+            conditionsPaiement: { delai: 'Paiement à 30 jours', acompte: '', fractionne: '', note: '' },
+            paiements: [],
+            devisRef: null
+        },
+        'FAC-2026-00002': {
+            numero: 'FAC-2026-00002',
+            statutEmission: 'emise',
+            dateCreation: '10/06/2026',
+            dateEmission: '10/06/2026',
+            dateEcheance: '10/07/2026',
+            clientSlug: 'atelier-leroy',
+            clientSnapshot: devisCalc.snapshotClient('atelier-leroy'),
+            companySnapshot: devisCalc.snapshotCompany(),
+            lignes: [
+                { designation: 'Maintenance mensuelle', description: 'Suivi technique mensuel et mises à jour de sécurité pour un site existant.', quantite: 4, prixUnitaireHT: 250, tauxTVA: 20, remisePourcent: 0 }
+            ],
+            conditionsPaiement: { delai: 'Paiement à 30 jours', acompte: '', fractionne: '', note: '' },
+            paiements: [
+                { date: '20/06/2026', montant: 600, mode: 'Virement bancaire', reference: 'VIR-2026-0456', note: '' }
+            ],
+            devisRef: null
+        },
+        'FAC-2026-00003': {
+            numero: 'FAC-2026-00003',
+            statutEmission: 'emise',
+            dateCreation: '16/03/2026',
+            dateEmission: '16/03/2026',
+            dateEcheance: '15/04/2026',
+            clientSlug: 'martin-dupont',
+            clientSnapshot: { nom: 'Martin Dupont', entreprise: '—', adresse: '12 rue des Artisans, 75011 Paris', telephone: '01 23 45 67 89', email: 'martin.dupont@example.com' },
+            companySnapshot: devisCalc.snapshotCompany(),
+            lignes: [
+                { designation: 'Audit stratégique', description: 'Diagnostic complet de la situation de l\'entreprise et recommandations stratégiques.', quantite: 1, prixUnitaireHT: 750, tauxTVA: 20, remisePourcent: 0 },
+                { designation: 'Création site vitrine', description: 'Conception et mise en ligne d\'un site vitrine professionnel clé en main.', quantite: 1, prixUnitaireHT: 1800, tauxTVA: 20, remisePourcent: 10 },
+                { designation: 'Maintenance mensuelle', description: 'Suivi technique mensuel et mises à jour de sécurité pour un site existant.', quantite: 3, prixUnitaireHT: 250, tauxTVA: 20, remisePourcent: 0 }
+            ],
+            conditionsPaiement: { delai: 'Paiement à 30 jours', acompte: 'Acompte de 30 % à la commande (site vitrine)', fractionne: 'Paiement en 3 fois pour la maintenance', note: 'Facturation de la maintenance mensuelle en 3 échéances trimestrielles.' },
+            paiements: [
+                { date: '20/03/2026', montant: 1122, mode: 'Virement bancaire', reference: 'VIR-2026-0301', note: 'Acompte 30 % à la commande' },
+                { date: '10/04/2026', montant: 2622, mode: 'Virement bancaire', reference: 'VIR-2026-0345', note: 'Solde à réception' }
+            ],
+            devisRef: { numero: 'DEV-2026-00015', version: 3 }
+        },
+        'FAC-2026-00004': {
+            numero: 'FAC-2026-00004',
+            statutEmission: 'emise',
+            dateCreation: '01/05/2026',
+            dateEmission: '01/05/2026',
+            dateEcheance: '01/06/2026',
+            clientSlug: 'boucherie-morel',
+            clientSnapshot: devisCalc.snapshotClient('boucherie-morel'),
+            companySnapshot: devisCalc.snapshotCompany(),
+            lignes: [
+                { designation: 'Kit de démarrage digital', description: 'Kit prêt à l\'emploi pour démarrer sa présence digitale.', quantite: 10, prixUnitaireHT: 129, tauxTVA: 20, remisePourcent: 5 }
+            ],
+            conditionsPaiement: { delai: 'Paiement à 30 jours', acompte: '', fractionne: '', note: '' },
+            paiements: [
+                { date: '15/05/2026', montant: 300, mode: 'Chèque', reference: 'CHQ-778812', note: 'Premier versement' }
+            ],
+            devisRef: null
+        },
+        'FAC-2026-00005': {
+            numero: 'FAC-2026-00005',
+            statutEmission: 'annulee',
+            dateCreation: '20/05/2026',
+            dateEmission: '20/05/2026',
+            dateEcheance: '19/06/2026',
+            clientSlug: 'techni-bois-sarl',
+            clientSnapshot: devisCalc.snapshotClient('techni-bois-sarl'),
+            companySnapshot: devisCalc.snapshotCompany(),
+            lignes: [
+                { designation: 'Formation personnalisée', description: 'Session de formation individuelle adaptée aux besoins du client.', quantite: 2, prixUnitaireHT: 950, tauxTVA: 10, remisePourcent: 0 }
+            ],
+            conditionsPaiement: { delai: 'Paiement comptant', acompte: '', fractionne: '', note: '' },
+            paiements: [],
+            devisRef: null,
+            noteAnnulation: 'Facture annulée suite à une erreur de saisie, avant tout paiement.'
+        },
+        'BROUILLON-JULIEN-PETIT': {
+            numero: null,
+            statutEmission: 'brouillon',
+            dateCreation: '08/07/2026',
+            dateEmission: null,
+            dateEcheance: null,
+            clientSlug: 'julien-petit',
+            clientSnapshot: devisCalc.snapshotClient('julien-petit'),
+            companySnapshot: devisCalc.snapshotCompany(),
+            lignes: [
+                { designation: 'Audit stratégique', description: 'Diagnostic complet de la situation de l\'entreprise et recommandations stratégiques.', quantite: 1, prixUnitaireHT: 750, tauxTVA: 20, remisePourcent: 0 }
+            ],
+            conditionsPaiement: { delai: '', acompte: '', fractionne: '', note: '' },
+            paiements: [],
+            devisRef: null
+        }
+    };
+
+    window.COCKPIT_FACTURE_STATUSES = FACTURE_STATUSES;
+    window.COCKPIT_PAYMENT_METHODS = PAYMENT_METHODS;
+    window.COCKPIT_FACTURE_DETAILS = FACTURE_DETAILS;
+    window.COCKPIT_FACTURE_CALC = {
+        computePaiements: computePaiements,
+        computeStatutAffiche: computeStatutAffiche,
+        computeNextFactureNumero: computeNextFactureNumero,
+        parseDate: parseFrDate
+    };
+})();
+
+// Statistiques commerciales Facturation (V0.6.4)
+// Un seul point de calcul (COCKPIT_FACTURATION_STATS.computeStats()),
+// réutilisé par le dashboard et facturation.html, pour ne jamais dupliquer la
+// logique d'exclusion des brouillons/factures annulées à plusieurs endroits.
+// Règles : le CA facturé/encaissé ne compte que les factures Émises (jamais
+// les brouillons, jamais les annulées, dont les paiements ne comptent pas non
+// plus) ; le montant moyen devis exclut les devis dont la version active est
+// un brouillon ; le taux de transformation ne considère que les devis
+// décidés (Accepté ou Refusé), jamais les brouillons/envoyés encore en
+// attente.
+
+(function () {
+    var devisCalc = window.COCKPIT_DEVIS_CALC;
+    var factureCalc = window.COCKPIT_FACTURE_CALC;
+
+    function computeStats() {
+        var DEVIS_DETAILS = window.COCKPIT_DEVIS_DETAILS || {};
+        var FACTURE_DETAILS = window.COCKPIT_FACTURE_DETAILS || {};
+        var CLIENT_DETAILS = window.COCKPIT_CLIENT_DETAILS || {};
+
+        var caFacture = 0;
+        var caEncaisse = 0;
+        var facturesEnRetard = 0;
+        var nombreFacturesEmises = 0;
+        var topClientsMap = {};
+        var prochainesEcheances = [];
+
+        Object.keys(FACTURE_DETAILS).forEach(function (key) {
+            var facture = FACTURE_DETAILS[key];
+            if (facture.statutEmission !== 'emise') {
+                return;
+            }
+
+            var totals = devisCalc.computeDevisTotals(facture.lignes);
+            var paiementsInfo = factureCalc.computePaiements(facture.paiements, totals.totalTTC);
+            var statutAffiche = factureCalc.computeStatutAffiche({
+                statutEmission: facture.statutEmission,
+                totalTTC: totals.totalTTC,
+                paiements: facture.paiements,
+                dateEcheance: facture.dateEcheance
+            });
+
+            caFacture = devisCalc.roundMoney(caFacture + totals.totalTTC);
+            caEncaisse = devisCalc.roundMoney(caEncaisse + paiementsInfo.totalPaye);
+            nombreFacturesEmises += 1;
+
+            if (statutAffiche === 'en-retard') {
+                facturesEnRetard += 1;
+            }
+
+            var clientKey = facture.clientSlug || key;
+            var clientNom = (CLIENT_DETAILS[facture.clientSlug] || facture.clientSnapshot || {}).nom || clientKey;
+            if (!topClientsMap[clientKey]) {
+                topClientsMap[clientKey] = { slug: facture.clientSlug, nom: clientNom, montant: 0 };
+            }
+            topClientsMap[clientKey].montant = devisCalc.roundMoney(topClientsMap[clientKey].montant + totals.totalTTC);
+
+            if (paiementsInfo.resteAPayer > 0 && facture.dateEcheance) {
+                prochainesEcheances.push({
+                    numero: facture.numero,
+                    key: key,
+                    clientNom: clientNom,
+                    dateEcheance: facture.dateEcheance,
+                    resteAPayer: paiementsInfo.resteAPayer
+                });
+            }
+        });
+
+        var resteAEncaisser = devisCalc.roundMoney(caFacture - caEncaisse);
+        var panierMoyenFacture = nombreFacturesEmises ? devisCalc.roundMoney(caFacture / nombreFacturesEmises) : 0;
+
+        var devisAcceptes = 0;
+        var devisRefuses = 0;
+        var devisEnvoyes = 0;
+        var totalMontantDevisHorsBrouillon = 0;
+        var nombreDevisHorsBrouillon = 0;
+
+        Object.keys(DEVIS_DETAILS).forEach(function (numero) {
+            var devis = DEVIS_DETAILS[numero];
+            var activeVersion = devisCalc.getActiveVersion(devis);
+            if (!activeVersion) {
+                return;
+            }
+            if (activeVersion.statut === 'accepte') {
+                devisAcceptes += 1;
+            } else if (activeVersion.statut === 'refuse') {
+                devisRefuses += 1;
+            } else if (activeVersion.statut === 'envoye') {
+                devisEnvoyes += 1;
+            }
+            if (activeVersion.statut !== 'brouillon') {
+                var devisTotals = devisCalc.computeDevisTotals(activeVersion.lignes);
+                totalMontantDevisHorsBrouillon = devisCalc.roundMoney(totalMontantDevisHorsBrouillon + devisTotals.totalTTC);
+                nombreDevisHorsBrouillon += 1;
+            }
+        });
+
+        var tauxTransformation = (devisAcceptes + devisRefuses) ? Math.round((devisAcceptes / (devisAcceptes + devisRefuses)) * 100) : 0;
+        var montantMoyenDevis = nombreDevisHorsBrouillon ? devisCalc.roundMoney(totalMontantDevisHorsBrouillon / nombreDevisHorsBrouillon) : 0;
+
+        var topClients = Object.keys(topClientsMap).map(function (key) {
+            return topClientsMap[key];
+        }).sort(function (a, b) {
+            return b.montant - a.montant;
+        }).slice(0, 3);
+
+        prochainesEcheances.sort(function (a, b) {
+            return (factureCalc.parseDate(a.dateEcheance) || 0) - (factureCalc.parseDate(b.dateEcheance) || 0);
+        });
+        prochainesEcheances = prochainesEcheances.slice(0, 3);
+
+        return {
+            caFacture: caFacture,
+            caEncaisse: caEncaisse,
+            resteAEncaisser: resteAEncaisser,
+            facturesEnRetard: facturesEnRetard,
+            nombreFacturesEmises: nombreFacturesEmises,
+            panierMoyenFacture: panierMoyenFacture,
+            devisAcceptes: devisAcceptes,
+            devisRefuses: devisRefuses,
+            devisEnvoyes: devisEnvoyes,
+            tauxTransformation: tauxTransformation,
+            montantMoyenDevis: montantMoyenDevis,
+            topClients: topClients,
+            prochainesEcheances: prochainesEcheances
+        };
+    }
+
+    window.COCKPIT_FACTURATION_STATS = {
+        computeStats: computeStats
+    };
+})();
+
+// Page Fiche client : fiche CRM complète à partir de données statiques (V0.4.2)
+// Le rendu (historique, rendez-vous, notes, documents & facturation) utilise
+// CLIENT_DETAILS (ci-dessus) et, depuis la V0.6.4, DEVIS_DETAILS/
+// FACTURE_DETAILS pour la section "Documents & facturation" (devis/factures
+// réellement liés au client via clientSlug).
+
+(function () {
+    var HISTORY_TYPES = {
+        'appel-sortant': { label: 'Appel sortant', badgeClass: 'badge-success' },
+        'email-envoye': { label: 'E-mail envoyé', badgeClass: 'badge-info' },
+        'email-recu': { label: 'E-mail reçu', badgeClass: 'badge-neutral' },
+        'rdv-realise': { label: 'Rendez-vous réalisé', badgeClass: 'badge-success' },
+        'relance': { label: 'Relance', badgeClass: 'badge-warning' },
+        'commentaire-interne': { label: 'Commentaire interne', badgeClass: 'badge-neutral' }
+    };
 
     var nameEl = document.getElementById('client-identity-name');
 
@@ -1122,25 +1772,101 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    function renderDocuments(documents) {
+    function renderDocuments(documents, slug) {
         var body = document.getElementById('client-documents-body');
         if (!body) {
             return;
         }
         body.innerHTML = '';
 
-        if (!documents || documents.length === 0) {
-            var row = document.createElement('tr');
-            var cell = document.createElement('td');
-            cell.colSpan = 5;
-            cell.className = 'empty-state-inline';
-            cell.textContent = 'Aucun document récent pour ce client.';
-            row.appendChild(cell);
-            body.appendChild(row);
+        var devisCalc = window.COCKPIT_DEVIS_CALC;
+        var factureCalc = window.COCKPIT_FACTURE_CALC;
+        var DEVIS_DETAILS = window.COCKPIT_DEVIS_DETAILS || {};
+        var FACTURE_DETAILS = window.COCKPIT_FACTURE_DETAILS || {};
+        var DEVIS_STATUSES = window.COCKPIT_DEVIS_STATUSES || [];
+        var FACTURE_STATUSES = window.COCKPIT_FACTURE_STATUSES || [];
+
+        var rows = [];
+
+        // Devis réellement liés à ce client (association sur la version active).
+        Object.keys(DEVIS_DETAILS).forEach(function (numero) {
+            var devis = DEVIS_DETAILS[numero];
+            var activeVersion = devisCalc.getActiveVersion(devis);
+            if (!activeVersion || activeVersion.clientSlug !== slug) {
+                return;
+            }
+            var totals = devisCalc.computeDevisTotals(activeVersion.lignes);
+            var statusInfo = DEVIS_STATUSES.filter(function (s) { return s.value === activeVersion.statut; })[0];
+            rows.push({
+                nom: numero + ' (v' + activeVersion.version + ')',
+                type: 'Devis',
+                date: activeVersion.dateCreation,
+                statutLabel: statusInfo ? statusInfo.label : activeVersion.statut,
+                badgeClass: statusInfo ? statusInfo.badgeClass : 'badge-neutral',
+                montant: devisCalc.formatMoney(totals.totalTTC),
+                reste: '—',
+                editHref: 'devis-edition.html?devis=' + encodeURIComponent(numero) + '&version=' + activeVersion.version,
+                docHref: 'devis-document.html?devis=' + encodeURIComponent(numero) + '&version=' + activeVersion.version
+            });
+        });
+
+        // Factures réellement liées à ce client.
+        Object.keys(FACTURE_DETAILS).forEach(function (key) {
+            var facture = FACTURE_DETAILS[key];
+            if (facture.clientSlug !== slug) {
+                return;
+            }
+            var totals = devisCalc.computeDevisTotals(facture.lignes);
+            var paiementsInfo = factureCalc.computePaiements(facture.paiements, totals.totalTTC);
+            var statutAffiche = factureCalc.computeStatutAffiche({
+                statutEmission: facture.statutEmission,
+                totalTTC: totals.totalTTC,
+                paiements: facture.paiements,
+                dateEcheance: facture.dateEcheance
+            });
+            var statusInfo = FACTURE_STATUSES.filter(function (s) { return s.value === statutAffiche; })[0];
+            rows.push({
+                nom: facture.numero || 'Brouillon sans numéro',
+                type: 'Facture',
+                date: facture.dateEmission || facture.dateCreation,
+                statutLabel: statusInfo ? statusInfo.label : statutAffiche,
+                badgeClass: statusInfo ? statusInfo.badgeClass : 'badge-neutral',
+                montant: devisCalc.formatMoney(totals.totalTTC),
+                reste: facture.statutEmission === 'emise' ? devisCalc.formatMoney(paiementsInfo.resteAPayer) : '—',
+                editHref: 'facture-edition.html?facture=' + encodeURIComponent(key),
+                docHref: 'facture-document.html?facture=' + encodeURIComponent(key)
+            });
+        });
+
+        // Anciennes entrées fictives non liées à la facturation (ex. Contrats) :
+        // conservées telles quelles, hors périmètre de ce module.
+        (documents || []).filter(function (doc) {
+            return doc.type !== 'Devis' && doc.type !== 'Facture';
+        }).forEach(function (doc) {
+            rows.push({
+                nom: doc.nom,
+                type: doc.type,
+                date: doc.date,
+                statutLabel: doc.statut,
+                badgeClass: doc.badgeClass,
+                montant: '—',
+                reste: '—',
+                legacyDownload: true
+            });
+        });
+
+        if (rows.length === 0) {
+            var emptyRow = document.createElement('tr');
+            var emptyCell = document.createElement('td');
+            emptyCell.colSpan = 7;
+            emptyCell.className = 'empty-state-inline';
+            emptyCell.textContent = 'Aucun document pour ce client.';
+            emptyRow.appendChild(emptyCell);
+            body.appendChild(emptyRow);
             return;
         }
 
-        documents.slice(0, 3).forEach(function (doc) {
+        rows.forEach(function (doc) {
             var row = document.createElement('tr');
 
             var nomCell = document.createElement('td');
@@ -1155,29 +1881,51 @@ document.addEventListener('DOMContentLoaded', function () {
             var statutCell = document.createElement('td');
             var statutBadge = document.createElement('span');
             statutBadge.className = 'badge ' + doc.badgeClass;
-            statutBadge.textContent = doc.statut;
+            statutBadge.textContent = doc.statutLabel;
             statutCell.appendChild(statutBadge);
 
+            var montantCell = document.createElement('td');
+            montantCell.textContent = doc.montant;
+
+            var resteCell = document.createElement('td');
+            resteCell.textContent = doc.reste;
+
             var actionsCell = document.createElement('td');
-            var downloadLink = document.createElement('a');
-            downloadLink.href = '#';
-            downloadLink.className = 'pdf-download btn-wip';
-            downloadLink.title = 'Télécharger le PDF';
-            downloadLink.setAttribute('aria-label', 'Télécharger le PDF de ' + doc.nom);
-            downloadLink.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg><span class="pdf-badge">PDF</span>';
-            actionsCell.appendChild(downloadLink);
+            if (doc.legacyDownload) {
+                var downloadLink = document.createElement('a');
+                downloadLink.href = '#';
+                downloadLink.className = 'pdf-download btn-wip';
+                downloadLink.title = 'Télécharger le PDF';
+                downloadLink.setAttribute('aria-label', 'Télécharger le PDF de ' + doc.nom);
+                downloadLink.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg><span class="pdf-badge">PDF</span>';
+                actionsCell.appendChild(downloadLink);
+            } else {
+                var viewLink = document.createElement('a');
+                viewLink.href = doc.editHref;
+                viewLink.className = 'btn-table-action';
+                viewLink.textContent = 'Voir';
+                actionsCell.appendChild(viewLink);
+
+                var docLink = document.createElement('a');
+                docLink.href = doc.docHref;
+                docLink.className = 'table-action-secondary';
+                docLink.textContent = 'Document';
+                actionsCell.appendChild(docLink);
+            }
 
             row.appendChild(nomCell);
             row.appendChild(typeCell);
             row.appendChild(dateCell);
             row.appendChild(statutCell);
+            row.appendChild(montantCell);
+            row.appendChild(resteCell);
             row.appendChild(actionsCell);
             body.appendChild(row);
         });
     }
 
     function renderClient(slug) {
-        var client = CLIENT_DETAILS[slug];
+        var client = (window.COCKPIT_CLIENT_DETAILS || {})[slug];
         var notFoundEl = document.getElementById('client-not-found');
         var contentEl = document.getElementById('client-profile-content');
 
@@ -1246,7 +1994,7 @@ document.addEventListener('DOMContentLoaded', function () {
         renderNotes(client.notes, client);
         renderHistory(client.historique);
         renderAppointments(client.rendezVous, slug);
-        renderDocuments(client.documents);
+        renderDocuments(client.documents, slug);
 
         var agendaLinkHeader = document.getElementById('agenda-link-header');
         if (agendaLinkHeader) {
@@ -2504,508 +3252,66 @@ document.addEventListener('DOMContentLoaded', function () {
     renderItem(params.get('item'));
 })();
 
-// Données Facturation / Devis (V0.6.1)
-// COMPANY_SETTINGS est la source par défaut de l'émetteur pour tout nouveau
-// devis ; chaque version de devis conserve ensuite son propre companySnapshot
-// et clientSnapshot, figés au moment de leur création, pour ne jamais changer
-// rétroactivement un devis existant si les Paramètres entreprise ou la fiche
-// client évoluent plus tard. DEVIS_DETAILS est une source statique en mémoire,
-// comme CLIENT_DETAILS et PRODUCT_DETAILS : aucune persistance réelle, aucun
-// localStorage. Le versionnement et le verrouillage sont démontrés sur ce jeu
-// de données fictif ; ils ne sont pas reconstruits dynamiquement.
+// Page Facturation : statistiques commerciales (V0.6.4). Bloc simple et
+// lisible au-dessus des onglets Devis/Factures, calculé depuis
+// COCKPIT_FACTURATION_STATS.computeStats() — pas de graphique, uniquement du
+// texte.
 
 (function () {
-    var COMPANY_SETTINGS = {
-        nom: 'Cockpit Entrepreneur SARL',
-        adresse: '10 rue de l\'Innovation, 75011 Paris',
-        telephone: '01 84 12 34 56',
-        email: 'contact@cockpit-entrepreneur.example.com',
-        siteInternet: 'www.cockpit-entrepreneur.example.com',
-        siren: '123 456 789',
-        siret: '123 456 789 00012',
-        tva: 'FR12 123456789',
-        iban: 'FR76 1234 5678 9012 3456 7890 123',
-        bic: 'ABCDEFGHXXX',
-        mentionsLegales: 'En cas de retard de paiement, une pénalité de 3 fois le taux d\'intérêt légal sera appliquée, ainsi qu\'une indemnité forfaitaire de 40 € pour frais de recouvrement (art. L441-10 du Code de commerce). Aucun escompte pour paiement anticipé.'
-    };
-
-    var DEVIS_STATUSES = [
-        { value: 'brouillon', label: 'Brouillon', badgeClass: 'badge-neutral' },
-        { value: 'envoye', label: 'Envoyé', badgeClass: 'badge-info' },
-        { value: 'accepte', label: 'Accepté', badgeClass: 'badge-success' },
-        { value: 'refuse', label: 'Refusé', badgeClass: 'badge-danger' }
-    ];
-
-    function snapshotClient(slug) {
-        var client = (window.COCKPIT_CLIENT_DETAILS || {})[slug];
-        if (!client) {
-            return null;
-        }
-        return {
-            nom: client.nom,
-            entreprise: client.entreprise,
-            adresse: client.adresse,
-            telephone: client.telephone,
-            email: client.email
-        };
+    var summaryEl = document.getElementById('facturation-stats-summary');
+    if (!summaryEl) {
+        return;
     }
 
-    function snapshotCompany() {
-        return {
-            nom: COMPANY_SETTINGS.nom,
-            adresse: COMPANY_SETTINGS.adresse,
-            telephone: COMPANY_SETTINGS.telephone,
-            email: COMPANY_SETTINGS.email,
-            siret: COMPANY_SETTINGS.siret,
-            tva: COMPANY_SETTINGS.tva
-        };
-    }
-
-    var DEVIS_DETAILS = {
-        'DEV-2026-00011': {
-            numero: 'DEV-2026-00011',
-            versionActive: 1,
-            versions: [
-                {
-                    version: 1,
-                    statut: 'brouillon',
-                    dateCreation: '05/07/2026',
-                    dateModification: '05/07/2026',
-                    clientSlug: 'julien-petit',
-                    clientSnapshot: snapshotClient('julien-petit'),
-                    companySnapshot: snapshotCompany(),
-                    lignes: [
-                        { designation: 'Audit stratégique', description: 'Diagnostic complet de la situation de l\'entreprise et recommandations stratégiques.', quantite: 1, prixUnitaireHT: 750, tauxTVA: 20, remisePourcent: 0 }
-                    ],
-                    conditionsPaiement: { delai: 'Paiement à réception', acompte: '', fractionne: '', note: '' }
-                }
-            ]
-        },
-        'DEV-2026-00012': {
-            numero: 'DEV-2026-00012',
-            versionActive: 1,
-            versions: [
-                {
-                    version: 1,
-                    statut: 'envoye',
-                    dateCreation: '22/06/2026',
-                    dateModification: '22/06/2026',
-                    clientSlug: 'atelier-leroy',
-                    clientSnapshot: snapshotClient('atelier-leroy'),
-                    companySnapshot: snapshotCompany(),
-                    lignes: [
-                        { designation: 'Création site vitrine', description: 'Conception et mise en ligne d\'un site vitrine professionnel clé en main.', quantite: 1, prixUnitaireHT: 1800, tauxTVA: 20, remisePourcent: 10 },
-                        { designation: 'Maintenance mensuelle', description: 'Suivi technique mensuel et mises à jour de sécurité pour un site existant.', quantite: 3, prixUnitaireHT: 250, tauxTVA: 20, remisePourcent: 0 }
-                    ],
-                    conditionsPaiement: { delai: 'Paiement à 30 jours', acompte: 'Acompte de 30 % à la commande', fractionne: '', note: '' }
-                }
-            ]
-        },
-        'DEV-2026-00013': {
-            numero: 'DEV-2026-00013',
-            versionActive: 1,
-            versions: [
-                {
-                    version: 1,
-                    statut: 'refuse',
-                    dateCreation: '15/05/2026',
-                    dateModification: '15/05/2026',
-                    clientSlug: 'techni-bois-sarl',
-                    clientSnapshot: snapshotClient('techni-bois-sarl'),
-                    companySnapshot: snapshotCompany(),
-                    lignes: [
-                        { designation: 'Formation personnalisée', description: 'Session de formation individuelle adaptée aux besoins du client.', quantite: 2, prixUnitaireHT: 950, tauxTVA: 10, remisePourcent: 0 }
-                    ],
-                    conditionsPaiement: { delai: 'Paiement comptant', acompte: '', fractionne: '', note: '' }
-                }
-            ]
-        },
-        'DEV-2026-00014': {
-            numero: 'DEV-2026-00014',
-            versionActive: 1,
-            versions: [
-                {
-                    version: 1,
-                    statut: 'envoye',
-                    dateCreation: '28/06/2026',
-                    dateModification: '28/06/2026',
-                    clientSlug: 'boucherie-morel',
-                    clientSnapshot: snapshotClient('boucherie-morel'),
-                    companySnapshot: snapshotCompany(),
-                    lignes: [
-                        { designation: 'Kit de démarrage digital', description: 'Kit prêt à l\'emploi pour démarrer sa présence digitale.', quantite: 5, prixUnitaireHT: 129, tauxTVA: 20, remisePourcent: 5 },
-                        { designation: 'Accessoire premium', description: 'Accessoire complémentaire, retiré temporairement de la vente.', quantite: 2, prixUnitaireHT: 89, tauxTVA: 20, remisePourcent: 0 }
-                    ],
-                    conditionsPaiement: { delai: 'Paiement à 15 jours', acompte: '', fractionne: '', note: '' }
-                }
-            ]
-        },
-        'DEV-2026-00015': {
-            numero: 'DEV-2026-00015',
-            versionActive: 3,
-            versions: [
-                {
-                    version: 1,
-                    statut: 'envoye',
-                    dateCreation: '14/02/2026',
-                    dateModification: '14/02/2026',
-                    clientSlug: 'martin-dupont',
-                    clientSnapshot: { nom: 'Martin Dupont', entreprise: '—', adresse: '8 rue des Artisans, 75011 Paris', telephone: '01 23 45 67 89', email: 'martin.dupont@example.com' },
-                    companySnapshot: snapshotCompany(),
-                    lignes: [
-                        { designation: 'Audit stratégique', description: 'Diagnostic complet de la situation de l\'entreprise et recommandations stratégiques.', quantite: 1, prixUnitaireHT: 750, tauxTVA: 20, remisePourcent: 0 },
-                        { designation: 'Maintenance mensuelle', description: 'Suivi technique mensuel et mises à jour de sécurité pour un site existant.', quantite: 1, prixUnitaireHT: 250, tauxTVA: 20, remisePourcent: 0 }
-                    ],
-                    conditionsPaiement: { delai: 'Paiement à 30 jours', acompte: '', fractionne: '', note: '' }
-                },
-                {
-                    version: 2,
-                    statut: 'envoye',
-                    dateCreation: '02/03/2026',
-                    dateModification: '02/03/2026',
-                    clientSlug: 'martin-dupont',
-                    clientSnapshot: snapshotClient('martin-dupont'),
-                    companySnapshot: snapshotCompany(),
-                    lignes: [
-                        { designation: 'Audit stratégique', description: 'Diagnostic complet de la situation de l\'entreprise et recommandations stratégiques.', quantite: 1, prixUnitaireHT: 750, tauxTVA: 20, remisePourcent: 0 },
-                        { designation: 'Création site vitrine', description: 'Conception et mise en ligne d\'un site vitrine professionnel clé en main.', quantite: 1, prixUnitaireHT: 1800, tauxTVA: 20, remisePourcent: 10 },
-                        { designation: 'Maintenance mensuelle', description: 'Suivi technique mensuel et mises à jour de sécurité pour un site existant.', quantite: 1, prixUnitaireHT: 250, tauxTVA: 20, remisePourcent: 0 }
-                    ],
-                    conditionsPaiement: { delai: 'Paiement à 30 jours', acompte: 'Acompte de 30 % à la commande (site vitrine)', fractionne: '', note: '' }
-                },
-                {
-                    version: 3,
-                    statut: 'accepte',
-                    dateCreation: '15/03/2026',
-                    dateModification: '15/03/2026',
-                    clientSlug: 'martin-dupont',
-                    clientSnapshot: snapshotClient('martin-dupont'),
-                    companySnapshot: snapshotCompany(),
-                    lignes: [
-                        { designation: 'Audit stratégique', description: 'Diagnostic complet de la situation de l\'entreprise et recommandations stratégiques.', quantite: 1, prixUnitaireHT: 750, tauxTVA: 20, remisePourcent: 0 },
-                        { designation: 'Création site vitrine', description: 'Conception et mise en ligne d\'un site vitrine professionnel clé en main.', quantite: 1, prixUnitaireHT: 1800, tauxTVA: 20, remisePourcent: 10 },
-                        { designation: 'Maintenance mensuelle', description: 'Suivi technique mensuel et mises à jour de sécurité pour un site existant.', quantite: 3, prixUnitaireHT: 250, tauxTVA: 20, remisePourcent: 0 }
-                    ],
-                    conditionsPaiement: { delai: 'Paiement à 30 jours', acompte: 'Acompte de 30 % à la commande (site vitrine)', fractionne: 'Paiement en 3 fois pour la maintenance', note: 'Facturation de la maintenance mensuelle en 3 échéances trimestrielles.' }
-                }
-            ]
-        },
-        'DEV-2026-00016': {
-            numero: 'DEV-2026-00016',
-            versionActive: 1,
-            versions: [
-                {
-                    version: 1,
-                    statut: 'accepte',
-                    dateCreation: '18/06/2026',
-                    dateModification: '18/06/2026',
-                    clientSlug: 'sophie-bernard',
-                    clientSnapshot: snapshotClient('sophie-bernard'),
-                    companySnapshot: snapshotCompany(),
-                    lignes: [
-                        { designation: 'Audit stratégique', description: 'Diagnostic complet de la situation de l\'entreprise et recommandations stratégiques.', quantite: 1, prixUnitaireHT: 750, tauxTVA: 20, remisePourcent: 0 }
-                    ],
-                    conditionsPaiement: { delai: 'Paiement à 30 jours', acompte: '', fractionne: '', note: '' }
-                }
-            ]
-        }
-    };
-
-    function roundMoney(value) {
-        return Math.round((value + Number.EPSILON) * 100) / 100;
-    }
-
-    function formatMoney(value) {
-        var rounded = roundMoney(value || 0);
-        var fixed = rounded.toFixed(2);
-        var parts = fixed.split('.');
-        var intPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-        return intPart + ',' + parts[1] + ' €';
-    }
-
-    function computeLine(line) {
-        var quantite = parseFloat(line.quantite) || 0;
-        var prixUnitaireHT = parseFloat(line.prixUnitaireHT) || 0;
-        var remisePourcent = parseFloat(line.remisePourcent) || 0;
-        var tauxTVA = parseFloat(line.tauxTVA) || 0;
-        var brutHT = roundMoney(quantite * prixUnitaireHT);
-        var remiseMontant = roundMoney(brutHT * (remisePourcent / 100));
-        var netHT = roundMoney(brutHT - remiseMontant);
-        var montantTVA = roundMoney(netHT * (tauxTVA / 100));
-        var totalTTC = roundMoney(netHT + montantTVA);
-        return { brutHT: brutHT, remiseMontant: remiseMontant, netHT: netHT, montantTVA: montantTVA, totalTTC: totalTTC, tauxTVA: tauxTVA };
-    }
-
-    function computeDevisTotals(lignes) {
-        var totalBrutHT = 0;
-        var totalRemises = 0;
-        var totalHT = 0;
-        var totalTVA = 0;
-        var totalTTC = 0;
-        var tvaParTaux = {};
-
-        (lignes || []).forEach(function (line) {
-            var computed = computeLine(line);
-            totalBrutHT = roundMoney(totalBrutHT + computed.brutHT);
-            totalRemises = roundMoney(totalRemises + computed.remiseMontant);
-            totalHT = roundMoney(totalHT + computed.netHT);
-            totalTVA = roundMoney(totalTVA + computed.montantTVA);
-            totalTTC = roundMoney(totalTTC + computed.totalTTC);
-
-            var rateKey = String(computed.tauxTVA);
-            tvaParTaux[rateKey] = roundMoney((tvaParTaux[rateKey] || 0) + computed.montantTVA);
-        });
-
-        return { totalBrutHT: totalBrutHT, totalRemises: totalRemises, totalHT: totalHT, totalTVA: totalTVA, totalTTC: totalTTC, tvaParTaux: tvaParTaux };
-    }
-
-    function getActiveVersion(devis) {
-        if (!devis) {
-            return null;
-        }
-        var match = devis.versions.filter(function (version) {
-            return version.version === devis.versionActive;
-        })[0];
-        return match || devis.versions[devis.versions.length - 1];
-    }
-
-    function computeNextDevisNumero(annee) {
-        var maxSeq = 0;
-        Object.keys(DEVIS_DETAILS).forEach(function (numero) {
-            var match = numero.match(/^DEV-(\d{4})-(\d{5})$/);
-            if (match && match[1] === String(annee)) {
-                var seq = parseInt(match[2], 10);
-                if (seq > maxSeq) {
-                    maxSeq = seq;
-                }
-            }
-        });
-        var nextSeq = maxSeq + 1;
-        var padded = String(nextSeq);
-        while (padded.length < 5) {
-            padded = '0' + padded;
-        }
-        return 'DEV-' + annee + '-' + padded;
-    }
-
-    window.COCKPIT_COMPANY_SETTINGS = COMPANY_SETTINGS;
-    window.COCKPIT_DEVIS_STATUSES = DEVIS_STATUSES;
-    window.COCKPIT_DEVIS_DETAILS = DEVIS_DETAILS;
-    window.COCKPIT_DEVIS_CALC = {
-        roundMoney: roundMoney,
-        formatMoney: formatMoney,
-        computeLine: computeLine,
-        computeDevisTotals: computeDevisTotals,
-        getActiveVersion: getActiveVersion,
-        computeNextDevisNumero: computeNextDevisNumero,
-        snapshotClient: snapshotClient,
-        snapshotCompany: snapshotCompany
-    };
-})();
-
-// Données Facturation / Factures (V0.6.2)
-// Réutilise directement COCKPIT_DEVIS_CALC pour tout ce qui est déjà correct :
-// roundMoney/formatMoney/computeLine/computeDevisTotals (les lignes de facture
-// ont exactement la même forme que les lignes de devis), snapshotClient/
-// snapshotCompany. COCKPIT_FACTURE_CALC n'ajoute que le spécifique aux
-// factures : paiements, statut affiché calculé, numérotation. FACTURE_DETAILS
-// est une source statique en mémoire, comme DEVIS_DETAILS : aucune
-// persistance réelle. Le statut affiché sépare volontairement un
-// statutEmission explicite (brouillon/emise/annulee) d'un statut de paiement
-// calculé (non-payee/partiellement-payee/payee/en-retard), pour ne jamais
-// pouvoir afficher un statut de paiement incohérent sur une facture non
-// émise.
-
-(function () {
     var devisCalc = window.COCKPIT_DEVIS_CALC;
-
-    var FACTURE_STATUSES = [
-        { value: 'brouillon', label: 'Brouillon', badgeClass: 'badge-neutral' },
-        { value: 'non-payee', label: 'Émise', badgeClass: 'badge-info' },
-        { value: 'partiellement-payee', label: 'Partiellement payée', badgeClass: 'badge-warning' },
-        { value: 'payee', label: 'Payée', badgeClass: 'badge-success' },
-        { value: 'en-retard', label: 'En retard', badgeClass: 'badge-danger' },
-        { value: 'annulee', label: 'Annulée', badgeClass: 'badge-neutral' }
-    ];
-
-    var PAYMENT_METHODS = ['Virement bancaire', 'Carte bancaire', 'Chèque', 'Espèces', 'Prélèvement'];
-
-    function parseFrDate(value) {
-        if (!value) {
-            return null;
-        }
-        var parts = value.split('/');
-        return new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
+    var stats = (window.COCKPIT_FACTURATION_STATS || {}).computeStats ? window.COCKPIT_FACTURATION_STATS.computeStats() : null;
+    if (!stats || !devisCalc) {
+        return;
     }
 
-    function computePaiements(paiements, totalTTC) {
-        var totalPaye = 0;
-        (paiements || []).forEach(function (paiement) {
-            totalPaye = devisCalc.roundMoney(totalPaye + (parseFloat(paiement.montant) || 0));
-        });
-        var resteAPayer = devisCalc.roundMoney((totalTTC || 0) - totalPaye);
-        var pourcentagePaye = totalTTC ? Math.round((totalPaye / totalTTC) * 100) : 0;
-        return { totalPaye: totalPaye, resteAPayer: resteAPayer, pourcentagePaye: pourcentagePaye };
+    function makeStatRow(label, value) {
+        var row = document.createElement('div');
+        row.className = 'devis-summary-row';
+        var labelEl = document.createElement('span');
+        labelEl.textContent = label;
+        var valueEl = document.createElement('span');
+        valueEl.textContent = value;
+        row.appendChild(labelEl);
+        row.appendChild(valueEl);
+        return row;
     }
 
-    function computeStatutAffiche(params) {
-        if (params.statutEmission === 'brouillon') {
-            return 'brouillon';
+    summaryEl.appendChild(makeStatRow('CA facturé', devisCalc.formatMoney(stats.caFacture)));
+    summaryEl.appendChild(makeStatRow('CA encaissé', devisCalc.formatMoney(stats.caEncaisse)));
+    summaryEl.appendChild(makeStatRow('Reste à encaisser', devisCalc.formatMoney(stats.resteAEncaisser)));
+    summaryEl.appendChild(makeStatRow('Taux de transformation', stats.tauxTransformation + ' %'));
+    summaryEl.appendChild(makeStatRow('Panier moyen facture', devisCalc.formatMoney(stats.panierMoyenFacture)));
+    summaryEl.appendChild(makeStatRow('Montant moyen devis', devisCalc.formatMoney(stats.montantMoyenDevis)));
+
+    var topClientsEl = document.getElementById('facturation-top-clients');
+    if (topClientsEl) {
+        if (stats.topClients.length === 0) {
+            topClientsEl.appendChild(makeStatRow('Aucune facture émise pour l\'instant', ''));
+        } else {
+            stats.topClients.forEach(function (client) {
+                topClientsEl.appendChild(makeStatRow(client.nom, devisCalc.formatMoney(client.montant)));
+            });
         }
-        if (params.statutEmission === 'annulee') {
-            return 'annulee';
-        }
-        var totals = computePaiements(params.paiements, params.totalTTC);
-        if (totals.resteAPayer <= 0) {
-            return 'payee';
-        }
-        var echeance = parseFrDate(params.dateEcheance);
-        if (echeance && echeance < new Date()) {
-            return 'en-retard';
-        }
-        if (totals.totalPaye > 0) {
-            return 'partiellement-payee';
-        }
-        return 'non-payee';
     }
 
-    function computeNextFactureNumero(annee) {
-        var maxSeq = 0;
-        Object.keys(FACTURE_DETAILS).forEach(function (key) {
-            var match = key.match(/^FAC-(\d{4})-(\d{5})$/);
-            if (match && match[1] === String(annee)) {
-                var seq = parseInt(match[2], 10);
-                if (seq > maxSeq) {
-                    maxSeq = seq;
-                }
-            }
-        });
-        var nextSeq = maxSeq + 1;
-        var padded = String(nextSeq);
-        while (padded.length < 5) {
-            padded = '0' + padded;
+    var echeancesEl = document.getElementById('facturation-echeances');
+    if (echeancesEl) {
+        if (stats.prochainesEcheances.length === 0) {
+            echeancesEl.appendChild(makeStatRow('Aucune échéance en attente', ''));
+        } else {
+            stats.prochainesEcheances.forEach(function (echeance) {
+                echeancesEl.appendChild(makeStatRow(
+                    echeance.numero + ' — ' + echeance.clientNom + ' (' + echeance.dateEcheance + ')',
+                    devisCalc.formatMoney(echeance.resteAPayer)
+                ));
+            });
         }
-        return 'FAC-' + annee + '-' + padded;
     }
-
-    var FACTURE_DETAILS = {
-        'FAC-2026-00001': {
-            numero: 'FAC-2026-00001',
-            statutEmission: 'emise',
-            dateCreation: '01/07/2026',
-            dateEmission: '01/07/2026',
-            dateEcheance: '31/07/2026',
-            clientSlug: 'sophie-bernard',
-            clientSnapshot: devisCalc.snapshotClient('sophie-bernard'),
-            companySnapshot: devisCalc.snapshotCompany(),
-            lignes: [
-                { designation: 'Audit stratégique', description: 'Diagnostic complet de la situation de l\'entreprise et recommandations stratégiques.', quantite: 1, prixUnitaireHT: 750, tauxTVA: 20, remisePourcent: 0 }
-            ],
-            conditionsPaiement: { delai: 'Paiement à 30 jours', acompte: '', fractionne: '', note: '' },
-            paiements: [],
-            devisRef: null
-        },
-        'FAC-2026-00002': {
-            numero: 'FAC-2026-00002',
-            statutEmission: 'emise',
-            dateCreation: '10/06/2026',
-            dateEmission: '10/06/2026',
-            dateEcheance: '10/07/2026',
-            clientSlug: 'atelier-leroy',
-            clientSnapshot: devisCalc.snapshotClient('atelier-leroy'),
-            companySnapshot: devisCalc.snapshotCompany(),
-            lignes: [
-                { designation: 'Maintenance mensuelle', description: 'Suivi technique mensuel et mises à jour de sécurité pour un site existant.', quantite: 4, prixUnitaireHT: 250, tauxTVA: 20, remisePourcent: 0 }
-            ],
-            conditionsPaiement: { delai: 'Paiement à 30 jours', acompte: '', fractionne: '', note: '' },
-            paiements: [
-                { date: '20/06/2026', montant: 600, mode: 'Virement bancaire', reference: 'VIR-2026-0456', note: '' }
-            ],
-            devisRef: null
-        },
-        'FAC-2026-00003': {
-            numero: 'FAC-2026-00003',
-            statutEmission: 'emise',
-            dateCreation: '16/03/2026',
-            dateEmission: '16/03/2026',
-            dateEcheance: '15/04/2026',
-            clientSlug: 'martin-dupont',
-            clientSnapshot: { nom: 'Martin Dupont', entreprise: '—', adresse: '12 rue des Artisans, 75011 Paris', telephone: '01 23 45 67 89', email: 'martin.dupont@example.com' },
-            companySnapshot: devisCalc.snapshotCompany(),
-            lignes: [
-                { designation: 'Audit stratégique', description: 'Diagnostic complet de la situation de l\'entreprise et recommandations stratégiques.', quantite: 1, prixUnitaireHT: 750, tauxTVA: 20, remisePourcent: 0 },
-                { designation: 'Création site vitrine', description: 'Conception et mise en ligne d\'un site vitrine professionnel clé en main.', quantite: 1, prixUnitaireHT: 1800, tauxTVA: 20, remisePourcent: 10 },
-                { designation: 'Maintenance mensuelle', description: 'Suivi technique mensuel et mises à jour de sécurité pour un site existant.', quantite: 3, prixUnitaireHT: 250, tauxTVA: 20, remisePourcent: 0 }
-            ],
-            conditionsPaiement: { delai: 'Paiement à 30 jours', acompte: 'Acompte de 30 % à la commande (site vitrine)', fractionne: 'Paiement en 3 fois pour la maintenance', note: 'Facturation de la maintenance mensuelle en 3 échéances trimestrielles.' },
-            paiements: [
-                { date: '20/03/2026', montant: 1122, mode: 'Virement bancaire', reference: 'VIR-2026-0301', note: 'Acompte 30 % à la commande' },
-                { date: '10/04/2026', montant: 2622, mode: 'Virement bancaire', reference: 'VIR-2026-0345', note: 'Solde à réception' }
-            ],
-            devisRef: { numero: 'DEV-2026-00015', version: 3 }
-        },
-        'FAC-2026-00004': {
-            numero: 'FAC-2026-00004',
-            statutEmission: 'emise',
-            dateCreation: '01/05/2026',
-            dateEmission: '01/05/2026',
-            dateEcheance: '01/06/2026',
-            clientSlug: 'boucherie-morel',
-            clientSnapshot: devisCalc.snapshotClient('boucherie-morel'),
-            companySnapshot: devisCalc.snapshotCompany(),
-            lignes: [
-                { designation: 'Kit de démarrage digital', description: 'Kit prêt à l\'emploi pour démarrer sa présence digitale.', quantite: 10, prixUnitaireHT: 129, tauxTVA: 20, remisePourcent: 5 }
-            ],
-            conditionsPaiement: { delai: 'Paiement à 30 jours', acompte: '', fractionne: '', note: '' },
-            paiements: [
-                { date: '15/05/2026', montant: 300, mode: 'Chèque', reference: 'CHQ-778812', note: 'Premier versement' }
-            ],
-            devisRef: null
-        },
-        'FAC-2026-00005': {
-            numero: 'FAC-2026-00005',
-            statutEmission: 'annulee',
-            dateCreation: '20/05/2026',
-            dateEmission: '20/05/2026',
-            dateEcheance: '19/06/2026',
-            clientSlug: 'techni-bois-sarl',
-            clientSnapshot: devisCalc.snapshotClient('techni-bois-sarl'),
-            companySnapshot: devisCalc.snapshotCompany(),
-            lignes: [
-                { designation: 'Formation personnalisée', description: 'Session de formation individuelle adaptée aux besoins du client.', quantite: 2, prixUnitaireHT: 950, tauxTVA: 10, remisePourcent: 0 }
-            ],
-            conditionsPaiement: { delai: 'Paiement comptant', acompte: '', fractionne: '', note: '' },
-            paiements: [],
-            devisRef: null,
-            noteAnnulation: 'Facture annulée suite à une erreur de saisie, avant tout paiement.'
-        },
-        'BROUILLON-JULIEN-PETIT': {
-            numero: null,
-            statutEmission: 'brouillon',
-            dateCreation: '08/07/2026',
-            dateEmission: null,
-            dateEcheance: null,
-            clientSlug: 'julien-petit',
-            clientSnapshot: devisCalc.snapshotClient('julien-petit'),
-            companySnapshot: devisCalc.snapshotCompany(),
-            lignes: [
-                { designation: 'Audit stratégique', description: 'Diagnostic complet de la situation de l\'entreprise et recommandations stratégiques.', quantite: 1, prixUnitaireHT: 750, tauxTVA: 20, remisePourcent: 0 }
-            ],
-            conditionsPaiement: { delai: '', acompte: '', fractionne: '', note: '' },
-            paiements: [],
-            devisRef: null
-        }
-    };
-
-    window.COCKPIT_FACTURE_STATUSES = FACTURE_STATUSES;
-    window.COCKPIT_PAYMENT_METHODS = PAYMENT_METHODS;
-    window.COCKPIT_FACTURE_DETAILS = FACTURE_DETAILS;
-    window.COCKPIT_FACTURE_CALC = {
-        computePaiements: computePaiements,
-        computeStatutAffiche: computeStatutAffiche,
-        computeNextFactureNumero: computeNextFactureNumero,
-        parseDate: parseFrDate
-    };
 })();
 
 // Page Facturation : bascule d'onglet Devis / Factures (V0.6.2). Affiche/
@@ -3538,7 +3844,15 @@ document.addEventListener('DOMContentLoaded', function () {
             container.appendChild(makeEl('p', 'empty-state-inline', 'Aucun client sélectionné.'));
             return;
         }
-        container.appendChild(makeEl('p', 'document-party-name', c.nom || '—'));
+        if (state.clientSlug) {
+            var nameLink = document.createElement('a');
+            nameLink.className = 'document-party-name document-party-name-link';
+            nameLink.href = 'fiche-client.html?client=' + encodeURIComponent(state.clientSlug);
+            nameLink.textContent = c.nom || '—';
+            container.appendChild(nameLink);
+        } else {
+            container.appendChild(makeEl('p', 'document-party-name', c.nom || '—'));
+        }
         [(c.entreprise && c.entreprise !== '—') ? c.entreprise : null, c.adresse, c.telephone, c.email].forEach(function (line) {
             if (line) {
                 container.appendChild(makeEl('p', null, line));
@@ -4410,7 +4724,15 @@ document.addEventListener('DOMContentLoaded', function () {
             container.appendChild(makeEl('p', 'empty-state-inline', 'Aucun client sélectionné.'));
             return;
         }
-        container.appendChild(makeEl('p', 'document-party-name', c.nom || '—'));
+        if (state.clientSlug) {
+            var nameLink = document.createElement('a');
+            nameLink.className = 'document-party-name document-party-name-link';
+            nameLink.href = 'fiche-client.html?client=' + encodeURIComponent(state.clientSlug);
+            nameLink.textContent = c.nom || '—';
+            container.appendChild(nameLink);
+        } else {
+            container.appendChild(makeEl('p', 'document-party-name', c.nom || '—'));
+        }
         [(c.entreprise && c.entreprise !== '—') ? c.entreprise : null, c.adresse, c.telephone, c.email].forEach(function (line) {
             if (line) {
                 container.appendChild(makeEl('p', null, line));
@@ -5160,7 +5482,15 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!cl) {
         clientEl.appendChild(makeEl('p', 'empty-state-inline', 'Aucun client renseigné.'));
     } else {
-        clientEl.appendChild(makeEl('p', 'document-party-name', cl.nom || '—'));
+        if (versionData.clientSlug) {
+            var clientNameLink = document.createElement('a');
+            clientNameLink.className = 'document-party-name document-party-name-link';
+            clientNameLink.href = 'fiche-client.html?client=' + encodeURIComponent(versionData.clientSlug);
+            clientNameLink.textContent = cl.nom || '—';
+            clientEl.appendChild(clientNameLink);
+        } else {
+            clientEl.appendChild(makeEl('p', 'document-party-name', cl.nom || '—'));
+        }
         [(cl.entreprise && cl.entreprise !== '—') ? cl.entreprise : null, cl.adresse, cl.telephone, cl.email].forEach(function (line) {
             if (line) {
                 clientEl.appendChild(makeEl('p', null, line));
@@ -5357,7 +5687,15 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!cl) {
         clientEl.appendChild(makeEl('p', 'empty-state-inline', 'Aucun client renseigné.'));
     } else {
-        clientEl.appendChild(makeEl('p', 'document-party-name', cl.nom || '—'));
+        if (facture.clientSlug) {
+            var clientNameLink = document.createElement('a');
+            clientNameLink.className = 'document-party-name document-party-name-link';
+            clientNameLink.href = 'fiche-client.html?client=' + encodeURIComponent(facture.clientSlug);
+            clientNameLink.textContent = cl.nom || '—';
+            clientEl.appendChild(clientNameLink);
+        } else {
+            clientEl.appendChild(makeEl('p', 'document-party-name', cl.nom || '—'));
+        }
         [(cl.entreprise && cl.entreprise !== '—') ? cl.entreprise : null, cl.adresse, cl.telephone, cl.email].forEach(function (line) {
             if (line) {
                 clientEl.appendChild(makeEl('p', null, line));
@@ -5428,4 +5766,50 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var companySettings = window.COCKPIT_COMPANY_SETTINGS || {};
     legalEl.textContent = companySettings.mentionsLegales || '';
+})();
+
+// Page Tableau de bord : bloc "Aperçu Facturation" (V0.6.4). Liste compacte
+// et en lecture seule, calculée depuis COCKPIT_FACTURATION_STATS.computeStats() —
+// volontairement pas une nouvelle grosse carte KPI, pour ne pas empiéter sur
+// les futurs modules Trésorerie/Finance (V0.7/V0.9) ni refondre le tableau
+// de bord existant. La carte favorite "Devis envoyés", jusqu'ici statique,
+// devient réelle au passage.
+
+(function () {
+    var statsEl = document.getElementById('dashboard-facturation-stats');
+    if (!statsEl) {
+        return;
+    }
+
+    var devisCalc = window.COCKPIT_DEVIS_CALC;
+    var stats = (window.COCKPIT_FACTURATION_STATS || {}).computeStats ? window.COCKPIT_FACTURATION_STATS.computeStats() : null;
+    if (!stats || !devisCalc) {
+        return;
+    }
+
+    function makeStatRow(label, value) {
+        var row = document.createElement('div');
+        row.className = 'devis-summary-row';
+        var labelEl = document.createElement('span');
+        labelEl.textContent = label;
+        var valueEl = document.createElement('span');
+        valueEl.textContent = value;
+        row.appendChild(labelEl);
+        row.appendChild(valueEl);
+        return row;
+    }
+
+    statsEl.appendChild(makeStatRow('Facturé', devisCalc.formatMoney(stats.caFacture)));
+    statsEl.appendChild(makeStatRow('Encaissé', devisCalc.formatMoney(stats.caEncaisse)));
+    statsEl.appendChild(makeStatRow('Reste à encaisser', devisCalc.formatMoney(stats.resteAEncaisser)));
+    statsEl.appendChild(makeStatRow('Factures en retard', String(stats.facturesEnRetard)));
+    statsEl.appendChild(makeStatRow('Devis en attente', String(stats.devisEnvoyes)));
+    var tauxRow = makeStatRow('Taux de transformation', stats.tauxTransformation + ' %');
+    tauxRow.classList.add('devis-summary-row-total');
+    statsEl.appendChild(tauxRow);
+
+    var devisEnvoyesValueEl = document.getElementById('dashboard-devis-envoyes-value');
+    if (devisEnvoyesValueEl) {
+        devisEnvoyesValueEl.textContent = String(stats.devisEnvoyes);
+    }
 })();
