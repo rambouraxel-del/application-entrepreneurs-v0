@@ -4177,7 +4177,32 @@ document.addEventListener('DOMContentLoaded', function () {
         if (devisParam) {
             var devis = DEVIS_DETAILS[devisParam];
             if (!devis) {
-                return false;
+                var fallbackClientSlug = params.get('client');
+                if (!fallbackClientSlug) {
+                    return false;
+                }
+                // Le devis brouillon a été créé en mémoire de page depuis une fiche
+                // rendez-vous (V0.7) puis perdu lors d'un rechargement/nouvel onglet
+                // (aucune persistance réelle dans l'application). Plutôt qu'un
+                // "Document introuvable" trompeur, on rouvre un brouillon neuf déjà
+                // rattaché au bon client, cohérent avec ce que l'utilisateur attend.
+                state.mode = 'new';
+                state.numero = calc.computeNextDevisNumero(new Date().getFullYear());
+                state.version = 1;
+                state.statut = 'brouillon';
+                state.dateCreation = null;
+                state.dateModification = null;
+                state.clientSlug = fallbackClientSlug;
+                state.clientSnapshot = calc.snapshotClient(fallbackClientSlug);
+                state.companySnapshot = calc.snapshotCompany();
+                state.lines = [];
+                state.conditionsPaiement = cloneConditionsPaiement(null);
+                state.basedOnVersion = null;
+                state.sourceDevis = null;
+                state.viewingVersion = null;
+                state.editable = true;
+                state.recreatedFromRdv = true;
+                return true;
             }
             var versionNumber = versionParam ? parseInt(versionParam, 10) : devis.versionActive;
             var versionData = devis.versions.filter(function (v) {
@@ -4261,6 +4286,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (state.mode === 'new-version') {
             metaEl.textContent = 'Nouvelle version v' + state.version + ' en préparation, basée sur la version v' + state.basedOnVersion + ' — non enregistrée.';
+        } else if (state.recreatedFromRdv) {
+            metaEl.textContent = 'Le brouillon créé depuis le rendez-vous n\'a pas survécu au rechargement (aucune persistance) — un nouveau brouillon est proposé pour ce client.';
         } else if (state.mode !== 'view') {
             metaEl.textContent = state.mode === 'duplicate'
                 ? 'Nouveau devis dupliqué, numéro attribué automatiquement à l\'enregistrement.'
@@ -6368,6 +6395,368 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 })();
 
+// Page Agenda : vues calendrier Jour/Semaine/Mois (V0.7.1, correctif
+// d'ergonomie). Semaine est la vue par défaut ; la vue Liste existante
+// (recherche/filtre/pagination, IIFE suivante) devient une vue secondaire
+// parmi d'autres, accessible via l'onglet "Liste". Les rendez-vous sont lus
+// directement depuis COCKPIT_RDV_DETAILS. Grille calculée par positionnement
+// absolu (1 minute = 1px), sans bibliothèque de calendrier externe. La plage
+// horaire par défaut (07h-20h) s'élargit automatiquement si un rendez-vous
+// affiché tombe hors de cette plage, pour qu'aucun rendez-vous ne soit jamais
+// masqué ou coupé.
+
+(function () {
+    var tabsEl = document.getElementById('agenda-view-tabs');
+    var dayGridEl = document.getElementById('calendar-day-grid');
+    if (!tabsEl || !dayGridEl) {
+        return;
+    }
+
+    var agendaCalc = window.COCKPIT_AGENDA_CALC || {};
+    var RDV_STATUSES = window.COCKPIT_RDV_STATUSES || [];
+    var RDV_PRIORITES = window.COCKPIT_RDV_PRIORITES || [];
+    var CLIENT_DETAILS = window.COCKPIT_CLIENT_DETAILS || {};
+
+    var navToolbarEl = document.getElementById('calendar-nav-toolbar');
+    var panels = {
+        jour: document.getElementById('view-panel-jour'),
+        semaine: document.getElementById('view-panel-semaine'),
+        mois: document.getElementById('view-panel-mois'),
+        liste: document.getElementById('view-panel-liste')
+    };
+    var weekGridEl = document.getElementById('calendar-week-grid');
+    var monthGridEl = document.getElementById('calendar-month-grid');
+    var rangeLabelEl = document.getElementById('calendar-range-label');
+    var prevBtn = document.getElementById('calendar-prev-btn');
+    var nextBtn = document.getElementById('calendar-next-btn');
+    var todayBtn = document.getElementById('calendar-today-btn');
+    var datePickerEl = document.getElementById('calendar-date-picker');
+
+    var DAY_NAMES = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+    var MONTH_NAMES = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+    var DEFAULT_START_HOUR = 7;
+    var DEFAULT_END_HOUR = 20;
+    var PX_PER_MIN = 1;
+
+    var activeView = 'semaine';
+    var refDate = new Date();
+    refDate.setHours(0, 0, 0, 0);
+
+    function pad2(n) {
+        return (n < 10 ? '0' : '') + n;
+    }
+
+    function formatDateFr(date) {
+        return pad2(date.getDate()) + '/' + pad2(date.getMonth() + 1) + '/' + date.getFullYear();
+    }
+
+    function sameDay(a, b) {
+        return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+    }
+
+    function addDays(date, n) {
+        var d = new Date(date);
+        d.setDate(d.getDate() + n);
+        return d;
+    }
+
+    function addMonths(date, n) {
+        var d = new Date(date);
+        d.setMonth(d.getMonth() + n);
+        return d;
+    }
+
+    function startOfWeek(date) {
+        var d = new Date(date);
+        var dow = d.getDay();
+        var offset = dow === 0 ? -6 : 1 - dow;
+        d.setDate(d.getDate() + offset);
+        return d;
+    }
+
+    function parseHM(value) {
+        if (!value) {
+            return null;
+        }
+        var parts = value.split(':');
+        var hours = parseInt(parts[0], 10);
+        var minutes = parseInt(parts[1], 10);
+        if (isNaN(hours)) {
+            return null;
+        }
+        return hours * 60 + (isNaN(minutes) ? 0 : minutes);
+    }
+
+    function getAllRdvs() {
+        var RDV_DETAILS = window.COCKPIT_RDV_DETAILS || {};
+        return Object.keys(RDV_DETAILS).map(function (id) {
+            return RDV_DETAILS[id];
+        });
+    }
+
+    function rdvsForDay(dateObj) {
+        return getAllRdvs().filter(function (rdv) {
+            var d = agendaCalc.parseDateFr ? agendaCalc.parseDateFr(rdv.date) : null;
+            return d && sameDay(d, dateObj);
+        }).sort(function (a, b) {
+            return (parseHM(a.heureDebut) || 0) - (parseHM(b.heureDebut) || 0);
+        });
+    }
+
+    function badgeInfo(list, value) {
+        return list.filter(function (item) { return item.value === value; })[0] || null;
+    }
+
+    function clientName(slug) {
+        return slug && CLIENT_DETAILS[slug] ? CLIENT_DETAILS[slug].nom : null;
+    }
+
+    function makeEl(tag, className, text) {
+        var node = document.createElement(tag);
+        if (className) {
+            node.className = className;
+        }
+        if (text !== undefined) {
+            node.textContent = text;
+        }
+        return node;
+    }
+
+    function computeRange(days) {
+        var startHour = DEFAULT_START_HOUR;
+        var endHour = DEFAULT_END_HOUR;
+        days.forEach(function (day) {
+            rdvsForDay(day).forEach(function (rdv) {
+                var start = parseHM(rdv.heureDebut);
+                var end = parseHM(rdv.heureFin) || (start !== null ? start + 30 : null);
+                if (start !== null) {
+                    startHour = Math.min(startHour, Math.floor(start / 60));
+                }
+                if (end !== null) {
+                    endHour = Math.max(endHour, Math.ceil(end / 60));
+                }
+            });
+        });
+        return { startHour: startHour, endHour: endHour };
+    }
+
+    function buildEventCard(rdv) {
+        var link = document.createElement('a');
+        link.className = 'calendar-event';
+        link.href = 'fiche-rdv.html?rdv=' + encodeURIComponent(rdv.id);
+
+        link.appendChild(makeEl('span', 'calendar-event-time', (rdv.heureDebut || '—') + (rdv.heureFin ? '–' + rdv.heureFin : '')));
+        link.appendChild(makeEl('span', 'calendar-event-title', rdv.titre || 'Rendez-vous'));
+
+        var clientNom = clientName(rdv.clientSlug);
+        if (clientNom) {
+            link.appendChild(makeEl('span', 'calendar-event-client', clientNom));
+        }
+
+        var badgesWrap = makeEl('span', 'calendar-event-badges');
+        var statutInfo = badgeInfo(RDV_STATUSES, rdv.statut);
+        if (statutInfo) {
+            badgesWrap.appendChild(makeEl('span', 'badge ' + statutInfo.badgeClass, statutInfo.label));
+        }
+        var prioriteInfo = badgeInfo(RDV_PRIORITES, rdv.priorite);
+        if (prioriteInfo) {
+            badgesWrap.appendChild(makeEl('span', 'badge ' + prioriteInfo.badgeClass, prioriteInfo.label));
+        }
+        link.appendChild(badgesWrap);
+
+        return link;
+    }
+
+    function renderTimeColumn(container, startHour, endHour, totalHeight) {
+        var col = makeEl('div', 'calendar-time-col');
+        col.style.height = totalHeight + 'px';
+        for (var h = startHour; h <= endHour; h++) {
+            var label = makeEl('span', 'calendar-time-label', pad2(h) + ':00');
+            label.style.top = ((h - startHour) * 60 * PX_PER_MIN) + 'px';
+            col.appendChild(label);
+        }
+        container.appendChild(col);
+    }
+
+    function renderDayColumn(container, dateObj, startHour, totalHeight, isToday) {
+        var col = makeEl('div', 'calendar-day-col' + (isToday ? ' calendar-day-col-today' : ''));
+        col.style.height = totalHeight + 'px';
+        rdvsForDay(dateObj).forEach(function (rdv) {
+            var start = parseHM(rdv.heureDebut);
+            if (start === null) {
+                return;
+            }
+            var end = parseHM(rdv.heureFin) || (start + 30);
+            var card = buildEventCard(rdv);
+            card.style.top = ((start - startHour * 60) * PX_PER_MIN) + 'px';
+            card.style.height = Math.max(28, (end - start) * PX_PER_MIN) + 'px';
+            col.appendChild(card);
+        });
+        container.appendChild(col);
+    }
+
+    function renderSemaine() {
+        weekGridEl.innerHTML = '';
+        var monday = startOfWeek(refDate);
+        var days = [];
+        for (var i = 0; i < 7; i++) {
+            days.push(addDays(monday, i));
+        }
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        weekGridEl.appendChild(makeEl('div', 'calendar-head-cell-empty'));
+        days.forEach(function (day) {
+            var isToday = sameDay(day, today);
+            var cell = makeEl('div', 'calendar-head-cell' + (isToday ? ' calendar-head-cell-today' : ''), DAY_NAMES[(day.getDay() + 6) % 7] + ' ' + pad2(day.getDate()) + '/' + pad2(day.getMonth() + 1));
+            weekGridEl.appendChild(cell);
+        });
+
+        var range = computeRange(days);
+        var totalHeight = (range.endHour - range.startHour) * 60 * PX_PER_MIN;
+
+        renderTimeColumn(weekGridEl, range.startHour, range.endHour, totalHeight);
+        days.forEach(function (day) {
+            renderDayColumn(weekGridEl, day, range.startHour, totalHeight, sameDay(day, today));
+        });
+
+        rangeLabelEl.textContent = 'Semaine du ' + formatDateFr(monday) + ' au ' + formatDateFr(addDays(monday, 6));
+    }
+
+    function renderJour() {
+        dayGridEl.innerHTML = '';
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+        var isToday = sameDay(refDate, today);
+
+        dayGridEl.appendChild(makeEl('div', 'calendar-head-cell-empty'));
+        dayGridEl.appendChild(makeEl('div', 'calendar-head-cell' + (isToday ? ' calendar-head-cell-today' : ''), DAY_NAMES[(refDate.getDay() + 6) % 7] + ' ' + formatDateFr(refDate)));
+
+        var range = computeRange([refDate]);
+        var totalHeight = (range.endHour - range.startHour) * 60 * PX_PER_MIN;
+
+        renderTimeColumn(dayGridEl, range.startHour, range.endHour, totalHeight);
+        renderDayColumn(dayGridEl, refDate, range.startHour, totalHeight, isToday);
+
+        rangeLabelEl.textContent = formatDateFr(refDate);
+    }
+
+    function renderMois() {
+        monthGridEl.innerHTML = '';
+        var firstOfMonth = new Date(refDate.getFullYear(), refDate.getMonth(), 1);
+        var gridStart = startOfWeek(firstOfMonth);
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        DAY_NAMES.forEach(function (name) {
+            monthGridEl.appendChild(makeEl('div', 'calendar-head-cell', name));
+        });
+
+        for (var i = 0; i < 42; i++) {
+            (function (day) {
+                var isOutside = day.getMonth() !== refDate.getMonth();
+                var isToday = sameDay(day, today);
+                var cell = makeEl('div', 'calendar-month-cell' + (isOutside ? ' calendar-month-cell-outside' : '') + (isToday ? ' calendar-month-cell-today' : ''));
+                cell.appendChild(makeEl('div', 'calendar-month-day-number', String(day.getDate())));
+
+                var dayRdvs = rdvsForDay(day);
+                dayRdvs.slice(0, 3).forEach(function (rdv) {
+                    var link = document.createElement('a');
+                    link.className = 'calendar-month-event';
+                    link.href = 'fiche-rdv.html?rdv=' + encodeURIComponent(rdv.id);
+                    link.textContent = (rdv.heureDebut ? rdv.heureDebut + ' ' : '') + (rdv.titre || 'Rendez-vous');
+                    link.addEventListener('click', function (evt) {
+                        evt.stopPropagation();
+                    });
+                    cell.appendChild(link);
+                });
+                if (dayRdvs.length > 3) {
+                    cell.appendChild(makeEl('span', 'calendar-month-more', '+ ' + (dayRdvs.length - 3) + ' autre(s)'));
+                }
+
+                cell.addEventListener('click', function () {
+                    refDate = new Date(day);
+                    setActiveView('jour');
+                });
+
+                monthGridEl.appendChild(cell);
+            })(addDays(gridStart, i));
+        }
+
+        rangeLabelEl.textContent = MONTH_NAMES[refDate.getMonth()] + ' ' + refDate.getFullYear();
+    }
+
+    function renderActiveView() {
+        if (activeView === 'semaine') {
+            renderSemaine();
+        } else if (activeView === 'jour') {
+            renderJour();
+        } else if (activeView === 'mois') {
+            renderMois();
+        }
+    }
+
+    function setActiveView(view) {
+        activeView = view;
+        Array.prototype.forEach.call(tabsEl.querySelectorAll('.page-tab'), function (tab) {
+            tab.classList.toggle('page-tab-active', tab.dataset.view === view);
+        });
+        Object.keys(panels).forEach(function (key) {
+            if (panels[key]) {
+                panels[key].style.display = key === view ? '' : 'none';
+            }
+        });
+        navToolbarEl.style.display = view === 'liste' ? 'none' : '';
+        if (view !== 'liste') {
+            renderActiveView();
+        }
+    }
+
+    Array.prototype.forEach.call(tabsEl.querySelectorAll('.page-tab'), function (tab) {
+        tab.addEventListener('click', function () {
+            setActiveView(tab.dataset.view);
+        });
+    });
+
+    prevBtn.addEventListener('click', function () {
+        if (activeView === 'jour') {
+            refDate = addDays(refDate, -1);
+        } else if (activeView === 'mois') {
+            refDate = addMonths(refDate, -1);
+        } else {
+            refDate = addDays(refDate, -7);
+        }
+        renderActiveView();
+    });
+
+    nextBtn.addEventListener('click', function () {
+        if (activeView === 'jour') {
+            refDate = addDays(refDate, 1);
+        } else if (activeView === 'mois') {
+            refDate = addMonths(refDate, 1);
+        } else {
+            refDate = addDays(refDate, 7);
+        }
+        renderActiveView();
+    });
+
+    todayBtn.addEventListener('click', function () {
+        refDate = new Date();
+        refDate.setHours(0, 0, 0, 0);
+        renderActiveView();
+    });
+
+    datePickerEl.addEventListener('change', function () {
+        var parsed = agendaCalc.parseDateFr ? agendaCalc.parseDateFr(datePickerEl.value.trim()) : null;
+        if (parsed) {
+            refDate = parsed;
+            renderActiveView();
+        }
+    });
+
+    setActiveView('semaine');
+})();
+
 // Page Agenda : liste des rendez-vous commerciaux, recherche/filtre/
 // pagination (V0.7) via COCKPIT_LIST_PAGINATION (V0.5.4) — même principe que
 // Clients/Produits/Devis/Factures : les lignes du tableau sont écrites en dur
@@ -6579,7 +6968,6 @@ document.addEventListener('DOMContentLoaded', function () {
     var editHeaderBtn = document.getElementById('rdv-edit-header-btn');
     var deleteBtn = document.getElementById('rdv-delete-btn');
     var pdfBtn = document.getElementById('rdv-pdf-btn');
-    var quickActionsBlock = document.getElementById('rdv-quick-actions-block');
 
     function renderHeader() {
         titreHeadingEl.textContent = rdv.titre || 'Nouveau rendez-vous';
@@ -6636,7 +7024,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (mode === 'view') {
             pdfBtn.href = 'rdv-document.html?rdv=' + encodeURIComponent(rdv.id);
         }
-        quickActionsBlock.style.display = mode === 'new' ? 'none' : '';
     }
 
     function renderPreparation() {
@@ -6784,7 +7171,8 @@ document.addEventListener('DOMContentLoaded', function () {
         var viewLink = document.createElement('a');
         viewLink.className = 'btn-table-action';
         viewLink.textContent = 'Voir le devis';
-        viewLink.href = 'devis-edition.html?devis=' + encodeURIComponent(devis.numero) + '&version=' + versionActive.version;
+        viewLink.href = 'devis-edition.html?devis=' + encodeURIComponent(devis.numero) + '&version=' + versionActive.version +
+            (rdv.clientSlug ? '&client=' + encodeURIComponent(rdv.clientSlug) : '');
         actions.appendChild(viewLink);
 
         var docLink = document.createElement('a');
@@ -7233,8 +7621,31 @@ document.addEventListener('DOMContentLoaded', function () {
         window.COCKPIT_MODAL.open({ title: 'Reporter le rendez-vous', body: body, footer: footer });
     }
 
-    function openSansSuiteModal() {
-        var body = makeEl('p', 'modal-text', 'Marquer ce rendez-vous comme sans suite ?');
+    function openStatutModal() {
+        var body = document.createElement('div');
+
+        var currentInfo = findInfo(RDV_STATUSES, rdv.statut);
+        var currentLine = makeEl('p', 'modal-text');
+        currentLine.appendChild(document.createTextNode('Statut actuel : '));
+        currentLine.appendChild(makeEl('span', 'badge ' + (currentInfo ? currentInfo.badgeClass : 'badge-neutral'), currentInfo ? currentInfo.label : rdv.statut));
+        body.appendChild(currentLine);
+
+        body.appendChild(makeLabel('Nouveau statut', 'rdv-form-statut'));
+        var select = document.createElement('select');
+        select.id = 'rdv-form-statut';
+        select.className = 'table-select modal-select';
+        select.setAttribute('data-modal-autofocus', 'true');
+        RDV_STATUSES.forEach(function (s) {
+            var option = document.createElement('option');
+            option.value = s.value;
+            option.textContent = s.label;
+            if (s.value === rdv.statut) {
+                option.selected = true;
+            }
+            select.appendChild(option);
+        });
+        body.appendChild(select);
+        body.appendChild(makeEl('p', 'modal-hint', 'Choisir "Reporté" ouvrira ensuite la saisie de la nouvelle date.'));
 
         var cancelButton = document.createElement('button');
         cancelButton.type = 'button';
@@ -7242,22 +7653,142 @@ document.addEventListener('DOMContentLoaded', function () {
         cancelButton.setAttribute('data-modal-close', 'true');
         cancelButton.textContent = 'Annuler';
 
-        var confirmButton = document.createElement('button');
-        confirmButton.type = 'button';
-        confirmButton.className = 'btn-danger';
-        confirmButton.setAttribute('data-modal-close', 'true');
-        confirmButton.textContent = 'Sans suite';
-        confirmButton.addEventListener('click', function () {
-            rdv.statut = 'sans_suite';
-            agendaCalc.pushHistorique(rdv, 'statut', 'Rendez-vous marqué sans suite.');
+        var saveButton = document.createElement('button');
+        saveButton.type = 'button';
+        saveButton.className = 'btn-primary';
+        saveButton.setAttribute('data-modal-close', 'true');
+        saveButton.textContent = 'Enregistrer';
+        saveButton.addEventListener('click', function () {
+            var newValue = select.value;
+            if (newValue === rdv.statut) {
+                return;
+            }
+            if (newValue === 'reporte') {
+                openReporterModal();
+                return;
+            }
+            var newInfo = findInfo(RDV_STATUSES, newValue);
+            rdv.statut = newValue;
+            if (newValue === 'confirme') {
+                rdv.communication.confirme = true;
+            }
+            agendaCalc.pushHistorique(rdv, 'statut', 'Statut modifié de "' + (currentInfo ? currentInfo.label : rdv.statut) + '" à "' + (newInfo ? newInfo.label : newValue) + '".');
             renderAll();
         });
 
         var footer = document.createDocumentFragment();
         footer.appendChild(cancelButton);
-        footer.appendChild(confirmButton);
+        footer.appendChild(saveButton);
 
-        window.COCKPIT_MODAL.open({ title: 'Marquer sans suite', body: body, footer: footer });
+        window.COCKPIT_MODAL.open({ title: 'Modifier le statut', body: body, footer: footer });
+    }
+
+    function openPrioriteModal() {
+        var body = document.createElement('div');
+
+        var currentInfo = findInfo(RDV_PRIORITES, rdv.priorite);
+        var currentLine = makeEl('p', 'modal-text');
+        currentLine.appendChild(document.createTextNode('Priorité actuelle : '));
+        currentLine.appendChild(makeEl('span', 'badge ' + (currentInfo ? currentInfo.badgeClass : 'badge-neutral'), currentInfo ? currentInfo.label : rdv.priorite));
+        body.appendChild(currentLine);
+
+        body.appendChild(makeLabel('Nouvelle priorité', 'rdv-form-priorite-select'));
+        var select = document.createElement('select');
+        select.id = 'rdv-form-priorite-select';
+        select.className = 'table-select modal-select';
+        select.setAttribute('data-modal-autofocus', 'true');
+        RDV_PRIORITES.forEach(function (p) {
+            var option = document.createElement('option');
+            option.value = p.value;
+            option.textContent = p.label;
+            if (p.value === rdv.priorite) {
+                option.selected = true;
+            }
+            select.appendChild(option);
+        });
+        body.appendChild(select);
+
+        var cancelButton = document.createElement('button');
+        cancelButton.type = 'button';
+        cancelButton.className = 'btn-secondary';
+        cancelButton.setAttribute('data-modal-close', 'true');
+        cancelButton.textContent = 'Annuler';
+
+        var saveButton = document.createElement('button');
+        saveButton.type = 'button';
+        saveButton.className = 'btn-primary';
+        saveButton.setAttribute('data-modal-close', 'true');
+        saveButton.textContent = 'Enregistrer';
+        saveButton.addEventListener('click', function () {
+            var newValue = select.value;
+            if (newValue === rdv.priorite) {
+                return;
+            }
+            var newInfo = findInfo(RDV_PRIORITES, newValue);
+            rdv.priorite = newValue;
+            agendaCalc.pushHistorique(rdv, 'modification', 'Priorité modifiée de "' + (currentInfo ? currentInfo.label : rdv.priorite) + '" à "' + (newInfo ? newInfo.label : newValue) + '".');
+            renderAll();
+        });
+
+        var footer = document.createDocumentFragment();
+        footer.appendChild(cancelButton);
+        footer.appendChild(saveButton);
+
+        window.COCKPIT_MODAL.open({ title: 'Modifier la priorité', body: body, footer: footer });
+    }
+
+    function openOpportuniteModal() {
+        var body = document.createElement('div');
+
+        var currentInfo = findInfo(RDV_OPPORTUNITES, rdv.opportunite);
+        var currentLine = makeEl('p', 'modal-text');
+        currentLine.appendChild(document.createTextNode('Opportunité actuelle : '));
+        currentLine.appendChild(makeEl('span', 'badge ' + (currentInfo ? currentInfo.badgeClass : 'badge-neutral'), currentInfo ? currentInfo.label : rdv.opportunite));
+        body.appendChild(currentLine);
+
+        body.appendChild(makeLabel('Nouvelle opportunité', 'rdv-form-opportunite-select'));
+        var select = document.createElement('select');
+        select.id = 'rdv-form-opportunite-select';
+        select.className = 'table-select modal-select';
+        select.setAttribute('data-modal-autofocus', 'true');
+        RDV_OPPORTUNITES.forEach(function (o) {
+            var option = document.createElement('option');
+            option.value = o.value;
+            option.textContent = o.label;
+            if (o.value === rdv.opportunite) {
+                option.selected = true;
+            }
+            select.appendChild(option);
+        });
+        body.appendChild(select);
+
+        var cancelButton = document.createElement('button');
+        cancelButton.type = 'button';
+        cancelButton.className = 'btn-secondary';
+        cancelButton.setAttribute('data-modal-close', 'true');
+        cancelButton.textContent = 'Annuler';
+
+        var saveButton = document.createElement('button');
+        saveButton.type = 'button';
+        saveButton.className = 'btn-primary';
+        saveButton.setAttribute('data-modal-close', 'true');
+        saveButton.textContent = 'Enregistrer';
+        saveButton.addEventListener('click', function () {
+            var newValue = select.value;
+            if (newValue === rdv.opportunite) {
+                return;
+            }
+            var newInfo = findInfo(RDV_OPPORTUNITES, newValue);
+            rdv.opportunite = newValue;
+            agendaCalc.pushHistorique(rdv, 'modification', 'Opportunité modifiée de "' + (currentInfo ? currentInfo.label : rdv.opportunite) + '" à "' + (newInfo ? newInfo.label : newValue) + '".');
+            renderAll();
+        });
+
+        var footer = document.createDocumentFragment();
+        footer.appendChild(cancelButton);
+        footer.appendChild(saveButton);
+
+        window.COCKPIT_MODAL.open({ title: 'Modifier l\'opportunité', body: body, footer: footer });
     }
 
     function openDeleteRdvModal() {
@@ -7302,15 +7833,6 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('rdv-edit-preparation-btn').addEventListener('click', openEditPreparationModal);
         document.getElementById('rdv-edit-communication-btn').addEventListener('click', openEditCommunicationModal);
 
-        document.getElementById('rdv-action-confirmer').addEventListener('click', function () {
-            rdv.communication.confirme = true;
-            if (rdv.statut === 'prevu' || rdv.statut === 'reporte') {
-                rdv.statut = 'confirme';
-            }
-            agendaCalc.pushHistorique(rdv, 'statut', 'Rendez-vous confirmé.');
-            renderAll();
-        });
-
         document.getElementById('rdv-action-relance').addEventListener('click', function () {
             rdv.communication.relances = (rdv.communication.relances || 0) + 1;
             rdv.communication.dateDerniereCommunication = agendaCalc.formatDateFr(new Date());
@@ -7318,14 +7840,9 @@ document.addEventListener('DOMContentLoaded', function () {
             renderAll();
         });
 
-        document.getElementById('rdv-action-realise').addEventListener('click', function () {
-            rdv.statut = 'realise';
-            agendaCalc.pushHistorique(rdv, 'statut', 'Rendez-vous marqué comme réalisé.');
-            renderAll();
-        });
-
-        document.getElementById('rdv-action-reporter').addEventListener('click', openReporterModal);
-        document.getElementById('rdv-action-sans-suite').addEventListener('click', openSansSuiteModal);
+        statusBadgeEl.addEventListener('click', openStatutModal);
+        prioriteBadgeEl.addEventListener('click', openPrioriteModal);
+        opportuniteBadgeEl.addEventListener('click', openOpportuniteModal);
     }
 })();
 

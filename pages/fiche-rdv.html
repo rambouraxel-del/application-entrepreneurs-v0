@@ -82,9 +82,9 @@
                             <div>
                                 <h2 id="rdv-titre-heading">Nouveau rendez-vous</h2>
                                 <div class="badge-group">
-                                    <span class="badge badge-neutral" id="rdv-status-badge">—</span>
-                                    <span class="badge badge-neutral" id="rdv-priorite-badge">—</span>
-                                    <span class="badge badge-neutral" id="rdv-opportunite-badge">—</span>
+                                    <button type="button" class="badge badge-neutral badge-clickable" id="rdv-status-badge" title="Modifier le statut" aria-label="Modifier le statut">—</button>
+                                    <button type="button" class="badge badge-neutral badge-clickable" id="rdv-priorite-badge" title="Modifier la priorité" aria-label="Modifier la priorité">—</button>
+                                    <button type="button" class="badge badge-neutral badge-clickable" id="rdv-opportunite-badge" title="Modifier l'opportunité" aria-label="Modifier l'opportunité">—</button>
                                 </div>
                             </div>
                             <button type="button" class="block-icon-btn" id="rdv-edit-header-btn" title="Modifier les informations" aria-label="Modifier les informations">
@@ -108,19 +108,6 @@
                             </div>
                         </div>
                         <button type="button" class="btn-primary" id="rdv-create-btn" style="display: none; margin-top: 12px;">Créer le rendez-vous</button>
-                    </div>
-
-                    <div class="dashboard-block" id="rdv-quick-actions-block">
-                        <div class="dashboard-block-header">
-                            <h2>Actions rapides</h2>
-                        </div>
-                        <div class="page-toolbar" style="justify-content: flex-start;">
-                            <button type="button" class="btn-secondary" id="rdv-action-confirmer">Marquer comme confirmé</button>
-                            <button type="button" class="btn-secondary" id="rdv-action-relance">Marquer comme relancé</button>
-                            <button type="button" class="btn-secondary" id="rdv-action-realise">Marquer comme réalisé</button>
-                            <button type="button" class="btn-secondary" id="rdv-action-reporter">Reporter</button>
-                            <button type="button" class="btn-danger" id="rdv-action-sans-suite">Sans suite</button>
-                        </div>
                     </div>
 
                     <div class="dashboard-block">
@@ -150,9 +137,12 @@
                     <div class="dashboard-block">
                         <div class="dashboard-block-header">
                             <h2>Communication client</h2>
-                            <button type="button" class="block-icon-btn" id="rdv-edit-communication-btn" title="Modifier le suivi de communication" aria-label="Modifier le suivi de communication">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg>
-                            </button>
+                            <div>
+                                <button type="button" class="btn-secondary" id="rdv-action-relance" style="margin-right: 6px;">Marquer comme relancé</button>
+                                <button type="button" class="block-icon-btn" id="rdv-edit-communication-btn" title="Modifier le suivi de communication" aria-label="Modifier le suivi de communication">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg>
+                                </button>
+                            </div>
                         </div>
                         <div class="info-grid">
                             <div class="info-item"><span class="info-label">Confirmation du rendez-vous</span><span class="info-value" id="comm-confirme">—</span></div>

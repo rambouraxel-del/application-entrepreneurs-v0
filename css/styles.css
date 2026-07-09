@@ -2012,6 +2012,202 @@ svg {
     cursor: default;
 }
 
+/* Agenda : vues calendrier Jour/Semaine/Mois (V0.7.1) */
+
+.calendar-panel {
+    overflow-x: auto;
+}
+
+.calendar-grid {
+    display: grid;
+    width: 100%;
+    min-width: 640px;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--color-surface);
+}
+
+.calendar-grid-week {
+    grid-template-columns: 64px repeat(7, 1fr);
+}
+
+.calendar-grid-day {
+    grid-template-columns: 64px 1fr;
+}
+
+.calendar-head-row {
+    display: contents;
+}
+
+.calendar-head-cell {
+    padding: 8px 6px;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    color: var(--color-text);
+    border-bottom: 1px solid var(--color-border);
+    border-left: 1px solid var(--color-border);
+    background: var(--color-neutral-bg);
+}
+
+.calendar-head-cell:first-child {
+    border-left: none;
+}
+
+.calendar-head-cell-today {
+    color: var(--color-primary);
+}
+
+.calendar-head-cell-empty {
+    border-left: none;
+    background: var(--color-neutral-bg);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.calendar-out-of-range {
+    grid-column: 1 / -1;
+    padding: 6px 10px;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-neutral-bg);
+}
+
+.calendar-time-col {
+    position: relative;
+    border-left: none;
+}
+
+.calendar-time-label {
+    position: absolute;
+    right: 6px;
+    top: -7px;
+    font-size: 10px;
+    color: var(--color-text-secondary);
+}
+
+.calendar-day-col {
+    position: relative;
+    border-left: 1px solid var(--color-border);
+    background-image: repeating-linear-gradient(to bottom, var(--color-border) 0, var(--color-border) 1px, transparent 1px, transparent 60px);
+}
+
+.calendar-day-col-today {
+    background-color: var(--color-primary-soft);
+}
+
+.calendar-event {
+    position: absolute;
+    left: 2px;
+    right: 2px;
+    background: var(--color-primary-soft);
+    border-left: 3px solid var(--color-primary);
+    border-radius: 6px;
+    padding: 3px 6px;
+    font-size: 11px;
+    line-height: 1.3;
+    overflow: hidden;
+    text-decoration: none;
+    color: var(--color-text);
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.calendar-event:hover {
+    filter: brightness(0.96);
+}
+
+.calendar-event-time {
+    font-weight: 700;
+    color: var(--color-primary);
+}
+
+.calendar-event-title {
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.calendar-event-client {
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.calendar-event-badges {
+    display: flex;
+    gap: 3px;
+    flex-wrap: wrap;
+}
+
+.calendar-month-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.calendar-month-cell {
+    min-height: 110px;
+    border-left: 1px solid var(--color-border);
+    border-top: 1px solid var(--color-border);
+    padding: 6px;
+    cursor: pointer;
+    background: var(--color-surface);
+}
+
+.calendar-month-cell:nth-child(7n+1) {
+    border-left: none;
+}
+
+.calendar-month-cell:hover {
+    background: var(--color-neutral-bg);
+}
+
+.calendar-month-cell-outside {
+    background: var(--color-neutral-bg);
+    color: var(--color-text-secondary);
+}
+
+.calendar-month-cell-today {
+    background: var(--color-primary-soft);
+}
+
+.calendar-month-day-number {
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.calendar-month-cell-today .calendar-month-day-number {
+    color: var(--color-primary);
+}
+
+.calendar-month-event {
+    display: block;
+    font-size: 10px;
+    padding: 1px 4px;
+    border-radius: 4px;
+    background: var(--color-surface);
+    border-left: 2px solid var(--color-primary);
+    color: var(--color-text);
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-decoration: none;
+}
+
+.calendar-month-more {
+    font-size: 10px;
+    color: var(--color-text-secondary);
+}
+
 .version-tag {
     font-size: 12px;
     color: var(--color-text-secondary);

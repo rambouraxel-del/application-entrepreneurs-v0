@@ -67,6 +67,39 @@
 
             <main class="page-content">
                 <div class="page-toolbar">
+                    <div class="page-tabs" id="agenda-view-tabs">
+                        <button type="button" class="page-tab" data-view="jour">Jour</button>
+                        <button type="button" class="page-tab page-tab-active" data-view="semaine">Semaine</button>
+                        <button type="button" class="page-tab" data-view="mois">Mois</button>
+                        <button type="button" class="page-tab" data-view="liste">Liste</button>
+                    </div>
+                    <a href="fiche-rdv.html" class="btn-primary">Ajouter un rendez-vous</a>
+                </div>
+
+                <div class="page-toolbar" id="calendar-nav-toolbar">
+                    <div class="table-filters">
+                        <button type="button" class="btn-secondary" id="calendar-prev-btn" aria-label="Précédent">‹ Précédent</button>
+                        <button type="button" class="btn-secondary" id="calendar-today-btn">Aujourd'hui</button>
+                        <button type="button" class="btn-secondary" id="calendar-next-btn" aria-label="Suivant">Suivant ›</button>
+                        <input type="text" id="calendar-date-picker" class="modal-input" placeholder="JJ/MM/AAAA" style="max-width: 130px;" aria-label="Aller à une date">
+                    </div>
+                    <p class="table-counter" id="calendar-range-label"></p>
+                </div>
+
+                <div id="view-panel-jour" class="calendar-panel" style="display: none;">
+                    <div class="calendar-grid calendar-grid-day" id="calendar-day-grid"></div>
+                </div>
+
+                <div id="view-panel-semaine" class="calendar-panel">
+                    <div class="calendar-grid calendar-grid-week" id="calendar-week-grid"></div>
+                </div>
+
+                <div id="view-panel-mois" style="display: none;">
+                    <div class="calendar-month-grid" id="calendar-month-grid"></div>
+                </div>
+
+                <div id="view-panel-liste" style="display: none;">
+                <div class="page-toolbar">
                     <div class="search-bar page-toolbar-search">
                         <span class="search-bar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg></span>
                         <input type="text" id="agenda-search" placeholder="Rechercher un rendez-vous...">
@@ -83,7 +116,6 @@
                         </select>
                         <button type="button" id="agenda-reset-filters" class="btn-secondary">Réinitialiser</button>
                     </div>
-                    <a href="fiche-rdv.html" class="btn-primary">Ajouter un rendez-vous</a>
                 </div>
 
                 <div class="list-pagination-bar">
@@ -183,6 +215,7 @@
                         </tr>
                     </tbody>
                 </table>
+                </div>
             </main>
         </div>
     </div>
