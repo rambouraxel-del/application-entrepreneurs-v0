@@ -37,16 +37,19 @@ Ce document regroupe les idées et pistes identifiées au fil du projet, non tra
 - Vues jour/semaine/mois interactives.
 
 ## Facturation
-- Page placeholder ajoutée à la navigation en V0.2 ; devenue la vraie liste des devis en V0.6.1 (recherche, filtre statut, pagination), avec un éditeur de devis complet (`pages/devis-edition.html`).
+- Page placeholder ajoutée à la navigation en V0.2 ; devenue la vraie liste des devis en V0.6.1 (recherche, filtre statut, pagination), avec un éditeur de devis complet (`pages/devis-edition.html`) ; l'onglet Factures est devenu réel en V0.6.2 (`pages/facture-edition.html`).
 - **Vraie création, modification, suppression de devis** : le générateur (client, lignes, calculs HT/TVA/TTC/remise, conditions de paiement) est entièrement fonctionnel en direct, mais "Enregistrer" (menu brouillon/version définitive) et "Supprimer" ne persistent rien (Work in progress).
-- **`DEVIS_DETAILS` (V0.6.1) reste une source statique en mémoire**, limitée à 5 devis fictifs : à remplacer par une vraie source de données le jour où le projet en aura une.
-- **Vraie numérotation persistante** : `computeNextDevisNumero` calcule un numéro plausible par balayage des données fictives existantes, sans allocation réelle ni compteur qui survivrait à un rechargement.
+- **`DEVIS_DETAILS` (V0.6.1) reste une source statique en mémoire**, limitée à 6 devis fictifs (dont `DEV-2026-00016` ajouté en V0.6.2 pour démontrer la conversion) : à remplacer par une vraie source de données le jour où le projet en aura une.
+- **Vraie numérotation persistante** : `computeNextDevisNumero`/`computeNextFactureNumero` calculent un numéro plausible par balayage des données fictives existantes, sans allocation réelle ni compteur qui survivrait à un rechargement.
 - **Vrai versionnement persistant** : "Créer une nouvelle version" (correctif de revue V0.6.1) ouvre désormais un brouillon éditable réel basé sur la dernière version, mais uniquement en mémoire de page — rien n'est conservé après rechargement, faute de persistance réelle.
-- Factures réelles, conversion devis → facture, paiements, échéances, avoirs : prévus dans une prochaine sous-version (V0.6.2), pour laquelle l'onglet "Factures" (actuellement `btn-wip` sur `facturation.html`) est déjà préparé. Le bloc "Conditions de paiement" du devis (correctif de revue V0.6.1) est pensé pour être réutilisable à cette occasion.
+- **`FACTURE_DETAILS` (V0.6.2) reste une source statique en mémoire**, limitée à 6 factures fictives (dont un brouillon sans numéro) : mêmes limites que `DEVIS_DETAILS`.
+- **Vraie émission/persistance de facture** : "Émettre la facture" et "Ajouter un paiement" sont des actions réelles en mémoire de page (numérotation, verrouillage, recalcul du reste à payer), mais rien ne survit à un rechargement ; "Enregistrer le brouillon"/"Supprimer le brouillon" restent en Work in progress.
+- **Avoirs non développés** : l'annulation d'une facture déjà émise est volontairement bloquée en V0.6.2 (aucune action, juste une note explicative) — à traiter dans une future version dédiée aux avoirs.
 - Export des documents (PDF notamment), impression.
-- Suivi réel des statuts de paiement.
 - Remise en montant fixe par ligne, en complément de la remise en pourcentage actuelle.
 - Statistiques et tableau de bord liés à la facturation.
+- **Factorisation du code dupliqué devis/facture** : recherche client, recherche catalogue, modale de description agrandie et rendu des conditions de paiement sont dupliqués entre `devis-edition.html` et `facture-edition.html` (choix assumé en V0.6.2 pour limiter le risque de régression) — à factoriser en helpers réutilisables (sur le principe de `COCKPIT_LIST_PAGINATION`) si une prochaine version touche à nouveau ces deux éditeurs.
+- **Relances de paiement en retard** : les factures "En retard" sont détectées (`computeStatutAffiche`) mais aucune action de relance n'existe encore.
 
 ## Trésorerie
 - Page placeholder ajoutée à la navigation en V0.2 ; développement fonctionnel réel prévu en V0.7 sur la roadmap.

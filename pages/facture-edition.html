@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Devis — Cockpit Entrepreneur</title>
+    <title>Facture — Cockpit Entrepreneur</title>
     <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
@@ -47,8 +47,8 @@
         <div class="main">
             <header class="topbar">
                 <div class="topbar-greeting">
-                    <h1>Devis</h1>
-                    <p class="page-subtitle">Construisez votre devis, le résultat s'affiche en direct.</p>
+                    <h1>Facture</h1>
+                    <p class="page-subtitle">Construisez votre facture, le résultat s'affiche en direct.</p>
                 </div>
                 <div class="topbar-actions">
                     <div class="topbar-search">
@@ -70,7 +70,7 @@
                     <nav class="breadcrumb" aria-label="Fil d'Ariane">
                         <a href="facturation.html">Facturation</a>
                         <span>›</span>
-                        <span class="breadcrumb-current">Devis</span>
+                        <span class="breadcrumb-current">Facture</span>
                     </nav>
                     <a href="facturation.html" class="fiche-back-link">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg>
@@ -78,35 +78,32 @@
                     </a>
                 </div>
 
-                <div id="devis-not-found" class="empty-state" style="display: none;">
+                <div id="facture-not-found" class="empty-state" style="display: none;">
                     <span class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path><line x1="8" y1="8" x2="14" y2="14"></line><line x1="14" y1="8" x2="8" y2="14"></line></svg></span>
-                    <h2>Devis introuvable</h2>
-                    <p>Aucun devis ne correspond à ce lien. Il a peut-être été supprimé, ou l'adresse est incorrecte.</p>
+                    <h2>Facture introuvable</h2>
+                    <p>Aucune facture ne correspond à ce lien, ou le devis source n'est pas convertible (seul un devis Accepté peut être converti en facture).</p>
                     <a href="facturation.html" class="btn-secondary">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg>
                         Retour à la liste
                     </a>
                 </div>
 
-                <div id="devis-content">
-                    <div id="devis-locked-banner" class="construction-banner" style="display: none;">
+                <div id="facture-content">
+                    <div id="facture-locked-banner" class="construction-banner" style="display: none;">
                         <span class="construction-banner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></span>
-                        <p id="devis-locked-message"><strong>Devis verrouillé.</strong> Ce devis est accepté et ne peut plus être modifié directement. Toute évolution nécessite une nouvelle version.</p>
+                        <p id="facture-locked-message"><strong>Facture verrouillée.</strong> Cette facture a été émise et ne peut plus être modifiée.</p>
                     </div>
 
                     <div class="dashboard-block">
                         <div class="document-header">
                             <div>
                                 <div class="document-header-heading">
-                                    <h2 id="devis-numero-heading">Nouveau devis</h2>
-                                    <span class="version-tag" id="devis-version-tag"></span>
-                                    <span class="badge badge-neutral" id="devis-status-badge">—</span>
+                                    <h2 id="facture-numero-heading">Brouillon sans numéro</h2>
+                                    <span class="badge badge-neutral" id="facture-status-badge">—</span>
                                 </div>
-                                <p class="document-header-meta" id="devis-meta">—</p>
-                                <p class="modal-hint" id="devis-readonly-hint" style="display: none; margin-top: 6px;">Vous consultez une ancienne version, non active, à titre de consultation uniquement.</p>
-                                <p class="document-header-meta" id="devis-facture-ref" style="display: none;"></p>
+                                <p class="document-header-meta" id="facture-meta">—</p>
+                                <p class="document-header-meta" id="facture-devis-ref" style="display: none;"></p>
                             </div>
-                            <div class="version-switch" id="devis-version-switch"></div>
                         </div>
                     </div>
 
@@ -114,21 +111,21 @@
                         <div class="document-parties">
                             <div class="document-party">
                                 <p class="document-party-label">Émetteur</p>
-                                <div id="devis-company-content"></div>
+                                <div id="facture-company-content"></div>
                             </div>
                             <div class="document-party">
                                 <p class="document-party-label">Client</p>
-                                <div id="devis-client-content"></div>
+                                <div id="facture-client-content"></div>
                             </div>
                         </div>
                     </div>
 
                     <div class="dashboard-block">
                         <div class="dashboard-block-header">
-                            <h2>Lignes du devis</h2>
-                            <div class="dashboard-block-actions" id="devis-lines-actions">
-                                <button type="button" class="btn-secondary" id="devis-add-catalog-btn">Ajouter depuis le catalogue</button>
-                                <button type="button" class="btn-secondary" id="devis-add-line-btn">Ajouter une ligne</button>
+                            <h2>Lignes de la facture</h2>
+                            <div class="dashboard-block-actions" id="facture-lines-actions">
+                                <button type="button" class="btn-secondary" id="facture-add-catalog-btn">Ajouter depuis le catalogue</button>
+                                <button type="button" class="btn-secondary" id="facture-add-line-btn">Ajouter une ligne</button>
                             </div>
                         </div>
                         <table class="data-table line-items-table">
@@ -144,37 +141,52 @@
                                     <th></th>
                                 </tr>
                             </thead>
-                            <tbody id="devis-lines-body"></tbody>
+                            <tbody id="facture-lines-body"></tbody>
                         </table>
-                        <p class="empty-state-inline" id="devis-lines-empty" style="display: none;">Aucune ligne pour l'instant.</p>
+                        <p class="empty-state-inline" id="facture-lines-empty" style="display: none;">Aucune ligne pour l'instant.</p>
 
-                        <div class="devis-summary" id="devis-summary"></div>
+                        <div class="devis-summary" id="facture-summary"></div>
                     </div>
 
                     <div class="dashboard-block">
                         <div class="dashboard-block-header">
                             <h2>Conditions de paiement</h2>
                         </div>
-                        <div id="devis-payment-terms"></div>
+                        <div id="facture-payment-terms"></div>
                     </div>
 
-                    <div class="page-toolbar" id="devis-actions-bar" style="justify-content: flex-start;">
-                        <div class="save-menu" id="devis-save-menu">
-                            <button type="button" class="btn-primary save-menu-toggle" id="devis-save-btn" aria-haspopup="true" aria-expanded="false">
-                                Enregistrer
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>
-                            </button>
-                            <div class="save-menu-dropdown" id="devis-save-dropdown" style="display: none;">
-                                <button type="button" class="save-menu-item btn-wip">Enregistrer comme brouillon</button>
-                                <button type="button" class="save-menu-item btn-wip">Enregistrer comme version définitive</button>
+                    <div class="dashboard-block">
+                        <div class="dashboard-block-header">
+                            <h2>Paiements</h2>
+                            <div class="dashboard-block-actions" id="facture-payments-actions">
+                                <button type="button" class="btn-secondary" id="facture-add-payment-btn">Ajouter un paiement</button>
                             </div>
                         </div>
-                        <button type="button" class="btn-secondary" id="devis-duplicate-btn">Dupliquer</button>
-                        <button type="button" class="btn-secondary" id="devis-new-version-btn">Créer une nouvelle version</button>
-                        <button type="button" class="btn-secondary" id="devis-convert-btn">Convertir en facture</button>
-                        <button type="button" class="btn-danger" id="devis-delete-btn">Supprimer</button>
+                        <table class="data-table" id="facture-payments-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Montant</th>
+                                    <th>Mode</th>
+                                    <th>Référence</th>
+                                    <th>Note</th>
+                                </tr>
+                            </thead>
+                            <tbody id="facture-payments-body"></tbody>
+                        </table>
+                        <p class="empty-state-inline" id="facture-payments-empty" style="display: none;">Aucun paiement enregistré pour l'instant.</p>
+
+                        <div class="devis-summary" id="facture-payments-summary"></div>
+                        <p class="modal-hint" id="facture-payments-hint" style="display: none;"></p>
                     </div>
-                    <p class="modal-hint" id="devis-persistence-hint">Ce devis n'est pas encore enregistré durablement : la persistance sera ajoutée dans une prochaine version.</p>
+
+                    <div class="page-toolbar" id="facture-actions-bar" style="justify-content: flex-start;">
+                        <button type="button" class="btn-primary" id="facture-emit-btn">Émettre la facture</button>
+                        <button type="button" class="btn-secondary btn-wip" id="facture-save-btn">Enregistrer le brouillon</button>
+                        <button type="button" class="btn-danger btn-wip" id="facture-delete-btn">Supprimer le brouillon</button>
+                    </div>
+                    <p class="modal-hint" id="facture-persistence-hint">Cette facture n'est pas encore enregistrée durablement : la persistance sera ajoutée dans une prochaine version.</p>
+                    <p class="modal-hint" id="facture-avoir-hint" style="display: none;">L'annulation d'une facture déjà émise sera possible via le futur module Avoirs, non encore développé.</p>
                 </div>
             </main>
         </div>
