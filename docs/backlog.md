@@ -37,7 +37,7 @@ Ce document regroupe les idées et pistes identifiées au fil du projet, non tra
 - Vues jour/semaine/mois interactives.
 
 ## Facturation
-- Page placeholder ajoutée à la navigation en V0.2 ; devenue la vraie liste des devis en V0.6.1 (recherche, filtre statut, pagination), avec un éditeur de devis complet (`pages/devis-edition.html`) ; l'onglet Factures est devenu réel en V0.6.2 (`pages/facture-edition.html`).
+- Page placeholder ajoutée à la navigation en V0.2 ; devenue la vraie liste des devis en V0.6.1 (recherche, filtre statut, pagination), avec un éditeur de devis complet (`pages/devis-edition.html`) ; l'onglet Factures est devenu réel en V0.6.2 (`pages/facture-edition.html`) ; documents imprimables/PDF ajoutés en V0.6.3 (`pages/devis-document.html`, `pages/facture-document.html`).
 - **Vraie création, modification, suppression de devis** : le générateur (client, lignes, calculs HT/TVA/TTC/remise, conditions de paiement) est entièrement fonctionnel en direct, mais "Enregistrer" (menu brouillon/version définitive) et "Supprimer" ne persistent rien (Work in progress).
 - **`DEVIS_DETAILS` (V0.6.1) reste une source statique en mémoire**, limitée à 6 devis fictifs (dont `DEV-2026-00016` ajouté en V0.6.2 pour démontrer la conversion) : à remplacer par une vraie source de données le jour où le projet en aura une.
 - **Vraie numérotation persistante** : `computeNextDevisNumero`/`computeNextFactureNumero` calculent un numéro plausible par balayage des données fictives existantes, sans allocation réelle ni compteur qui survivrait à un rechargement.
@@ -45,11 +45,13 @@ Ce document regroupe les idées et pistes identifiées au fil du projet, non tra
 - **`FACTURE_DETAILS` (V0.6.2) reste une source statique en mémoire**, limitée à 6 factures fictives (dont un brouillon sans numéro) : mêmes limites que `DEVIS_DETAILS`.
 - **Vraie émission/persistance de facture** : "Émettre la facture" et "Ajouter un paiement" sont des actions réelles en mémoire de page (numérotation, verrouillage, recalcul du reste à payer), mais rien ne survit à un rechargement ; "Enregistrer le brouillon"/"Supprimer le brouillon" restent en Work in progress.
 - **Avoirs non développés** : l'annulation d'une facture déjà émise est volontairement bloquée en V0.6.2 (aucune action, juste une note explicative) — à traiter dans une future version dédiée aux avoirs.
-- Export des documents (PDF notamment), impression.
+- **Documents imprimables (V0.6.3)** : `pages/devis-document.html`/`pages/facture-document.html` s'appuient sur l'impression navigateur (`window.print()` + `css/print.css`), volontairement sans bibliothèque PDF externe — solution jugée suffisante tant qu'aucun besoin de génération automatique sans interaction utilisateur ou de mise en page pixel-perfect garantie cross-navigateur ne se présente. À réévaluer seulement si un tel besoin apparaît clairement.
+- **Aperçu/impression non disponible pour un document en cours de frappe non enregistré** (choix explicite du chef de projet en V0.6.3, pour ne pas introduire de `sessionStorage`) : à revoir uniquement si une vraie persistance apparaît, ce qui rendrait la limite obsolète d'elle-même.
 - Remise en montant fixe par ligne, en complément de la remise en pourcentage actuelle.
 - Statistiques et tableau de bord liés à la facturation.
-- **Factorisation du code dupliqué devis/facture** : recherche client, recherche catalogue, modale de description agrandie et rendu des conditions de paiement sont dupliqués entre `devis-edition.html` et `facture-edition.html` (choix assumé en V0.6.2 pour limiter le risque de régression) — à factoriser en helpers réutilisables (sur le principe de `COCKPIT_LIST_PAGINATION`) si une prochaine version touche à nouveau ces deux éditeurs.
+- **Factorisation du code dupliqué devis/facture** : recherche client, recherche catalogue, modale de description agrandie et rendu des conditions de paiement/parties/lignes/récapitulatif sont dupliqués entre `devis-edition.html`, `facture-edition.html`, `devis-document.html` et `facture-document.html` (choix assumé en V0.6.2 puis reconduit en V0.6.3 pour limiter le risque de régression et avancer vite) — la duplication s'étend maintenant sur 4 fichiers, ce point devient plus pressant à factoriser (sur le principe de `COCKPIT_LIST_PAGINATION`) dès qu'une prochaine version touche de nouveau ces pages.
 - **Relances de paiement en retard** : les factures "En retard" sont détectées (`computeStatutAffiche`) mais aucune action de relance n'existe encore.
+- **Personnalisation des modèles de document** (choix de mise en page, upload réel de logo) : volontairement hors périmètre de la V0.6.3, un seul modèle sobre étant proposé pour l'instant.
 
 ## Trésorerie
 - Page placeholder ajoutée à la navigation en V0.2 ; développement fonctionnel réel prévu en V0.7 sur la roadmap.

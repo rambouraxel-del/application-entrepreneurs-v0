@@ -181,12 +181,14 @@
                     </div>
 
                     <div class="page-toolbar" id="facture-actions-bar" style="justify-content: flex-start;">
+                        <a href="#" class="btn-secondary" id="facture-preview-btn" target="_blank" style="display: none;">Aperçu / Imprimer</a>
                         <button type="button" class="btn-primary" id="facture-emit-btn">Émettre la facture</button>
                         <button type="button" class="btn-secondary btn-wip" id="facture-save-btn">Enregistrer le brouillon</button>
                         <button type="button" class="btn-danger btn-wip" id="facture-delete-btn">Supprimer le brouillon</button>
                     </div>
                     <p class="modal-hint" id="facture-persistence-hint">Cette facture n'est pas encore enregistrée durablement : la persistance sera ajoutée dans une prochaine version.</p>
                     <p class="modal-hint" id="facture-avoir-hint" style="display: none;">L'annulation d'une facture déjà émise sera possible via le futur module Avoirs, non encore développé.</p>
+                    <p class="modal-hint" id="facture-preview-unavailable-hint" style="display: none;">L'aperçu / impression sera disponible une fois cette facture enregistrée.</p>
                 </div>
             </main>
         </div>

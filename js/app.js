@@ -3301,6 +3301,8 @@ document.addEventListener('DOMContentLoaded', function () {
     var saveMenuEl = document.getElementById('devis-save-menu');
     var saveBtn = document.getElementById('devis-save-btn');
     var saveDropdownEl = document.getElementById('devis-save-dropdown');
+    var previewBtn = document.getElementById('devis-preview-btn');
+    var previewUnavailableHintEl = document.getElementById('devis-preview-unavailable-hint');
     var duplicateBtn = document.getElementById('devis-duplicate-btn');
     var newVersionBtn = document.getElementById('devis-new-version-btn');
     var convertBtn = document.getElementById('devis-convert-btn');
@@ -3881,6 +3883,15 @@ document.addEventListener('DOMContentLoaded', function () {
             state.statut === 'accepte' &&
             !findLinkedFactureKey()
         ) ? '' : 'none';
+
+        if (state.mode === 'view') {
+            previewBtn.style.display = '';
+            previewBtn.href = 'devis-document.html?devis=' + encodeURIComponent(state.numero) + '&version=' + state.version;
+            previewUnavailableHintEl.style.display = 'none';
+        } else {
+            previewBtn.style.display = 'none';
+            previewUnavailableHintEl.style.display = '';
+        }
     }
 
     function matchesProductQuery(item, typeLabel, query) {
@@ -4167,6 +4178,8 @@ document.addEventListener('DOMContentLoaded', function () {
     var saveBtn = document.getElementById('facture-save-btn');
     var deleteBtn = document.getElementById('facture-delete-btn');
     var avoirHintEl = document.getElementById('facture-avoir-hint');
+    var previewBtn = document.getElementById('facture-preview-btn');
+    var previewUnavailableHintEl = document.getElementById('facture-preview-unavailable-hint');
 
     function makeEl(tag, className, text) {
         var node = document.createElement(tag);
@@ -4771,6 +4784,15 @@ document.addEventListener('DOMContentLoaded', function () {
         emitBtn.style.display = state.statutEmission === 'brouillon' ? '' : 'none';
         saveBtn.style.display = state.statutEmission === 'brouillon' ? '' : 'none';
         deleteBtn.style.display = state.statutEmission === 'brouillon' ? '' : 'none';
+
+        if (state.mode === 'view') {
+            previewBtn.style.display = '';
+            previewBtn.href = 'facture-document.html?facture=' + encodeURIComponent(state.key);
+            previewUnavailableHintEl.style.display = 'none';
+        } else {
+            previewBtn.style.display = 'none';
+            previewUnavailableHintEl.style.display = '';
+        }
     }
 
     function openAddFromCatalogModal() {
@@ -5015,4 +5037,395 @@ document.addEventListener('DOMContentLoaded', function () {
             renderAll();
         });
     }
+})();
+
+// Page Document devis (V0.6.3) : rendu imprimable en lecture seule d'un
+// devis existant (?devis=NUMERO&version=N). Réutilise exactement les mêmes
+// données et fonctions de calcul que l'éditeur (COCKPIT_DEVIS_DETAILS /
+// COCKPIT_DEVIS_CALC), sans aucun recalcul indépendant. Le bouton "Imprimer /
+// Enregistrer en PDF" se contente d'appeler window.print() : aucune
+// bibliothèque PDF, le navigateur propose nativement "Enregistrer en PDF"
+// comme destination d'impression (voir css/print.css pour la mise en page
+// d'impression). Disponible uniquement pour un devis déjà présent dans les
+// données (y compris un brouillon fictif ou une ancienne version) : un devis
+// en cours de frappe non enregistré n'a pas de page document (pas de
+// mécanisme de stockage temporaire, conformément à l'absence de persistance
+// du projet).
+
+(function () {
+    var contentEl = document.getElementById('devis-doc-content');
+    var notFoundEl = document.getElementById('devis-doc-not-found');
+    if (!contentEl) {
+        return;
+    }
+
+    var calc = window.COCKPIT_DEVIS_CALC;
+    var DEVIS_DETAILS = window.COCKPIT_DEVIS_DETAILS || {};
+    var DEVIS_STATUSES = window.COCKPIT_DEVIS_STATUSES || [];
+
+    var backLink = document.getElementById('devis-doc-back-link');
+    var printBtn = document.getElementById('devis-doc-print-btn');
+    var bannerEl = document.getElementById('devis-doc-banner');
+    var numeroEl = document.getElementById('devis-doc-numero');
+    var versionTagEl = document.getElementById('devis-doc-version-tag');
+    var statusBadgeEl = document.getElementById('devis-doc-status-badge');
+    var metaEl = document.getElementById('devis-doc-meta');
+    var companyEl = document.getElementById('devis-doc-company');
+    var clientEl = document.getElementById('devis-doc-client');
+    var linesBodyEl = document.getElementById('devis-doc-lines-body');
+    var summaryEl = document.getElementById('devis-doc-summary');
+    var paymentTermsEl = document.getElementById('devis-doc-payment-terms');
+    var legalEl = document.getElementById('devis-doc-legal');
+    var companySignatureEl = document.getElementById('devis-doc-company-signature');
+
+    function makeEl(tag, className, text) {
+        var node = document.createElement(tag);
+        if (className) {
+            node.className = className;
+        }
+        if (text !== undefined) {
+            node.textContent = text;
+        }
+        return node;
+    }
+
+    function findStatusInfo(value) {
+        return DEVIS_STATUSES.filter(function (status) {
+            return status.value === value;
+        })[0] || null;
+    }
+
+    function addBanner(html) {
+        var banner = document.createElement('div');
+        banner.className = 'construction-banner';
+        var icon = document.createElement('span');
+        icon.className = 'construction-banner-icon';
+        icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>';
+        var p = document.createElement('p');
+        p.innerHTML = html;
+        banner.appendChild(icon);
+        banner.appendChild(p);
+        bannerEl.appendChild(banner);
+    }
+
+    var params = new URLSearchParams(window.location.search);
+    var devisParam = params.get('devis');
+    var versionParam = params.get('version');
+
+    var devis = devisParam ? DEVIS_DETAILS[devisParam] : null;
+    var versionNumber = versionParam ? parseInt(versionParam, 10) : (devis ? devis.versionActive : null);
+    var versionData = devis ? devis.versions.filter(function (v) {
+        return v.version === versionNumber;
+    })[0] : null;
+
+    if (!devis || !versionData) {
+        notFoundEl.style.display = '';
+        contentEl.style.display = 'none';
+        return;
+    }
+
+    notFoundEl.style.display = 'none';
+    contentEl.style.display = '';
+
+    backLink.href = 'devis-edition.html?devis=' + encodeURIComponent(devis.numero) + '&version=' + versionData.version;
+    printBtn.addEventListener('click', function () {
+        window.print();
+    });
+
+    if (versionData.statut === 'brouillon') {
+        addBanner('<strong>Brouillon.</strong> Ce document est un brouillon, non contractuel.');
+    }
+    if (versionData.version !== devis.versionActive) {
+        addBanner('<strong>Version historique.</strong> Cette version n\'est plus la version active du devis.');
+    }
+
+    numeroEl.textContent = devis.numero;
+    versionTagEl.textContent = 'v' + versionData.version;
+    var statusInfo = findStatusInfo(versionData.statut);
+    statusBadgeEl.textContent = statusInfo ? statusInfo.label : versionData.statut;
+    statusBadgeEl.className = 'badge ' + (statusInfo ? statusInfo.badgeClass : 'badge-neutral');
+    metaEl.textContent = 'Créé le ' + versionData.dateCreation +
+        (versionData.dateModification && versionData.dateModification !== versionData.dateCreation ? ' · Modifié le ' + versionData.dateModification : '');
+
+    var c = versionData.companySnapshot || {};
+    companyEl.appendChild(makeEl('p', 'document-party-name', c.nom || '—'));
+    [c.adresse, c.telephone, c.email, c.siret ? ('SIRET ' + c.siret) : null, c.tva ? ('TVA ' + c.tva) : null].forEach(function (line) {
+        if (line) {
+            companyEl.appendChild(makeEl('p', null, line));
+        }
+    });
+    companySignatureEl.appendChild(makeEl('p', null, c.nom || ''));
+
+    var cl = versionData.clientSnapshot;
+    if (!cl) {
+        clientEl.appendChild(makeEl('p', 'empty-state-inline', 'Aucun client renseigné.'));
+    } else {
+        clientEl.appendChild(makeEl('p', 'document-party-name', cl.nom || '—'));
+        [(cl.entreprise && cl.entreprise !== '—') ? cl.entreprise : null, cl.adresse, cl.telephone, cl.email].forEach(function (line) {
+            if (line) {
+                clientEl.appendChild(makeEl('p', null, line));
+            }
+        });
+    }
+
+    versionData.lignes.forEach(function (line) {
+        var row = document.createElement('tr');
+        [line.designation, line.description, line.quantite, calc.formatMoney(line.prixUnitaireHT), line.tauxTVA + ' %', line.remisePourcent + ' %'].forEach(function (value) {
+            row.appendChild(makeEl('td', null, String(value)));
+        });
+        row.appendChild(makeEl('td', 'line-total-cell', calc.formatMoney(calc.computeLine(line).totalTTC)));
+        linesBodyEl.appendChild(row);
+    });
+
+    function makeSummaryRow(label, value) {
+        var row = document.createElement('div');
+        row.className = 'devis-summary-row';
+        row.appendChild(makeEl('span', null, label));
+        row.appendChild(makeEl('span', null, value));
+        return row;
+    }
+
+    var totals = calc.computeDevisTotals(versionData.lignes);
+    summaryEl.appendChild(makeSummaryRow('Total HT avant remise', calc.formatMoney(totals.totalBrutHT)));
+    summaryEl.appendChild(makeSummaryRow('Remises', (totals.totalRemises > 0 ? '- ' : '') + calc.formatMoney(totals.totalRemises)));
+    summaryEl.appendChild(makeSummaryRow('Total HT net', calc.formatMoney(totals.totalHT)));
+    Object.keys(totals.tvaParTaux).sort(function (a, b) {
+        return parseFloat(a) - parseFloat(b);
+    }).forEach(function (rate) {
+        summaryEl.appendChild(makeSummaryRow('TVA ' + rate + ' %', calc.formatMoney(totals.tvaParTaux[rate])));
+    });
+    summaryEl.appendChild(makeSummaryRow('Total TVA', calc.formatMoney(totals.totalTVA)));
+    var ttcRow = makeSummaryRow('Total TTC', calc.formatMoney(totals.totalTTC));
+    ttcRow.classList.add('devis-summary-row-total');
+    summaryEl.appendChild(ttcRow);
+
+    var terms = versionData.conditionsPaiement || {};
+    var termLines = [
+        terms.delai ? ('Délai de paiement : ' + terms.delai) : null,
+        terms.acompte ? ('Acompte : ' + terms.acompte) : null,
+        terms.fractionne ? ('Paiement fractionné : ' + terms.fractionne) : null,
+        terms.note ? ('Note : ' + terms.note) : null
+    ].filter(function (line) { return !!line; });
+    if (termLines.length === 0) {
+        paymentTermsEl.appendChild(makeEl('p', 'empty-state-inline', 'Aucune condition de paiement renseignée.'));
+    } else {
+        termLines.forEach(function (line) {
+            paymentTermsEl.appendChild(makeEl('p', null, line));
+        });
+    }
+
+    var companySettings = window.COCKPIT_COMPANY_SETTINGS || {};
+    legalEl.textContent = companySettings.mentionsLegales || '';
+})();
+
+// Page Document facture (V0.6.3) : rendu imprimable en lecture seule d'une
+// facture existante (?facture=KEY). Même principe que le document devis :
+// aucun recalcul indépendant, réutilise COCKPIT_FACTURE_DETAILS/
+// COCKPIT_FACTURE_CALC/COCKPIT_DEVIS_CALC, disponible uniquement pour une
+// facture déjà présente dans les données (y compris le brouillon fictif),
+// jamais pour une facture en cours de frappe non enregistrée.
+
+(function () {
+    var contentEl = document.getElementById('facture-doc-content');
+    var notFoundEl = document.getElementById('facture-doc-not-found');
+    if (!contentEl) {
+        return;
+    }
+
+    var devisCalc = window.COCKPIT_DEVIS_CALC;
+    var factureCalc = window.COCKPIT_FACTURE_CALC;
+    var FACTURE_DETAILS = window.COCKPIT_FACTURE_DETAILS || {};
+    var FACTURE_STATUSES = window.COCKPIT_FACTURE_STATUSES || [];
+
+    var backLink = document.getElementById('facture-doc-back-link');
+    var printBtn = document.getElementById('facture-doc-print-btn');
+    var bannerEl = document.getElementById('facture-doc-banner');
+    var numeroEl = document.getElementById('facture-doc-numero');
+    var statusBadgeEl = document.getElementById('facture-doc-status-badge');
+    var metaEl = document.getElementById('facture-doc-meta');
+    var devisRefEl = document.getElementById('facture-doc-devis-ref');
+    var companyEl = document.getElementById('facture-doc-company');
+    var clientEl = document.getElementById('facture-doc-client');
+    var linesBodyEl = document.getElementById('facture-doc-lines-body');
+    var summaryEl = document.getElementById('facture-doc-summary');
+    var paymentTermsEl = document.getElementById('facture-doc-payment-terms');
+    var paymentsSectionEl = document.getElementById('facture-doc-payments-section');
+    var paymentsBodyEl = document.getElementById('facture-doc-payments-body');
+    var paymentsEmptyEl = document.getElementById('facture-doc-payments-empty');
+    var paymentsSummaryEl = document.getElementById('facture-doc-payments-summary');
+    var legalEl = document.getElementById('facture-doc-legal');
+
+    function makeEl(tag, className, text) {
+        var node = document.createElement(tag);
+        if (className) {
+            node.className = className;
+        }
+        if (text !== undefined) {
+            node.textContent = text;
+        }
+        return node;
+    }
+
+    function findStatusInfo(value) {
+        return FACTURE_STATUSES.filter(function (status) {
+            return status.value === value;
+        })[0] || null;
+    }
+
+    function addBanner(html) {
+        var banner = document.createElement('div');
+        banner.className = 'construction-banner';
+        var icon = document.createElement('span');
+        icon.className = 'construction-banner-icon';
+        icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>';
+        var p = document.createElement('p');
+        p.innerHTML = html;
+        banner.appendChild(icon);
+        banner.appendChild(p);
+        bannerEl.appendChild(banner);
+    }
+
+    function makeSummaryRow(label, value) {
+        var row = document.createElement('div');
+        row.className = 'devis-summary-row';
+        row.appendChild(makeEl('span', null, label));
+        row.appendChild(makeEl('span', null, value));
+        return row;
+    }
+
+    var params = new URLSearchParams(window.location.search);
+    var factureParam = params.get('facture');
+    var facture = factureParam ? FACTURE_DETAILS[factureParam] : null;
+
+    if (!facture) {
+        notFoundEl.style.display = '';
+        contentEl.style.display = 'none';
+        return;
+    }
+
+    notFoundEl.style.display = 'none';
+    contentEl.style.display = '';
+
+    backLink.href = 'facture-edition.html?facture=' + encodeURIComponent(factureParam);
+    printBtn.addEventListener('click', function () {
+        window.print();
+    });
+
+    if (facture.statutEmission === 'brouillon') {
+        addBanner('<strong>Brouillon.</strong> Ce document est un aperçu de brouillon, non une facture officielle.');
+    }
+    if (facture.statutEmission === 'annulee') {
+        addBanner('<strong>Facture annulée.</strong> Ce document n\'a plus de valeur commerciale.');
+    }
+
+    numeroEl.textContent = facture.numero || 'Brouillon sans numéro';
+
+    var totals = devisCalc.computeDevisTotals(facture.lignes);
+    var statutAffiche = factureCalc.computeStatutAffiche({
+        statutEmission: facture.statutEmission,
+        totalTTC: totals.totalTTC,
+        paiements: facture.paiements,
+        dateEcheance: facture.dateEcheance
+    });
+    var statusInfo = findStatusInfo(statutAffiche);
+    statusBadgeEl.textContent = statusInfo ? statusInfo.label : statutAffiche;
+    statusBadgeEl.className = 'badge ' + (statusInfo ? statusInfo.badgeClass : 'badge-neutral');
+
+    if (facture.statutEmission === 'brouillon') {
+        metaEl.textContent = 'Créé le ' + facture.dateCreation + ' — non encore émise.';
+    } else {
+        metaEl.textContent = 'Émise le ' + facture.dateEmission + ' · Échéance le ' + facture.dateEcheance;
+    }
+
+    if (facture.devisRef) {
+        devisRefEl.style.display = '';
+        var link = document.createElement('a');
+        link.href = 'devis-document.html?devis=' + encodeURIComponent(facture.devisRef.numero) + '&version=' + facture.devisRef.version;
+        link.textContent = 'Devis source : ' + facture.devisRef.numero + ' (v' + facture.devisRef.version + ')';
+        devisRefEl.appendChild(link);
+    }
+
+    var c = facture.companySnapshot || {};
+    companyEl.appendChild(makeEl('p', 'document-party-name', c.nom || '—'));
+    [c.adresse, c.telephone, c.email, c.siret ? ('SIRET ' + c.siret) : null, c.tva ? ('TVA ' + c.tva) : null].forEach(function (line) {
+        if (line) {
+            companyEl.appendChild(makeEl('p', null, line));
+        }
+    });
+
+    var cl = facture.clientSnapshot;
+    if (!cl) {
+        clientEl.appendChild(makeEl('p', 'empty-state-inline', 'Aucun client renseigné.'));
+    } else {
+        clientEl.appendChild(makeEl('p', 'document-party-name', cl.nom || '—'));
+        [(cl.entreprise && cl.entreprise !== '—') ? cl.entreprise : null, cl.adresse, cl.telephone, cl.email].forEach(function (line) {
+            if (line) {
+                clientEl.appendChild(makeEl('p', null, line));
+            }
+        });
+    }
+
+    facture.lignes.forEach(function (line) {
+        var row = document.createElement('tr');
+        [line.designation, line.description, line.quantite, devisCalc.formatMoney(line.prixUnitaireHT), line.tauxTVA + ' %', line.remisePourcent + ' %'].forEach(function (value) {
+            row.appendChild(makeEl('td', null, String(value)));
+        });
+        row.appendChild(makeEl('td', 'line-total-cell', devisCalc.formatMoney(devisCalc.computeLine(line).totalTTC)));
+        linesBodyEl.appendChild(row);
+    });
+
+    summaryEl.appendChild(makeSummaryRow('Total HT avant remise', devisCalc.formatMoney(totals.totalBrutHT)));
+    summaryEl.appendChild(makeSummaryRow('Remises', (totals.totalRemises > 0 ? '- ' : '') + devisCalc.formatMoney(totals.totalRemises)));
+    summaryEl.appendChild(makeSummaryRow('Total HT net', devisCalc.formatMoney(totals.totalHT)));
+    Object.keys(totals.tvaParTaux).sort(function (a, b) {
+        return parseFloat(a) - parseFloat(b);
+    }).forEach(function (rate) {
+        summaryEl.appendChild(makeSummaryRow('TVA ' + rate + ' %', devisCalc.formatMoney(totals.tvaParTaux[rate])));
+    });
+    summaryEl.appendChild(makeSummaryRow('Total TVA', devisCalc.formatMoney(totals.totalTVA)));
+    var ttcRow = makeSummaryRow('Total TTC', devisCalc.formatMoney(totals.totalTTC));
+    ttcRow.classList.add('devis-summary-row-total');
+    summaryEl.appendChild(ttcRow);
+
+    var terms = facture.conditionsPaiement || {};
+    var termLines = [
+        terms.delai ? ('Délai de paiement : ' + terms.delai) : null,
+        terms.acompte ? ('Acompte : ' + terms.acompte) : null,
+        terms.fractionne ? ('Paiement fractionné : ' + terms.fractionne) : null,
+        terms.note ? ('Note : ' + terms.note) : null
+    ].filter(function (line) { return !!line; });
+    if (termLines.length === 0) {
+        paymentTermsEl.appendChild(makeEl('p', 'empty-state-inline', 'Aucune condition de paiement renseignée.'));
+    } else {
+        termLines.forEach(function (line) {
+            paymentTermsEl.appendChild(makeEl('p', null, line));
+        });
+    }
+
+    if (facture.statutEmission !== 'brouillon') {
+        paymentsSectionEl.style.display = '';
+        paymentsEmptyEl.style.display = (facture.paiements || []).length === 0 ? '' : 'none';
+
+        (facture.paiements || []).forEach(function (paiement) {
+            var row = document.createElement('tr');
+            row.appendChild(makeEl('td', null, paiement.date));
+            row.appendChild(makeEl('td', null, devisCalc.formatMoney(paiement.montant)));
+            row.appendChild(makeEl('td', null, paiement.mode));
+            row.appendChild(makeEl('td', null, paiement.reference || '—'));
+            row.appendChild(makeEl('td', null, paiement.note || '—'));
+            paymentsBodyEl.appendChild(row);
+        });
+
+        if (facture.statutEmission === 'emise') {
+            var paiementsInfo = factureCalc.computePaiements(facture.paiements, totals.totalTTC);
+            paymentsSummaryEl.appendChild(makeSummaryRow('Total payé', devisCalc.formatMoney(paiementsInfo.totalPaye)));
+            var resteRow = makeSummaryRow('Reste à payer', devisCalc.formatMoney(paiementsInfo.resteAPayer));
+            resteRow.classList.add('devis-summary-row-total');
+            paymentsSummaryEl.appendChild(resteRow);
+            paymentsSummaryEl.appendChild(makeSummaryRow('Pourcentage payé', paiementsInfo.pourcentagePaye + ' %'));
+        }
+    }
+
+    var companySettings = window.COCKPIT_COMPANY_SETTINGS || {};
+    legalEl.textContent = companySettings.mentionsLegales || '';
 })();
