@@ -48,7 +48,7 @@
             <header class="topbar">
                 <div class="topbar-greeting">
                     <h1>Trésorerie</h1>
-                    <p class="page-subtitle">Suivez la santé financière de votre trésorerie.</p>
+                    <p class="page-subtitle">Suivez votre trésorerie, anticipez vos mouvements et sécurisez votre activité.</p>
                 </div>
                 <div class="topbar-actions">
                     <div class="topbar-search">
@@ -66,44 +66,118 @@
             </header>
 
             <main class="page-content">
+                <div class="page-toolbar tresorerie-toolbar">
+                    <select id="tresorerie-period-select" class="table-select" aria-label="Choisir la période">
+                        <option value="30">30 prochains jours</option>
+                        <option value="60">60 prochains jours</option>
+                        <option value="90">90 prochains jours</option>
+                    </select>
+                    <div class="page-header-actions">
+                        <button type="button" class="btn-secondary btn-wip">Exporter</button>
+                        <button type="button" class="btn-primary" id="tresorerie-add-operation-btn">Ajouter une opération</button>
+                    </div>
+                </div>
+
                 <section class="dashboard-kpis">
                     <div class="dashboard-card kpi-card">
                         <div class="kpi-icon kpi-icon-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4z"></path></svg></div>
                         <div class="kpi-card-body">
-                            <h2>Solde disponible</h2>
-                            <p class="kpi-value">3 250 €</p>
-                            <p class="kpi-variation status-neutral">stable</p>
+                            <h2>Solde estimé</h2>
+                            <p class="kpi-value" id="tresorerie-kpi-solde">—</p>
+                            <p class="kpi-variation status-neutral" id="tresorerie-kpi-solde-variation"></p>
                         </div>
                     </div>
                     <div class="dashboard-card kpi-card">
-                        <div class="kpi-icon kpi-icon-2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="16"></line></svg></div>
+                        <div class="kpi-icon kpi-icon-3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="19 12 12 19 5 12"></polyline><line x1="12" y1="19" x2="12" y2="5"></line></svg></div>
                         <div class="kpi-card-body">
-                            <h2>Dépenses du mois</h2>
-                            <p class="kpi-value">2 180 €</p>
-                            <p class="kpi-variation status-negative">↗ +4,1 % vs mois précédent</p>
+                            <h2>À encaisser</h2>
+                            <p class="kpi-value" id="tresorerie-kpi-encaisser">—</p>
+                            <p class="kpi-variation status-neutral" id="tresorerie-kpi-encaisser-detail"></p>
                         </div>
                     </div>
                     <div class="dashboard-card kpi-card">
-                        <div class="kpi-icon kpi-icon-3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg></div>
+                        <div class="kpi-icon kpi-icon-2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="5 12 12 19 19 12"></polyline></svg></div>
                         <div class="kpi-card-body">
-                            <h2>Recettes du mois</h2>
-                            <p class="kpi-value">8 750 €</p>
-                            <p class="kpi-variation status-positive">↗ +12 % vs mois précédent</p>
+                            <h2>À décaisser</h2>
+                            <p class="kpi-value" id="tresorerie-kpi-decaisser">—</p>
+                            <p class="kpi-variation status-neutral" id="tresorerie-kpi-decaisser-detail"></p>
                         </div>
                     </div>
                     <div class="dashboard-card kpi-card">
-                        <div class="kpi-icon kpi-icon-4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></svg></div>
+                        <div class="kpi-icon kpi-icon-4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg></div>
                         <div class="kpi-card-body">
-                            <h2>Échéances à venir</h2>
-                            <p class="kpi-value">2</p>
-                            <p class="kpi-variation status-neutral">cette semaine</p>
+                            <h2>Solde prévisionnel</h2>
+                            <p class="kpi-value" id="tresorerie-kpi-previsionnel">—</p>
+                            <p class="kpi-variation status-neutral" id="tresorerie-kpi-previsionnel-detail"></p>
                         </div>
                     </div>
                 </section>
 
-                <div class="construction-banner">
-                    <span class="construction-banner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg></span>
-                    <p><strong>Module en construction.</strong> Cette page présente la future organisation de la Trésorerie. Les données affichées sont fictives ; le suivi réel des flux et des échéances sera développé dans une prochaine version.</p>
+                <section class="dashboard-row">
+                    <div class="dashboard-block">
+                        <div class="dashboard-block-header">
+                            <h2>Prochains mouvements</h2>
+                        </div>
+                        <ul class="tresorerie-timeline" id="tresorerie-mouvements-list"></ul>
+                        <p class="empty-state-inline" id="tresorerie-mouvements-empty" style="display: none;">Aucun mouvement prévu sur la période.</p>
+                    </div>
+
+                    <div class="dashboard-block">
+                        <div class="dashboard-block-header">
+                            <h2>Charges prévues</h2>
+                        </div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Catégorie</th>
+                                    <th>Libellé</th>
+                                    <th>Échéance</th>
+                                    <th>Montant</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tresorerie-charges-body"></tbody>
+                        </table>
+                        <p class="empty-state-inline" id="tresorerie-charges-empty" style="display: none;">Aucune charge prévue.</p>
+                    </div>
+                </section>
+
+                <section class="dashboard-row">
+                    <div class="dashboard-block">
+                        <div class="dashboard-block-header">
+                            <h2>Factures à encaisser</h2>
+                            <a href="facturation.html" class="dashboard-block-link">Voir toutes les factures</a>
+                        </div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Facture</th>
+                                    <th>Client</th>
+                                    <th>Échéance</th>
+                                    <th>Reste à encaisser</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tresorerie-factures-body"></tbody>
+                        </table>
+                        <p class="empty-state-inline" id="tresorerie-factures-empty" style="display: none;">Aucune facture à encaisser.</p>
+                    </div>
+
+                    <div class="dashboard-block">
+                        <div class="dashboard-block-header">
+                            <h2>Alertes &amp; points d'attention</h2>
+                        </div>
+                        <ul class="alert-list" id="tresorerie-alertes-list"></ul>
+                        <p class="empty-state-inline" id="tresorerie-alertes-empty" style="display: none;">Aucune alerte pour l'instant.</p>
+                    </div>
+                </section>
+
+                <div class="dashboard-block">
+                    <div class="dashboard-block-header">
+                        <h2>Évolution du solde prévisionnel</h2>
+                        <span class="dashboard-block-link" id="tresorerie-chart-range"></span>
+                    </div>
+                    <div id="tresorerie-chart-container"></div>
                 </div>
             </main>
         </div>

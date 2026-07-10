@@ -2731,6 +2731,119 @@ svg {
     border-style: dashed;
 }
 
+/* Trésorerie (V0.8) */
+
+.tresorerie-toolbar {
+    justify-content: space-between;
+}
+
+.tresorerie-timeline {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    max-height: 440px;
+    overflow-y: auto;
+}
+
+.tresorerie-timeline-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 4px;
+    border-bottom: 1px solid var(--color-border);
+    text-decoration: none;
+    color: inherit;
+}
+
+.tresorerie-timeline-item:last-child {
+    border-bottom: none;
+}
+
+a.tresorerie-timeline-item:hover {
+    background-color: var(--color-neutral-bg);
+}
+
+.tresorerie-timeline-date {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    flex-shrink: 0;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+}
+
+.tresorerie-timeline-date strong {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.tresorerie-flow-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.tresorerie-flow-icon svg {
+    width: 16px;
+    height: 16px;
+}
+
+.tresorerie-flow-icon-in {
+    background-color: var(--color-success-bg);
+    color: var(--color-success);
+}
+
+.tresorerie-flow-icon-out {
+    background-color: var(--color-danger-bg);
+    color: var(--color-danger);
+}
+
+.tresorerie-timeline-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.tresorerie-timeline-title {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.tresorerie-timeline-sub {
+    margin: 2px 0 0;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+}
+
+.tresorerie-timeline-amount {
+    font-size: 14px;
+    font-weight: 700;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.tresorerie-amount-in {
+    color: var(--color-success);
+}
+
+.tresorerie-amount-out {
+    color: var(--color-danger);
+}
+
+.tresorerie-timeline-status {
+    flex-shrink: 0;
+}
+
 /* Responsive : tablette et mobile */
 
 @media (max-width: 1100px) {

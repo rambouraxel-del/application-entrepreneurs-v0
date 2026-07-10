@@ -1803,6 +1803,382 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 })();
 
+// Données Trésorerie (V0.8). Outil simple de pilotage du cash, pas une
+// comptabilité complète : réutilise directement FACTURE_DETAILS/DEVIS_CALC/
+// FACTURE_CALC/FACTURATION_STATS pour tout ce qui vient de la facturation
+// (encaissements attendus, factures en retard, paiements déjà reçus), et
+// n'ajoute que le spécifique trésorerie : opérations manuelles (charges
+// prévues, encaissements/décaissements hors facturation), solde estimé/
+// prévisionnel, alertes. TRESORERIE_OPERATIONS est une source statique en
+// mémoire, comme le reste de l'application : aucune persistance réelle,
+// "Ajouter une opération" modifie l'objet en mémoire de la page courante.
+// SOLDE_INITIAL représente une trésorerie de départ fictive (hors montants
+// déjà suivis par la Facturation), nécessaire pour obtenir un solde estimé
+// cohérent sans reconstruire un historique bancaire complet (hors périmètre
+// V0.8, cf. "rapprochement bancaire" explicitement exclu).
+
+(function () {
+    var devisCalc = window.COCKPIT_DEVIS_CALC;
+    var factureCalc = window.COCKPIT_FACTURE_CALC;
+
+    var TRESORERIE_CATEGORIES = [
+        { value: 'loyer', label: 'Loyer' },
+        { value: 'fournisseur', label: 'Fournisseur' },
+        { value: 'abonnement', label: 'Abonnement' },
+        { value: 'salaires', label: 'Salaires' },
+        { value: 'impots', label: 'Impôts / taxes' },
+        { value: 'remboursement', label: 'Remboursement' },
+        { value: 'autre', label: 'Autre' }
+    ];
+
+    var TRESORERIE_STATUSES = [
+        { value: 'prevu', label: 'Prévu', badgeClass: 'badge-info' },
+        { value: 'realise', label: 'Réalisé', badgeClass: 'badge-success' },
+        { value: 'en-retard', label: 'En retard', badgeClass: 'badge-danger' },
+        { value: 'annule', label: 'Annulé', badgeClass: 'badge-neutral' }
+    ];
+
+    var SOLDE_INITIAL = 5250;
+
+    var TRESORERIE_OPERATIONS = {
+        'OP-0001': { id: 'OP-0001', type: 'decaissement', libelle: 'Loyer — Bureaux', categorie: 'loyer', montant: 1850, date: '10/07/2026', statut: 'prevu', notes: 'Bail mensuel juillet', recurrence: 'mensuelle' },
+        'OP-0002': { id: 'OP-0002', type: 'decaissement', libelle: 'Fournisseur — Matériel Pro', categorie: 'fournisseur', montant: 3120, date: '15/07/2026', statut: 'prevu', notes: 'Facture FR-45231', recurrence: 'aucune' },
+        'OP-0003': { id: 'OP-0003', type: 'decaissement', libelle: 'Salaires — Équipe', categorie: 'salaires', montant: 6750, date: '20/07/2026', statut: 'prevu', notes: 'Paie mensuelle', recurrence: 'mensuelle' },
+        'OP-0004': { id: 'OP-0004', type: 'decaissement', libelle: 'Abonnement — Logiciel', categorie: 'abonnement', montant: 79, date: '22/07/2026', statut: 'prevu', notes: 'Outil de gestion', recurrence: 'mensuelle' },
+        'OP-0005': { id: 'OP-0005', type: 'decaissement', libelle: 'Impôts — TVA', categorie: 'impots', montant: 2340, date: '31/07/2026', statut: 'prevu', notes: 'Déclaration TVA trimestrielle', recurrence: 'trimestrielle' },
+        'OP-0006': { id: 'OP-0006', type: 'decaissement', libelle: 'Loyer — Bureaux', categorie: 'loyer', montant: 1850, date: '10/06/2026', statut: 'realise', notes: 'Bail mensuel juin', recurrence: 'mensuelle' }
+    };
+
+    function labelForCategorie(value) {
+        var found = TRESORERIE_CATEGORIES.filter(function (c) { return c.value === value; })[0];
+        return found ? found.label : 'Autre';
+    }
+
+    function labelForStatut(value) {
+        var found = TRESORERIE_STATUSES.filter(function (s) { return s.value === value; })[0];
+        return found || null;
+    }
+
+    function computeNextOperationId() {
+        var maxSeq = 0;
+        Object.keys(TRESORERIE_OPERATIONS).forEach(function (key) {
+            var match = key.match(/^OP-(\d{4,})$/);
+            if (match) {
+                var seq = parseInt(match[1], 10);
+                if (seq > maxSeq) {
+                    maxSeq = seq;
+                }
+            }
+        });
+        var nextSeq = maxSeq + 1;
+        var padded = String(nextSeq);
+        while (padded.length < 4) {
+            padded = '0' + padded;
+        }
+        return 'OP-' + padded;
+    }
+
+    function parseDate(value) {
+        return factureCalc.parseDate(value);
+    }
+
+    function addDaysLocal(date, n) {
+        var d = new Date(date);
+        d.setDate(d.getDate() + n);
+        return d;
+    }
+
+    function computePaiementsRecus() {
+        var FACTURE_DETAILS = window.COCKPIT_FACTURE_DETAILS || {};
+        var total = 0;
+        Object.keys(FACTURE_DETAILS).forEach(function (key) {
+            (FACTURE_DETAILS[key].paiements || []).forEach(function (p) {
+                total = devisCalc.roundMoney(total + (parseFloat(p.montant) || 0));
+            });
+        });
+        return total;
+    }
+
+    function computeOperationsRealisees(type) {
+        var total = 0;
+        Object.keys(TRESORERIE_OPERATIONS).forEach(function (key) {
+            var op = TRESORERIE_OPERATIONS[key];
+            if (op.type === type && op.statut === 'realise') {
+                total = devisCalc.roundMoney(total + (parseFloat(op.montant) || 0));
+            }
+        });
+        return total;
+    }
+
+    function computeSoldeEstime() {
+        return devisCalc.roundMoney(SOLDE_INITIAL + computePaiementsRecus() - computeOperationsRealisees('decaissement') + computeOperationsRealisees('encaissement'));
+    }
+
+    function getFacturesAEncaisser() {
+        var FACTURE_DETAILS = window.COCKPIT_FACTURE_DETAILS || {};
+        var CLIENT_DETAILS = window.COCKPIT_CLIENT_DETAILS || {};
+        var result = [];
+        Object.keys(FACTURE_DETAILS).forEach(function (key) {
+            var facture = FACTURE_DETAILS[key];
+            if (facture.statutEmission !== 'emise') {
+                return;
+            }
+            var totals = devisCalc.computeDevisTotals(facture.lignes);
+            var paiementsInfo = factureCalc.computePaiements(facture.paiements, totals.totalTTC);
+            if (paiementsInfo.resteAPayer <= 0) {
+                return;
+            }
+            var statutAffiche = factureCalc.computeStatutAffiche({
+                statutEmission: facture.statutEmission,
+                totalTTC: totals.totalTTC,
+                paiements: facture.paiements,
+                dateEcheance: facture.dateEcheance
+            });
+            var statutTresorerie = statutAffiche === 'en-retard' ? 'en-retard' : (paiementsInfo.totalPaye > 0 ? 'partiellement-payee' : 'a-venir');
+            result.push({
+                key: key,
+                numero: facture.numero || key,
+                clientSlug: facture.clientSlug,
+                clientNom: (CLIENT_DETAILS[facture.clientSlug] || facture.clientSnapshot || {}).nom || facture.clientSlug || '—',
+                dateEcheance: facture.dateEcheance,
+                resteAPayer: paiementsInfo.resteAPayer,
+                statut: statutTresorerie
+            });
+        });
+        result.sort(function (a, b) {
+            return (parseDate(a.dateEcheance) || 0) - (parseDate(b.dateEcheance) || 0);
+        });
+        return result;
+    }
+
+    function getChargesPrevues() {
+        return Object.keys(TRESORERIE_OPERATIONS).map(function (key) {
+            return TRESORERIE_OPERATIONS[key];
+        }).filter(function (op) {
+            return op.type === 'decaissement' && op.statut !== 'annule';
+        }).sort(function (a, b) {
+            return (parseDate(a.date) || 0) - (parseDate(b.date) || 0);
+        });
+    }
+
+    function getMouvements(periodEnd) {
+        var mouvements = [];
+
+        getFacturesAEncaisser().forEach(function (f) {
+            mouvements.push({
+                date: f.dateEcheance,
+                libelle: 'Règlement facture ' + f.numero,
+                categorie: 'Client : ' + f.clientNom,
+                montant: f.resteAPayer,
+                type: 'encaissement',
+                statut: f.statut === 'en-retard' ? 'en-retard' : 'prevu',
+                lien: { type: 'facture', key: f.key }
+            });
+        });
+
+        Object.keys(TRESORERIE_OPERATIONS).forEach(function (key) {
+            var op = TRESORERIE_OPERATIONS[key];
+            if (op.statut === 'annule') {
+                return;
+            }
+            mouvements.push({
+                date: op.date,
+                libelle: op.libelle,
+                categorie: labelForCategorie(op.categorie),
+                montant: op.montant,
+                type: op.type,
+                statut: op.statut,
+                lien: null
+            });
+        });
+
+        mouvements.sort(function (a, b) {
+            return (parseDate(a.date) || 0) - (parseDate(b.date) || 0);
+        });
+
+        if (periodEnd) {
+            var today = new Date();
+            today.setHours(0, 0, 0, 0);
+            mouvements = mouvements.filter(function (m) {
+                var d = parseDate(m.date);
+                return d && d >= today && d <= periodEnd;
+            });
+        }
+
+        return mouvements;
+    }
+
+    function computeAlertes(ctx) {
+        var alertes = [];
+
+        if (ctx.facturationStats.facturesEnRetard > 0) {
+            var montantRetard = ctx.facturesAEncaisser.filter(function (f) {
+                return f.statut === 'en-retard';
+            }).reduce(function (sum, f) {
+                return devisCalc.roundMoney(sum + f.resteAPayer);
+            }, 0);
+            alertes.push({
+                niveau: 'critical',
+                titre: ctx.facturationStats.facturesEnRetard + ' facture(s) en retard',
+                sousTexte: 'Montant total : ' + devisCalc.formatMoney(montantRetard),
+                lien: 'facturation.html'
+            });
+        }
+
+        var dansUneSemaine = addDaysLocal(ctx.today, 7);
+        var chargeSemaine = ctx.chargesAVenir.filter(function (op) {
+            var d = parseDate(op.date);
+            return d && d <= dansUneSemaine;
+        }).sort(function (a, b) {
+            return (parseDate(a.date) || 0) - (parseDate(b.date) || 0);
+        })[0];
+        if (chargeSemaine) {
+            alertes.push({
+                niveau: 'warning',
+                titre: chargeSemaine.libelle + ' à payer cette semaine',
+                sousTexte: 'Échéance le ' + chargeSemaine.date + ' — ' + devisCalc.formatMoney(chargeSemaine.montant),
+                lien: 'tresorerie.html'
+            });
+        }
+
+        if (ctx.soldePrevisionnel < ctx.soldeEstime * 0.3 || ctx.soldePrevisionnel < 1000) {
+            alertes.push({
+                niveau: 'warning',
+                titre: 'Risque de tension de trésorerie',
+                sousTexte: 'Solde prévisionnel bas sur la période sélectionnée',
+                lien: 'tresorerie.html'
+            });
+        }
+
+        var grosseFacture = ctx.facturesAEncaisser.filter(function (f) {
+            return f.resteAPayer >= 2000;
+        }).sort(function (a, b) {
+            return b.resteAPayer - a.resteAPayer;
+        })[0];
+        if (grosseFacture) {
+            alertes.push({
+                niveau: 'info',
+                titre: 'Encaissement important attendu',
+                sousTexte: grosseFacture.numero + ' — ' + devisCalc.formatMoney(grosseFacture.resteAPayer),
+                lien: 'facturation.html'
+            });
+        }
+
+        return alertes;
+    }
+
+    function computeSerie(soldeDepart, mouvements, today, periodEnd) {
+        var points = [{ date: new Date(today), solde: soldeDepart }];
+        var running = soldeDepart;
+        var cursor = new Date(today);
+
+        while (cursor < periodEnd) {
+            var previous = new Date(cursor);
+            cursor = addDaysLocal(cursor, 7);
+            if (cursor > periodEnd) {
+                cursor = new Date(periodEnd);
+            }
+            mouvements.forEach(function (m) {
+                var d = parseDate(m.date);
+                if (!d || d <= previous || d > cursor) {
+                    return;
+                }
+                running = devisCalc.roundMoney(running + (m.type === 'encaissement' ? m.montant : -m.montant));
+            });
+            points.push({ date: new Date(cursor), solde: running });
+            if (cursor.getTime() === periodEnd.getTime()) {
+                break;
+            }
+        }
+
+        return points;
+    }
+
+    function computeSnapshot(periodDays) {
+        periodDays = periodDays || 30;
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+        var periodEnd = addDaysLocal(today, periodDays);
+
+        var facturationStats = (window.COCKPIT_FACTURATION_STATS || {}).computeStats
+            ? window.COCKPIT_FACTURATION_STATS.computeStats()
+            : { resteAEncaisser: 0, facturesEnRetard: 0 };
+
+        var soldeEstime = computeSoldeEstime();
+        var aEncaisser = facturationStats.resteAEncaisser;
+
+        var chargesPrevues = getChargesPrevues();
+        var chargesAVenir = chargesPrevues.filter(function (op) {
+            var d = parseDate(op.date);
+            return op.statut === 'prevu' && d && d >= today && d <= periodEnd;
+        });
+        var aDecaisser = 0;
+        chargesAVenir.forEach(function (op) {
+            aDecaisser = devisCalc.roundMoney(aDecaisser + op.montant);
+        });
+
+        var soldePrevisionnel = devisCalc.roundMoney(soldeEstime + aEncaisser - aDecaisser);
+
+        var facturesAEncaisser = getFacturesAEncaisser();
+        var mouvements = getMouvements(periodEnd);
+
+        var alertes = computeAlertes({
+            soldeEstime: soldeEstime,
+            soldePrevisionnel: soldePrevisionnel,
+            facturesAEncaisser: facturesAEncaisser,
+            chargesAVenir: chargesAVenir,
+            facturationStats: facturationStats,
+            today: today
+        });
+
+        var serie = computeSerie(soldeEstime, mouvements, today, periodEnd);
+
+        return {
+            today: today,
+            periodEnd: periodEnd,
+            soldeEstime: soldeEstime,
+            aEncaisser: aEncaisser,
+            aDecaisser: aDecaisser,
+            soldePrevisionnel: soldePrevisionnel,
+            mouvements: mouvements,
+            facturesAEncaisser: facturesAEncaisser,
+            chargesPrevues: chargesPrevues,
+            chargesAVenir: chargesAVenir,
+            alertes: alertes,
+            serie: serie
+        };
+    }
+
+    function addOperation(data) {
+        var id = computeNextOperationId();
+        TRESORERIE_OPERATIONS[id] = {
+            id: id,
+            type: data.type,
+            libelle: data.libelle,
+            categorie: data.categorie,
+            montant: parseFloat(data.montant) || 0,
+            date: data.date,
+            statut: data.statut || 'prevu',
+            notes: data.notes || '',
+            recurrence: data.recurrence || 'aucune'
+        };
+        return TRESORERIE_OPERATIONS[id];
+    }
+
+    window.COCKPIT_TRESORERIE_CATEGORIES = TRESORERIE_CATEGORIES;
+    window.COCKPIT_TRESORERIE_STATUSES = TRESORERIE_STATUSES;
+    window.COCKPIT_TRESORERIE_OPERATIONS = TRESORERIE_OPERATIONS;
+    window.COCKPIT_TRESORERIE_CALC = {
+        computeSnapshot: computeSnapshot,
+        getFacturesAEncaisser: getFacturesAEncaisser,
+        getChargesPrevues: getChargesPrevues,
+        addOperation: addOperation,
+        labelForCategorie: labelForCategorie,
+        labelForStatut: labelForStatut,
+        parseDate: parseDate
+    };
+})();
+
 // Page Fiche client : fiche CRM complète à partir de données statiques (V0.4.2)
 // Le rendu (historique, rendez-vous, notes, documents & facturation) utilise
 // CLIENT_DETAILS (ci-dessus) et, depuis la V0.6.4, DEVIS_DETAILS/
@@ -6373,6 +6749,53 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 })();
 
+// Page Tableau de bord : bloc "Aperçu Trésorerie" (V0.8). Même principe que
+// "Aperçu Facturation" ci-dessus : liste compacte en lecture seule, calculée
+// depuis COCKPIT_TRESORERIE_CALC.computeSnapshot() (fenêtre de 30 jours par
+// défaut, cohérente avec tresorerie.html). La carte KPI "Trésorerie
+// disponible", jusqu'ici statique, reflète désormais le vrai solde estimé.
+
+(function () {
+    var statsEl = document.getElementById('dashboard-tresorerie-stats');
+    if (!statsEl) {
+        return;
+    }
+
+    var devisCalc = window.COCKPIT_DEVIS_CALC;
+    var calc = window.COCKPIT_TRESORERIE_CALC;
+    var snapshot = calc && calc.computeSnapshot ? calc.computeSnapshot(30) : null;
+    if (!snapshot || !devisCalc) {
+        return;
+    }
+
+    function makeStatRow(label, value) {
+        var row = document.createElement('div');
+        row.className = 'devis-summary-row';
+        var labelEl = document.createElement('span');
+        labelEl.textContent = label;
+        var valueEl = document.createElement('span');
+        valueEl.textContent = value;
+        row.appendChild(labelEl);
+        row.appendChild(valueEl);
+        return row;
+    }
+
+    statsEl.appendChild(makeStatRow('Solde estimé', devisCalc.formatMoney(snapshot.soldeEstime)));
+    statsEl.appendChild(makeStatRow('À encaisser', devisCalc.formatMoney(snapshot.aEncaisser)));
+    statsEl.appendChild(makeStatRow('À décaisser', devisCalc.formatMoney(snapshot.aDecaisser)));
+    var previsionnelRow = makeStatRow('Solde prévisionnel (30 j)', devisCalc.formatMoney(snapshot.soldePrevisionnel));
+    previsionnelRow.classList.add('devis-summary-row-total');
+    statsEl.appendChild(previsionnelRow);
+
+    var alerteRow = makeStatRow('Alerte principale', snapshot.alertes.length > 0 ? snapshot.alertes[0].titre : 'Aucune alerte');
+    statsEl.appendChild(alerteRow);
+
+    var soldeKpiEl = document.getElementById('dashboard-tresorerie-solde');
+    if (soldeKpiEl) {
+        soldeKpiEl.textContent = devisCalc.formatMoney(snapshot.soldeEstime);
+    }
+})();
+
 // Page Tableau de bord : bloc "Agenda commercial" réel (V0.7). Remplace
 // l'ancienne liste statique "Agenda du jour" par un rendu calculé depuis
 // COCKPIT_AGENDA_CALC.computeDashboardStats() : rendez-vous du jour (liste),
@@ -8560,4 +8983,480 @@ document.addEventListener('DOMContentLoaded', function () {
     commEl.appendChild(makeInfoItem('Commentaire de suivi', rdv.communication.commentaireSuivi));
 
     document.getElementById('rdv-doc-legal').textContent = 'Document interne de préparation commerciale — usage interne, non contractuel.';
+})();
+
+// Page Trésorerie : outil simple de pilotage du cash (V0.8). KPI, prochains
+// mouvements, charges prévues, factures à encaisser, graphique de projection
+// et alertes calculés depuis COCKPIT_TRESORERIE_CALC.computeSnapshot(), qui
+// réutilise lui-même COCKPIT_FACTURATION_STATS/FACTURE_DETAILS pour rester
+// cohérent avec la Facturation. "Ajouter une opération" modifie
+// COCKPIT_TRESORERIE_OPERATIONS en mémoire (aucune persistance), comme
+// partout ailleurs dans l'application.
+
+(function () {
+    var soldeEl = document.getElementById('tresorerie-kpi-solde');
+    if (!soldeEl) {
+        return;
+    }
+
+    var devisCalc = window.COCKPIT_DEVIS_CALC;
+    var calc = window.COCKPIT_TRESORERIE_CALC;
+    var CATEGORIES = window.COCKPIT_TRESORERIE_CATEGORIES || [];
+    var STATUSES = window.COCKPIT_TRESORERIE_STATUSES || [];
+
+    var MONTH_ABBR = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+
+    var FACTURE_STATUT_INFO = {
+        'a-venir': { label: 'À venir', badgeClass: 'badge-info' },
+        'en-retard': { label: 'En retard', badgeClass: 'badge-danger' },
+        'partiellement-payee': { label: 'Partiellement payé', badgeClass: 'badge-warning' }
+    };
+
+    var periodSelectEl = document.getElementById('tresorerie-period-select');
+    var mouvementsListEl = document.getElementById('tresorerie-mouvements-list');
+    var mouvementsEmptyEl = document.getElementById('tresorerie-mouvements-empty');
+    var chargesBodyEl = document.getElementById('tresorerie-charges-body');
+    var chargesEmptyEl = document.getElementById('tresorerie-charges-empty');
+    var facturesBodyEl = document.getElementById('tresorerie-factures-body');
+    var facturesEmptyEl = document.getElementById('tresorerie-factures-empty');
+    var alertesListEl = document.getElementById('tresorerie-alertes-list');
+    var alertesEmptyEl = document.getElementById('tresorerie-alertes-empty');
+    var chartContainerEl = document.getElementById('tresorerie-chart-container');
+    var chartRangeEl = document.getElementById('tresorerie-chart-range');
+    var addOperationBtn = document.getElementById('tresorerie-add-operation-btn');
+
+    function pad2(n) {
+        return (n < 10 ? '0' : '') + n;
+    }
+
+    function toISODate(date) {
+        return date.getFullYear() + '-' + pad2(date.getMonth() + 1) + '-' + pad2(date.getDate());
+    }
+
+    function fromISODate(value) {
+        if (!value) {
+            return null;
+        }
+        var parts = value.split('-');
+        if (parts.length !== 3) {
+            return null;
+        }
+        var year = parseInt(parts[0], 10);
+        if (isNaN(year) || year < 2000 || year > 2099) {
+            return null;
+        }
+        var d = new Date(year, parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+        return isNaN(d.getTime()) ? null : d;
+    }
+
+    function formatDateFr(date) {
+        return pad2(date.getDate()) + '/' + pad2(date.getMonth() + 1) + '/' + date.getFullYear();
+    }
+
+    function formatShortDate(frDateStr) {
+        var d = calc.parseDate(frDateStr);
+        if (!d) {
+            return { day: '—', month: '' };
+        }
+        return { day: pad2(d.getDate()), month: MONTH_ABBR[d.getMonth()] };
+    }
+
+    function makeEl(tag, className, text) {
+        var node = document.createElement(tag);
+        if (className) {
+            node.className = className;
+        }
+        if (text !== undefined) {
+            node.textContent = text;
+        }
+        return node;
+    }
+
+    function statutBadge(value) {
+        var info = STATUSES.filter(function (s) { return s.value === value; })[0];
+        var badge = makeEl('span', 'badge ' + (info ? info.badgeClass : 'badge-neutral'), info ? info.label : value);
+        return badge;
+    }
+
+    function buildTimelineItem(mouvement) {
+        var isLien = !!mouvement.lien;
+        var item = document.createElement(isLien ? 'a' : 'div');
+        item.className = 'tresorerie-timeline-item';
+        if (isLien && mouvement.lien.type === 'facture') {
+            item.href = 'facture-edition.html?facture=' + encodeURIComponent(mouvement.lien.key);
+            item.target = '_blank';
+        }
+
+        var shortDate = formatShortDate(mouvement.date);
+        var dateEl = makeEl('div', 'tresorerie-timeline-date');
+        dateEl.appendChild(makeEl('strong', null, shortDate.day));
+        dateEl.appendChild(makeEl('span', null, shortDate.month));
+        item.appendChild(dateEl);
+
+        var isEncaissement = mouvement.type === 'encaissement';
+        var iconEl = makeEl('span', 'tresorerie-flow-icon ' + (isEncaissement ? 'tresorerie-flow-icon-in' : 'tresorerie-flow-icon-out'));
+        iconEl.innerHTML = isEncaissement
+            ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 19 19 12"></polyline></svg>'
+            : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>';
+        item.appendChild(iconEl);
+
+        var bodyEl = makeEl('div', 'tresorerie-timeline-body');
+        bodyEl.appendChild(makeEl('p', 'tresorerie-timeline-title', mouvement.libelle));
+        bodyEl.appendChild(makeEl('p', 'tresorerie-timeline-sub', mouvement.categorie));
+        item.appendChild(bodyEl);
+
+        var amountEl = makeEl('span', 'tresorerie-timeline-amount ' + (isEncaissement ? 'tresorerie-amount-in' : 'tresorerie-amount-out'),
+            (isEncaissement ? '+ ' : '- ') + devisCalc.formatMoney(mouvement.montant));
+        item.appendChild(amountEl);
+
+        var statusWrap = makeEl('span', 'tresorerie-timeline-status');
+        statusWrap.appendChild(statutBadge(mouvement.statut));
+        item.appendChild(statusWrap);
+
+        return item;
+    }
+
+    function renderMouvements(snapshot) {
+        mouvementsListEl.innerHTML = '';
+        if (snapshot.mouvements.length === 0) {
+            mouvementsEmptyEl.style.display = '';
+            return;
+        }
+        mouvementsEmptyEl.style.display = 'none';
+        snapshot.mouvements.forEach(function (m) {
+            mouvementsListEl.appendChild(buildTimelineItem(m));
+        });
+    }
+
+    function renderCharges(snapshot) {
+        chargesBodyEl.innerHTML = '';
+        if (snapshot.chargesPrevues.length === 0) {
+            chargesEmptyEl.style.display = '';
+            return;
+        }
+        chargesEmptyEl.style.display = 'none';
+        snapshot.chargesPrevues.forEach(function (op) {
+            var row = document.createElement('tr');
+            row.appendChild(makeEl('td', null, calc.labelForCategorie(op.categorie)));
+            row.appendChild(makeEl('td', null, op.libelle));
+            row.appendChild(makeEl('td', null, op.date));
+            row.appendChild(makeEl('td', null, devisCalc.formatMoney(op.montant)));
+            var statutCell = document.createElement('td');
+            statutCell.appendChild(statutBadge(op.statut));
+            row.appendChild(statutCell);
+            chargesBodyEl.appendChild(row);
+        });
+    }
+
+    function renderFactures(snapshot) {
+        facturesBodyEl.innerHTML = '';
+        if (snapshot.facturesAEncaisser.length === 0) {
+            facturesEmptyEl.style.display = '';
+            return;
+        }
+        facturesEmptyEl.style.display = 'none';
+        snapshot.facturesAEncaisser.forEach(function (f) {
+            var row = document.createElement('tr');
+            row.appendChild(makeEl('td', null, f.numero));
+            var clientCell = document.createElement('td');
+            if (f.clientSlug) {
+                var link = document.createElement('a');
+                link.href = 'fiche-client.html?client=' + encodeURIComponent(f.clientSlug);
+                link.textContent = f.clientNom;
+                clientCell.appendChild(link);
+            } else {
+                clientCell.textContent = f.clientNom;
+            }
+            row.appendChild(clientCell);
+            row.appendChild(makeEl('td', null, f.dateEcheance || '—'));
+            row.appendChild(makeEl('td', null, devisCalc.formatMoney(f.resteAPayer)));
+            var statutCell = document.createElement('td');
+            var info = FACTURE_STATUT_INFO[f.statut];
+            statutCell.appendChild(makeEl('span', 'badge ' + (info ? info.badgeClass : 'badge-neutral'), info ? info.label : f.statut));
+            row.appendChild(statutCell);
+            facturesBodyEl.appendChild(row);
+        });
+    }
+
+    function renderAlertes(snapshot) {
+        alertesListEl.innerHTML = '';
+        if (snapshot.alertes.length === 0) {
+            alertesEmptyEl.style.display = '';
+            return;
+        }
+        alertesEmptyEl.style.display = 'none';
+        var ICONS = {
+            critical: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>',
+            warning: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>',
+            info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>'
+        };
+        var CLASS_MAP = { critical: 'alert-critical', warning: 'alert-warning', info: 'alert-info' };
+        snapshot.alertes.forEach(function (alerte) {
+            var li = document.createElement('li');
+            var link = document.createElement('a');
+            link.className = 'alert-item ' + (CLASS_MAP[alerte.niveau] || 'alert-info');
+            link.href = alerte.lien || '#';
+            var iconEl = makeEl('span', 'alert-icon');
+            iconEl.innerHTML = ICONS[alerte.niveau] || ICONS.info;
+            link.appendChild(iconEl);
+            var bodyEl = makeEl('div', 'alert-item-body');
+            bodyEl.appendChild(makeEl('p', 'alert-item-title', alerte.titre));
+            bodyEl.appendChild(makeEl('p', 'alert-item-subtext', alerte.sousTexte));
+            link.appendChild(bodyEl);
+            var chevronEl = makeEl('span', 'alert-chevron');
+            chevronEl.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>';
+            link.appendChild(chevronEl);
+            li.appendChild(link);
+            alertesListEl.appendChild(li);
+        });
+    }
+
+    function renderChart(snapshot) {
+        var points = snapshot.serie;
+        chartContainerEl.innerHTML = '';
+        if (points.length < 2) {
+            chartContainerEl.appendChild(makeEl('p', 'empty-state-inline', 'Pas assez de données pour tracer une projection.'));
+            return;
+        }
+
+        var values = points.map(function (p) { return p.solde; });
+        var minValue = Math.min.apply(null, values.concat([0]));
+        var maxValue = Math.max.apply(null, values);
+        if (maxValue === minValue) {
+            maxValue = minValue + 1;
+        }
+        var width = 600;
+        var height = 200;
+        var topMargin = 16;
+        var bottomMargin = 30;
+
+        function xFor(index) {
+            return (index / (points.length - 1)) * width;
+        }
+        function yFor(value) {
+            var ratio = (value - minValue) / (maxValue - minValue);
+            return height - bottomMargin - ratio * (height - topMargin - bottomMargin);
+        }
+
+        var coords = points.map(function (p, index) {
+            return xFor(index) + ',' + yFor(p.solde);
+        });
+        var linePoints = coords.join(' ');
+        var fillPoints = coords.join(' ') + ' ' + xFor(points.length - 1) + ',' + (height - bottomMargin) + ' ' + xFor(0) + ',' + (height - bottomMargin);
+
+        var circles = points.map(function (p, index) {
+            return '<circle cx="' + xFor(index) + '" cy="' + yFor(p.solde) + '" r="4" fill="#4f46e5"></circle>';
+        }).join('');
+
+        var zeroLine = (minValue < 0 && maxValue > 0)
+            ? '<line x1="0" y1="' + yFor(0) + '" x2="' + width + '" y2="' + yFor(0) + '" stroke="#d1d5db" stroke-width="1" stroke-dasharray="4 4"></line>'
+            : '';
+
+        var svg = document.createElement('div');
+        svg.innerHTML = '<svg class="chart-container" viewBox="0 0 ' + width + ' ' + height + '" preserveAspectRatio="none">' +
+            '<defs><linearGradient id="tresorerieChartFill" x1="0" y1="0" x2="0" y2="1">' +
+            '<stop offset="0%" stop-color="#4f46e5" stop-opacity="0.25"></stop>' +
+            '<stop offset="100%" stop-color="#4f46e5" stop-opacity="0"></stop>' +
+            '</linearGradient></defs>' +
+            zeroLine +
+            '<polygon points="' + fillPoints + '" fill="url(#tresorerieChartFill)"></polygon>' +
+            '<polyline points="' + linePoints + '" fill="none" stroke="#4f46e5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>' +
+            circles +
+            '</svg>';
+        chartContainerEl.appendChild(svg.firstChild);
+
+        var labels = makeEl('div', 'chart-labels');
+        points.forEach(function (p) {
+            labels.appendChild(makeEl('span', null, pad2(p.date.getDate()) + '/' + pad2(p.date.getMonth() + 1)));
+        });
+        chartContainerEl.appendChild(labels);
+
+        chartRangeEl.textContent = formatDateFr(snapshot.today) + ' → ' + formatDateFr(snapshot.periodEnd);
+    }
+
+    function render() {
+        var periodDays = parseInt(periodSelectEl.value, 10) || 30;
+        var snapshot = calc.computeSnapshot(periodDays);
+
+        document.getElementById('tresorerie-kpi-solde').textContent = devisCalc.formatMoney(snapshot.soldeEstime);
+        document.getElementById('tresorerie-kpi-solde-variation').textContent = 'trésorerie actuellement disponible';
+
+        document.getElementById('tresorerie-kpi-encaisser').textContent = devisCalc.formatMoney(snapshot.aEncaisser);
+        document.getElementById('tresorerie-kpi-encaisser-detail').textContent = snapshot.facturesAEncaisser.length + ' facture(s)';
+
+        document.getElementById('tresorerie-kpi-decaisser').textContent = devisCalc.formatMoney(snapshot.aDecaisser);
+        document.getElementById('tresorerie-kpi-decaisser-detail').textContent = snapshot.chargesAVenir.length + ' charge(s) prévue(s)';
+
+        var previsionnelEl = document.getElementById('tresorerie-kpi-previsionnel');
+        previsionnelEl.textContent = devisCalc.formatMoney(snapshot.soldePrevisionnel);
+        var previsionnelDetailEl = document.getElementById('tresorerie-kpi-previsionnel-detail');
+        previsionnelDetailEl.textContent = 'au ' + formatDateFr(snapshot.periodEnd);
+        previsionnelDetailEl.className = 'kpi-variation ' + (snapshot.soldePrevisionnel < snapshot.soldeEstime ? 'status-negative' : 'status-positive');
+
+        renderMouvements(snapshot);
+        renderCharges(snapshot);
+        renderFactures(snapshot);
+        renderAlertes(snapshot);
+        renderChart(snapshot);
+    }
+
+    function openAddOperationModal() {
+        var body = document.createElement('div');
+
+        var typeWrap = document.createElement('div');
+        typeWrap.appendChild(makeEl('label', 'modal-label', 'Type'));
+        var typeSelect = document.createElement('select');
+        typeSelect.className = 'modal-select';
+        [['encaissement', 'Encaissement'], ['decaissement', 'Décaissement']].forEach(function (pair) {
+            var option = document.createElement('option');
+            option.value = pair[0];
+            option.textContent = pair[1];
+            typeSelect.appendChild(option);
+        });
+        typeSelect.value = 'decaissement';
+        typeWrap.appendChild(typeSelect);
+        body.appendChild(typeWrap);
+
+        body.appendChild(makeEl('label', 'modal-label', 'Libellé'));
+        var libelleInput = document.createElement('input');
+        libelleInput.type = 'text';
+        libelleInput.className = 'modal-input';
+        libelleInput.placeholder = 'Ex. Loyer — Bureaux';
+        body.appendChild(libelleInput);
+
+        var grid = makeEl('div', 'form-grid-2');
+        grid.style.marginTop = '10px';
+
+        var categorieWrap = document.createElement('div');
+        categorieWrap.appendChild(makeEl('label', 'modal-label', 'Catégorie'));
+        var categorieSelect = document.createElement('select');
+        categorieSelect.className = 'modal-select';
+        CATEGORIES.forEach(function (c) {
+            var option = document.createElement('option');
+            option.value = c.value;
+            option.textContent = c.label;
+            categorieSelect.appendChild(option);
+        });
+        categorieWrap.appendChild(categorieSelect);
+        grid.appendChild(categorieWrap);
+
+        var montantWrap = document.createElement('div');
+        montantWrap.appendChild(makeEl('label', 'modal-label', 'Montant (€)'));
+        var montantInput = document.createElement('input');
+        montantInput.type = 'number';
+        montantInput.min = '0';
+        montantInput.step = '0.01';
+        montantInput.className = 'modal-input';
+        montantWrap.appendChild(montantInput);
+        grid.appendChild(montantWrap);
+        body.appendChild(grid);
+
+        var grid2 = makeEl('div', 'form-grid-2');
+        grid2.style.marginTop = '10px';
+
+        var dateWrap = document.createElement('div');
+        dateWrap.appendChild(makeEl('label', 'modal-label', 'Date prévue'));
+        var dateInput = document.createElement('input');
+        dateInput.type = 'date';
+        dateInput.className = 'modal-input';
+        dateInput.min = '2000-01-01';
+        dateInput.max = '2099-12-31';
+        dateInput.value = toISODate(new Date());
+        dateWrap.appendChild(dateInput);
+        grid2.appendChild(dateWrap);
+
+        var statutWrap = document.createElement('div');
+        statutWrap.appendChild(makeEl('label', 'modal-label', 'Statut'));
+        var statutSelect = document.createElement('select');
+        statutSelect.className = 'modal-select';
+        [['prevu', 'Prévu'], ['realise', 'Réalisé'], ['annule', 'Annulé']].forEach(function (pair) {
+            var option = document.createElement('option');
+            option.value = pair[0];
+            option.textContent = pair[1];
+            statutSelect.appendChild(option);
+        });
+        statutWrap.appendChild(statutSelect);
+        grid2.appendChild(statutWrap);
+        body.appendChild(grid2);
+
+        var recurrenceWrap = document.createElement('div');
+        recurrenceWrap.style.marginTop = '10px';
+        recurrenceWrap.appendChild(makeEl('label', 'modal-label', 'Récurrence'));
+        var recurrenceSelect = document.createElement('select');
+        recurrenceSelect.className = 'modal-select';
+        [['aucune', 'Aucune'], ['mensuelle', 'Mensuelle'], ['trimestrielle', 'Trimestrielle'], ['annuelle', 'Annuelle']].forEach(function (pair) {
+            var option = document.createElement('option');
+            option.value = pair[0];
+            option.textContent = pair[1];
+            recurrenceSelect.appendChild(option);
+        });
+        recurrenceWrap.appendChild(recurrenceSelect);
+        body.appendChild(recurrenceWrap);
+
+        var notesWrap = document.createElement('div');
+        notesWrap.style.marginTop = '10px';
+        notesWrap.appendChild(makeEl('label', 'modal-label', 'Notes'));
+        var notesTextarea = document.createElement('textarea');
+        notesTextarea.className = 'modal-textarea';
+        notesTextarea.rows = 2;
+        notesWrap.appendChild(notesTextarea);
+        body.appendChild(notesWrap);
+
+        var errorEl = makeEl('p', 'modal-hint');
+        errorEl.style.color = 'var(--color-danger)';
+        errorEl.style.display = 'none';
+        body.appendChild(errorEl);
+
+        var cancelButton = document.createElement('button');
+        cancelButton.type = 'button';
+        cancelButton.className = 'btn-secondary';
+        cancelButton.setAttribute('data-modal-close', 'true');
+        cancelButton.textContent = 'Annuler';
+
+        var saveButton = document.createElement('button');
+        saveButton.type = 'button';
+        saveButton.className = 'btn-primary';
+        saveButton.textContent = 'Enregistrer';
+
+        saveButton.addEventListener('click', function () {
+            var libelle = libelleInput.value.trim();
+            var montant = parseFloat(montantInput.value);
+            var date = fromISODate(dateInput.value);
+
+            if (!libelle || !montant || montant <= 0 || !date) {
+                errorEl.textContent = 'Merci de renseigner un libellé, un montant positif et une date valide.';
+                errorEl.style.display = '';
+                return;
+            }
+
+            calc.addOperation({
+                type: typeSelect.value,
+                libelle: libelle,
+                categorie: categorieSelect.value,
+                montant: montant,
+                date: formatDateFr(date),
+                statut: statutSelect.value,
+                notes: notesTextarea.value.trim(),
+                recurrence: recurrenceSelect.value
+            });
+
+            window.COCKPIT_MODAL.close();
+            render();
+        });
+
+        var footer = document.createDocumentFragment();
+        footer.appendChild(cancelButton);
+        footer.appendChild(saveButton);
+
+        window.COCKPIT_MODAL.open({
+            title: 'Ajouter une opération',
+            body: body,
+            footer: footer
+        });
+    }
+
+    periodSelectEl.addEventListener('change', render);
+    addOperationBtn.addEventListener('click', openAddOperationModal);
+
+    render();
 })();
