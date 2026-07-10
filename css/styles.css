@@ -2734,7 +2734,8 @@ svg {
 
 /* Trésorerie (V0.8) */
 
-.amount-cell {
+.amount-cell,
+.nowrap-cell {
     white-space: nowrap;
 }
 
@@ -2744,6 +2745,41 @@ svg {
 
 .tresorerie-chart-point {
     cursor: pointer;
+}
+
+#tresorerie-chart-container {
+    position: relative;
+}
+
+.tresorerie-chart-tooltip {
+    position: absolute;
+    transform: translate(-50%, calc(-100% - 12px));
+    min-width: 140px;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    box-shadow: var(--shadow-elevated);
+    padding: 8px 12px;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.tresorerie-chart-tooltip-date {
+    margin: 0;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+}
+
+.tresorerie-chart-tooltip-solde {
+    margin: 2px 0 0;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.tresorerie-chart-tooltip-mvt {
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: var(--color-text-secondary);
 }
 
 .tresorerie-timeline {

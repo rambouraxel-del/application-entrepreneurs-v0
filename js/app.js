@@ -9164,6 +9164,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var row = document.createElement('tr');
 
             var numeroCell = document.createElement('td');
+            numeroCell.className = 'nowrap-cell';
             var factureLink = document.createElement('a');
             factureLink.href = 'facture-edition.html?facture=' + encodeURIComponent(f.key);
             factureLink.target = '_blank';
@@ -9227,11 +9228,14 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    function escapeXml(value) {
-        return String(value)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;');
+    function soldeStatusClass(value) {
+        if (value > 0) {
+            return 'status-positive';
+        }
+        if (value < 0) {
+            return 'status-negative';
+        }
+        return 'status-neutral';
     }
 
     function renderChart(snapshot) {
@@ -9250,7 +9254,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         var width = 640;
         var height = 220;
-        var leftMargin = 78;
+        var leftMargin = 12;
         var rightPad = 12;
         var topMargin = 16;
         var bottomMargin = 30;
@@ -9270,49 +9274,77 @@ document.addEventListener('DOMContentLoaded', function () {
         var linePoints = coords.join(' ');
         var fillPoints = coords.join(' ') + ' ' + xFor(points.length - 1) + ',' + (height - bottomMargin) + ' ' + xFor(0) + ',' + (height - bottomMargin);
 
-        var TICK_COUNT = 4;
-        var ticks = '';
+        var TICK_COUNT = 3;
+        var gridlines = '';
         for (var i = 0; i <= TICK_COUNT; i++) {
             var tickValue = minValue + (maxValue - minValue) * (i / TICK_COUNT);
             var tickY = yFor(tickValue);
-            ticks += '<line x1="' + leftMargin + '" y1="' + tickY + '" x2="' + (width - rightPad) + '" y2="' + tickY + '" stroke="#e5e7eb" stroke-width="1"></line>';
-            ticks += '<text class="chart-axis-label" x="' + (leftMargin - 10) + '" y="' + (tickY + 4) + '" text-anchor="end">' + escapeXml(devisCalc.formatMoney(tickValue)) + '</text>';
+            gridlines += '<line x1="' + leftMargin + '" y1="' + tickY + '" x2="' + (width - rightPad) + '" y2="' + tickY + '" stroke="#eef0f4" stroke-width="1"></line>';
         }
 
         var circles = points.map(function (p, index) {
-            var tooltip = formatDateFr(p.date) + ' : ' + devisCalc.formatMoney(p.solde);
-            if (p.mouvementPrincipal) {
-                tooltip += ' — ' + p.mouvementPrincipal.libelle + ' (' + (p.mouvementPrincipal.type === 'encaissement' ? '+ ' : '- ') + devisCalc.formatMoney(p.mouvementPrincipal.montant) + ')';
-            }
-            return '<circle class="tresorerie-chart-point" cx="' + xFor(index) + '" cy="' + yFor(p.solde) + '" r="5" fill="#4f46e5"><title>' + escapeXml(tooltip) + '</title></circle>';
+            return '<circle class="tresorerie-chart-point" data-point-index="' + index + '" cx="' + xFor(index) + '" cy="' + yFor(p.solde) + '" r="5" fill="#4f46e5"></circle>';
         }).join('');
 
         var zeroLine = (minValue < 0 && maxValue > 0)
             ? '<line x1="' + leftMargin + '" y1="' + yFor(0) + '" x2="' + (width - rightPad) + '" y2="' + yFor(0) + '" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="4 4"></line>'
             : '';
 
-        var svg = document.createElement('div');
-        svg.innerHTML = '<svg class="chart-container tresorerie-chart" viewBox="0 0 ' + width + ' ' + height + '" preserveAspectRatio="xMidYMid meet">' +
+        var svgWrap = document.createElement('div');
+        svgWrap.innerHTML = '<svg class="chart-container tresorerie-chart" viewBox="0 0 ' + width + ' ' + height + '" preserveAspectRatio="xMidYMid meet">' +
             '<defs><linearGradient id="tresorerieChartFill" x1="0" y1="0" x2="0" y2="1">' +
             '<stop offset="0%" stop-color="#4f46e5" stop-opacity="0.25"></stop>' +
             '<stop offset="100%" stop-color="#4f46e5" stop-opacity="0"></stop>' +
             '</linearGradient></defs>' +
-            ticks +
+            gridlines +
             zeroLine +
             '<polygon points="' + fillPoints + '" fill="url(#tresorerieChartFill)"></polygon>' +
             '<polyline points="' + linePoints + '" fill="none" stroke="#4f46e5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>' +
             circles +
             '</svg>';
-        chartContainerEl.appendChild(svg.firstChild);
+        var svgEl = svgWrap.firstChild;
+        chartContainerEl.appendChild(svgEl);
 
         var labels = makeEl('div', 'chart-labels');
-        labels.style.marginLeft = leftMargin + 'px';
         points.forEach(function (p) {
             labels.appendChild(makeEl('span', null, pad2(p.date.getDate()) + '/' + pad2(p.date.getMonth() + 1)));
         });
         chartContainerEl.appendChild(labels);
 
         chartRangeEl.textContent = formatDateFr(snapshot.today) + ' → ' + formatDateFr(snapshot.periodEnd);
+
+        var tooltipEl = makeEl('div', 'tresorerie-chart-tooltip');
+        tooltipEl.style.display = 'none';
+        chartContainerEl.appendChild(tooltipEl);
+
+        function showTooltip(circleEl, point) {
+            tooltipEl.innerHTML = '';
+            tooltipEl.appendChild(makeEl('p', 'tresorerie-chart-tooltip-date', formatDateFr(point.date)));
+            tooltipEl.appendChild(makeEl('p', 'tresorerie-chart-tooltip-solde ' + soldeStatusClass(point.solde), devisCalc.formatMoney(point.solde)));
+            if (point.mouvementPrincipal) {
+                var mvt = point.mouvementPrincipal;
+                tooltipEl.appendChild(makeEl('p', 'tresorerie-chart-tooltip-mvt', mvt.libelle + ' (' + (mvt.type === 'encaissement' ? '+ ' : '- ') + devisCalc.formatMoney(mvt.montant) + ')'));
+            }
+
+            var containerRect = chartContainerEl.getBoundingClientRect();
+            var circleRect = circleEl.getBoundingClientRect();
+            var left = circleRect.left - containerRect.left + circleRect.width / 2;
+            var top = circleRect.top - containerRect.top;
+            tooltipEl.style.left = left + 'px';
+            tooltipEl.style.top = top + 'px';
+            tooltipEl.style.display = '';
+        }
+
+        function hideTooltip() {
+            tooltipEl.style.display = 'none';
+        }
+
+        Array.prototype.forEach.call(svgEl.querySelectorAll('.tresorerie-chart-point'), function (circleEl) {
+            var index = parseInt(circleEl.getAttribute('data-point-index'), 10);
+            var point = points[index];
+            circleEl.addEventListener('mouseenter', function () { showTooltip(circleEl, point); });
+            circleEl.addEventListener('mouseleave', hideTooltip);
+        });
     }
 
     function render() {
