@@ -2469,18 +2469,43 @@ document.addEventListener('DOMContentLoaded', function () {
     function computePointsCles(ctx) {
         var points = [];
         if (ctx.facturationStats.facturesEnRetard > 0) {
-            points.push(ctx.facturationStats.facturesEnRetard + ' facture(s) en retard.');
+            points.push({
+                tonalite: 'danger',
+                icon: 'clock',
+                titre: ctx.facturationStats.facturesEnRetard + ' facture(s) en retard',
+                sousTexte: 'À traiter en priorité'
+            });
         }
         if (ctx.clients.topParCA.length > 0) {
-            points.push('Le client ' + ctx.clients.topParCA[0].nom + ' représente la plus forte part du CA facturé.');
+            points.push({
+                tonalite: 'primary',
+                icon: 'user',
+                titre: ctx.clients.topParCA[0].nom,
+                sousTexte: 'Plus forte part du CA facturé'
+            });
         }
         if (ctx.tresorerieSnapshot.soldePrevisionnel < 0) {
-            points.push('Le solde prévisionnel devient négatif sur la période trésorerie.');
+            points.push({
+                tonalite: 'warning',
+                icon: 'alert',
+                titre: 'Solde prévisionnel négatif',
+                sousTexte: 'Sur la période trésorerie sélectionnée'
+            });
         }
         if (ctx.activite.avecDevis > 0) {
-            points.push(ctx.activite.avecDevis + ' rendez-vous ont généré un devis.');
+            points.push({
+                tonalite: 'info',
+                icon: 'calendar',
+                titre: ctx.activite.avecDevis + ' RDV ont généré un devis',
+                sousTexte: 'Sur la période sélectionnée'
+            });
         }
-        points.push('Le taux de transformation devis → facture est de ' + ctx.commercial.tauxTransformation + ' %.');
+        points.push({
+            tonalite: 'success',
+            icon: 'trend',
+            titre: ctx.commercial.tauxTransformation + ' % de transformation',
+            sousTexte: 'Devis → facture'
+        });
         return points.slice(0, 5);
     }
 
@@ -9997,6 +10022,18 @@ document.addEventListener('DOMContentLoaded', function () {
         return list.filter(function (s) { return s.value === value; })[0] || null;
     }
 
+    function pad2(n) {
+        return (n < 10 ? '0' : '') + n;
+    }
+
+    function formatDateShort(date) {
+        return pad2(date.getDate()) + '/' + pad2(date.getMonth() + 1) + '/' + date.getFullYear();
+    }
+
+    function formatDateRange(start, end) {
+        return formatDateShort(start) + ' – ' + formatDateShort(end);
+    }
+
     function setActiveTab(tabKey) {
         Array.prototype.forEach.call(tabsEl.querySelectorAll('.page-tab'), function (btn) {
             btn.classList.toggle('page-tab-active', btn.getAttribute('data-tab') === tabKey);
@@ -10083,6 +10120,91 @@ document.addEventListener('DOMContentLoaded', function () {
         return row;
     }
 
+    function buildDonut(segments, centerValue, centerLabel) {
+        var total = segments.reduce(function (sum, seg) { return sum + seg.value; }, 0);
+        var wrap = makeEl('div', 'donut-widget');
+
+        var chart = makeEl('div', 'donut-chart');
+        if (total > 0) {
+            var cursor = 0;
+            var parts = [];
+            segments.forEach(function (seg) {
+                if (seg.value <= 0) {
+                    return;
+                }
+                var pct = (seg.value / total) * 100;
+                parts.push(seg.color + ' ' + cursor + '% ' + (cursor + pct) + '%');
+                cursor += pct;
+            });
+            chart.style.background = 'conic-gradient(' + parts.join(', ') + ')';
+        } else {
+            chart.style.background = 'var(--color-neutral-bg)';
+        }
+        var center = makeEl('div', 'donut-chart-center');
+        center.appendChild(makeEl('strong', null, String(centerValue)));
+        center.appendChild(makeEl('span', null, centerLabel));
+        chart.appendChild(center);
+        wrap.appendChild(chart);
+
+        var legend = makeEl('div', 'donut-legend');
+        segments.forEach(function (seg) {
+            var item = makeEl('div', 'donut-legend-item');
+            var dot = makeEl('span', 'donut-legend-dot');
+            dot.style.backgroundColor = seg.color;
+            item.appendChild(dot);
+            item.appendChild(makeEl('span', 'donut-legend-label', seg.label));
+            var pct = total > 0 ? Math.round((seg.value / total) * 100) : 0;
+            var displayValue = seg.displayValue !== undefined ? seg.displayValue : seg.value;
+            item.appendChild(makeEl('span', 'donut-legend-value', displayValue + ' (' + pct + ' %)'));
+            legend.appendChild(item);
+        });
+        wrap.appendChild(legend);
+
+        return wrap;
+    }
+
+    var INSIGHT_ICONS = {
+        clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>',
+        alert: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>',
+        trend: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>',
+        calendar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></svg>',
+        user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>'
+    };
+
+    function renderInsightCards(containerEl, points) {
+        containerEl.innerHTML = '';
+        if (!points || points.length === 0) {
+            containerEl.appendChild(makeEl('p', 'empty-state-inline', 'Aucun constat particulier.'));
+            return;
+        }
+        points.forEach(function (point) {
+            var card = makeEl('div', 'insight-card insight-card-' + point.tonalite);
+            var iconEl = makeEl('span', 'insight-card-icon');
+            iconEl.innerHTML = INSIGHT_ICONS[point.icon] || INSIGHT_ICONS.alert;
+            card.appendChild(iconEl);
+            var bodyEl = makeEl('div', 'insight-card-body');
+            bodyEl.appendChild(makeEl('p', 'insight-card-title', point.titre));
+            bodyEl.appendChild(makeEl('p', 'insight-card-subtext', point.sousTexte));
+            card.appendChild(bodyEl);
+            containerEl.appendChild(card);
+        });
+    }
+
+    function buildCompactClientRow(c) {
+        var row = document.createElement('tr');
+        var clientCell = makeEl('td', 'nowrap-cell');
+        var link = document.createElement('a');
+        link.href = 'fiche-client.html?client=' + encodeURIComponent(c.slug);
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = c.nom;
+        clientCell.appendChild(link);
+        row.appendChild(clientCell);
+        row.appendChild(makeEl('td', 'amount-cell', devisCalc.formatMoney(c.caFacture)));
+        row.appendChild(makeEl('td', 'amount-cell', devisCalc.formatMoney(c.resteAEncaisser)));
+        return row;
+    }
+
     function renderVueEnsemble(snapshot) {
         var kpisEl = document.getElementById('analyses-vue-kpis');
         kpisEl.innerHTML = '';
@@ -10100,13 +10222,25 @@ document.addEventListener('DOMContentLoaded', function () {
             kpisEl.appendChild(buildKpiCard(KPI_ICON_CYCLE[index % KPI_ICON_CYCLE.length], c[0], c[1], c[2]));
         });
 
-        var pointsEl = document.getElementById('analyses-points-cles');
-        pointsEl.innerHTML = '';
-        if (snapshot.pointsCles.length === 0) {
-            pointsEl.appendChild(makeEl('li', 'empty-state-inline', 'Aucun constat particulier.'));
+        renderInsightCards(document.getElementById('analyses-points-cles'), snapshot.pointsCles);
+
+        var donutEl = document.getElementById('analyses-vue-devis-donut');
+        donutEl.innerHTML = '';
+        var repartitionCounts = { brouillon: snapshot.commercial.brouillon, envoye: snapshot.commercial.envoye, accepte: snapshot.commercial.accepte, refuse: snapshot.commercial.refuse };
+        var segments = DEVIS_STATUSES.map(function (status) {
+            return { label: status.label, value: repartitionCounts[status.value] || 0, color: BADGE_COLOR_VAR[status.badgeClass] };
+        });
+        donutEl.appendChild(buildDonut(segments, snapshot.commercial.total, 'devis'));
+
+        var topClientsBodyEl = document.getElementById('analyses-vue-top-clients-body');
+        var topClientsEmptyEl = document.getElementById('analyses-vue-top-clients-empty');
+        topClientsBodyEl.innerHTML = '';
+        if (snapshot.clients.topParCA.length === 0) {
+            topClientsEmptyEl.style.display = '';
         } else {
-            snapshot.pointsCles.forEach(function (texte) {
-                pointsEl.appendChild(makeEl('li', 'insight-item', texte));
+            topClientsEmptyEl.style.display = 'none';
+            snapshot.clients.topParCA.forEach(function (c) {
+                topClientsBodyEl.appendChild(buildCompactClientRow(c));
             });
         }
 
@@ -10133,11 +10267,10 @@ document.addEventListener('DOMContentLoaded', function () {
         var repartitionEl = document.getElementById('analyses-devis-repartition');
         repartitionEl.innerHTML = '';
         var repartitionCounts = { brouillon: c.brouillon, envoye: c.envoye, accepte: c.accepte, refuse: c.refuse };
-        var maxCount = Math.max.apply(null, Object.keys(repartitionCounts).map(function (k) { return repartitionCounts[k]; }).concat([1]));
-        DEVIS_STATUSES.forEach(function (status) {
-            var value = repartitionCounts[status.value] || 0;
-            repartitionEl.appendChild(buildBarRow(status.label, value, maxCount, BADGE_COLOR_VAR[status.badgeClass]));
+        var repartitionSegments = DEVIS_STATUSES.map(function (status) {
+            return { label: status.label, value: repartitionCounts[status.value] || 0, color: BADGE_COLOR_VAR[status.badgeClass] };
         });
+        repartitionEl.appendChild(buildDonut(repartitionSegments, c.total, 'devis'));
 
         var topDevisBodyEl = document.getElementById('analyses-top-devis-body');
         var topDevisEmptyEl = document.getElementById('analyses-top-devis-empty');
@@ -10234,18 +10367,36 @@ document.addEventListener('DOMContentLoaded', function () {
 
         var funnelEl = document.getElementById('analyses-funnel');
         funnelEl.innerHTML = '';
+        var FUNNEL_THEMES = [
+            { bg: 'var(--color-primary-soft)', color: 'var(--color-primary-dark)' },
+            { bg: 'rgba(37, 99, 235, 0.12)', color: '#2563eb' },
+            { bg: 'var(--color-success-bg)', color: 'var(--color-success)' }
+        ];
         var steps = [
-            ['Rendez-vous', a.total],
-            ['→ Devis', a.avecDevis],
-            ['→ Facture', a.avecFacture]
+            { label: 'Rendez-vous', value: a.total },
+            { label: 'Devis', value: a.avecDevis },
+            { label: 'Facture', value: a.avecFacture }
         ];
         var maxStep = Math.max(a.total, 1);
-        steps.forEach(function (step) {
+        steps.forEach(function (step, index) {
+            if (index > 0) {
+                var pctConversion = steps[index - 1].value > 0 ? Math.round((step.value / steps[index - 1].value) * 100) : 0;
+                var arrow = makeEl('div', 'analyses-funnel-arrow');
+                arrow.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>';
+                funnelEl.appendChild(arrow);
+                var percentLabel = makeEl('div', 'analyses-funnel-percent-wrap');
+                percentLabel.style.textAlign = 'center';
+                percentLabel.appendChild(makeEl('span', 'analyses-funnel-percent', pctConversion + ' % de conversion'));
+                funnelEl.appendChild(percentLabel);
+            }
             var box = makeEl('div', 'analyses-funnel-step');
-            var widthPct = Math.max(20, Math.round((step[1] / maxStep) * 100));
+            var theme = FUNNEL_THEMES[index % FUNNEL_THEMES.length];
+            box.style.backgroundColor = theme.bg;
+            box.style.color = theme.color;
+            var widthPct = Math.max(30, Math.round((step.value / maxStep) * 100));
             box.style.width = widthPct + '%';
-            box.appendChild(makeEl('span', 'analyses-funnel-value', String(step[1])));
-            box.appendChild(makeEl('span', 'analyses-funnel-label', step[0]));
+            box.appendChild(makeEl('span', 'analyses-funnel-value', String(step.value)));
+            box.appendChild(makeEl('span', 'analyses-funnel-label', step.label));
             funnelEl.appendChild(box);
         });
 
@@ -10284,6 +10435,36 @@ document.addEventListener('DOMContentLoaded', function () {
             summaryEl.appendChild(buildSummaryRow('Charges prévues', String(t.chargesPrevues.length)));
         }
 
+        var CATEGORY_COLORS = {
+            loyer: '#7c3aed',
+            fournisseur: '#2563eb',
+            abonnement: '#0891b2',
+            salaires: '#4f46e5',
+            impots: '#d97706',
+            remboursement: '#16a34a',
+            autre: '#9096b3'
+        };
+        var chargesDonutEl = document.getElementById('analyses-tresorerie-charges-donut');
+        chargesDonutEl.innerHTML = '';
+        if (!t || t.chargesPrevues.length === 0) {
+            chargesDonutEl.appendChild(makeEl('p', 'empty-state-inline', 'Aucune charge prévue.'));
+        } else {
+            var totauxParCategorie = {};
+            t.chargesPrevues.forEach(function (op) {
+                totauxParCategorie[op.categorie] = devisCalc.roundMoney((totauxParCategorie[op.categorie] || 0) + op.montant);
+            });
+            var categorySegments = Object.keys(totauxParCategorie).map(function (categorie) {
+                return {
+                    label: window.COCKPIT_TRESORERIE_CALC.labelForCategorie(categorie),
+                    value: totauxParCategorie[categorie],
+                    displayValue: devisCalc.formatMoney(totauxParCategorie[categorie]),
+                    color: CATEGORY_COLORS[categorie] || CATEGORY_COLORS.autre
+                };
+            }).sort(function (a, b) { return b.value - a.value; });
+            var totalCharges = categorySegments.reduce(function (sum, seg) { return sum + seg.value; }, 0);
+            chargesDonutEl.appendChild(buildDonut(categorySegments, devisCalc.formatMoney(totalCharges), 'total'));
+        }
+
         renderAlertList(
             document.getElementById('analyses-tresorerie-alertes'),
             document.getElementById('analyses-tresorerie-alertes-empty'),
@@ -10293,6 +10474,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function render() {
         var snapshot = analysesCalc.computeSnapshot(periodSelectEl.value);
+        var rangeLabelEl = document.getElementById('analyses-range-label');
+        if (rangeLabelEl) {
+            rangeLabelEl.textContent = periodSelectEl.value === 'tout'
+                ? 'Depuis le début'
+                : formatDateRange(snapshot.range.start, snapshot.range.end);
+        }
         renderVueEnsemble(snapshot);
         renderCommercial(snapshot);
         renderClients(snapshot);

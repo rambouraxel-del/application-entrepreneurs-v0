@@ -47,7 +47,10 @@
         <div class="main">
             <header class="topbar">
                 <div class="topbar-greeting">
-                    <h1>Analyses et Performance</h1>
+                    <div class="analyses-title-row">
+                        <span class="analyses-title-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="m19 9-5 5-4-4-3 3"></path></svg></span>
+                        <h1>Analyses et Performance</h1>
+                    </div>
                     <p class="page-subtitle">Analysez vos ventes, vos clients, votre activité et vos indicateurs clés pour mieux piloter votre entreprise.</p>
                 </div>
                 <div class="topbar-actions">
@@ -74,23 +77,49 @@
                         <button type="button" class="page-tab" data-tab="activite">Activité</button>
                         <button type="button" class="page-tab" data-tab="tresorerie">Trésorerie</button>
                     </div>
-                    <select id="analyses-period-select" class="table-select" aria-label="Choisir la période d'analyse">
-                        <option value="tout">Toutes périodes</option>
-                        <option value="mois">Mois en cours</option>
-                        <option value="trimestre">Trimestre en cours</option>
-                        <option value="annee">Année en cours</option>
-                    </select>
+                    <div>
+                        <select id="analyses-period-select" class="table-select" aria-label="Choisir la période d'analyse">
+                            <option value="tout">Toutes périodes</option>
+                            <option value="mois">Mois en cours</option>
+                            <option value="trimestre">Trimestre en cours</option>
+                            <option value="annee">Année en cours</option>
+                        </select>
+                        <span class="analyses-range-label" id="analyses-range-label"></span>
+                    </div>
                 </div>
 
                 <div id="panel-vue-ensemble" class="analyses-panel">
                     <section class="dashboard-kpis analyses-kpis-8" id="analyses-vue-kpis"></section>
 
-                    <div class="dashboard-row">
+                    <div class="dashboard-block">
+                        <div class="dashboard-block-header">
+                            <h2>Lecture rapide</h2>
+                        </div>
+                        <div class="insight-cards" id="analyses-points-cles"></div>
+                    </div>
+
+                    <div class="dashboard-row dashboard-row-3">
                         <div class="dashboard-block">
                             <div class="dashboard-block-header">
-                                <h2>Lecture rapide</h2>
+                                <h2>Répartition des devis</h2>
                             </div>
-                            <ul class="insight-list" id="analyses-points-cles"></ul>
+                            <div id="analyses-vue-devis-donut"></div>
+                        </div>
+                        <div class="dashboard-block">
+                            <div class="dashboard-block-header">
+                                <h2>Top clients par CA facturé</h2>
+                            </div>
+                            <table class="data-table analyses-compact-table">
+                                <thead>
+                                    <tr>
+                                        <th>Client</th>
+                                        <th>CA facturé</th>
+                                        <th>Reste à encaisser</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="analyses-vue-top-clients-body"></tbody>
+                            </table>
+                            <p class="empty-state-inline" id="analyses-vue-top-clients-empty" style="display: none;">Aucun client facturé.</p>
                         </div>
                         <div class="dashboard-block">
                             <div class="dashboard-block-header">
@@ -115,7 +144,7 @@
                             <div class="dashboard-block-header">
                                 <h2>Répartition des devis par statut</h2>
                             </div>
-                            <div class="bar-chart-list" id="analyses-devis-repartition"></div>
+                            <div id="analyses-devis-repartition"></div>
                         </div>
                         <div class="dashboard-block">
                             <div class="dashboard-block-header">
@@ -203,12 +232,20 @@
                 </div>
 
                 <div id="panel-tresorerie" class="analyses-panel" style="display: none;">
-                    <div class="dashboard-block">
-                        <div class="dashboard-block-header">
-                            <h2>Synthèse trésorerie</h2>
-                            <a href="tresorerie.html" class="dashboard-block-link">Voir le module Trésorerie</a>
+                    <div class="dashboard-row">
+                        <div class="dashboard-block">
+                            <div class="dashboard-block-header">
+                                <h2>Synthèse trésorerie</h2>
+                                <a href="tresorerie.html" class="dashboard-block-link">Voir le module Trésorerie</a>
+                            </div>
+                            <div class="form-grid-2" id="analyses-tresorerie-summary"></div>
                         </div>
-                        <div class="form-grid-2" id="analyses-tresorerie-summary"></div>
+                        <div class="dashboard-block">
+                            <div class="dashboard-block-header">
+                                <h2>Charges prévues par catégorie</h2>
+                            </div>
+                            <div id="analyses-tresorerie-charges-donut"></div>
+                        </div>
                     </div>
 
                     <div class="dashboard-block">

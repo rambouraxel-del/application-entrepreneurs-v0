@@ -2994,6 +2994,229 @@ a.tresorerie-timeline-item:hover {
     font-weight: 600;
 }
 
+.analyses-funnel-percent {
+    font-size: 12px;
+    font-weight: 600;
+    opacity: 0.85;
+}
+
+.analyses-funnel-arrow {
+    display: flex;
+    justify-content: center;
+    color: var(--color-text-secondary);
+}
+
+.analyses-funnel-arrow svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Analyses (V0.9.1) : refonte visuelle, sans changement fonctionnel.
+   Classes scopées (préfixe analyses- / donut- ou ancrées sur des id
+   propres à cette page) pour ne modifier ni le style partagé des autres
+   pages (dashboard, facturation...) ni leurs onglets/cartes/alertes. */
+
+.analyses-title-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    margin-right: 10px;
+    border-radius: 10px;
+    background-color: var(--color-primary);
+    color: #ffffff;
+    vertical-align: middle;
+}
+
+.analyses-title-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.topbar-greeting .analyses-title-row {
+    display: flex;
+    align-items: center;
+}
+
+#analyses-tabs.page-tabs {
+    display: inline-flex;
+    gap: 4px;
+    background-color: var(--color-neutral-bg);
+    border-bottom: none;
+    padding: 4px;
+    border-radius: 12px;
+}
+
+#analyses-tabs .page-tab {
+    border-bottom: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    color: var(--color-text-secondary);
+}
+
+#analyses-tabs .page-tab.page-tab-active {
+    background-color: var(--color-surface);
+    color: var(--color-primary);
+    box-shadow: var(--shadow-card);
+}
+
+#analyses-period-select {
+    border-radius: 999px;
+    padding: 9px 16px;
+    font-weight: 600;
+}
+
+.analyses-range-label {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    margin: 0 0 0 10px;
+}
+
+.insight-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+}
+
+.insight-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px;
+    border-radius: 12px;
+    background-color: var(--color-neutral-bg);
+}
+
+.insight-card-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    flex-shrink: 0;
+    color: #ffffff;
+}
+
+.insight-card-icon svg {
+    width: 16px;
+    height: 16px;
+}
+
+.insight-card-body {
+    min-width: 0;
+}
+
+.insight-card-title {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.insight-card-subtext {
+    margin: 3px 0 0;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+}
+
+.insight-card-danger { background-color: var(--color-danger-bg); }
+.insight-card-danger .insight-card-icon { background-color: var(--color-danger); }
+
+.insight-card-warning { background-color: var(--color-warning-bg); }
+.insight-card-warning .insight-card-icon { background-color: var(--color-warning); }
+
+.insight-card-success { background-color: var(--color-success-bg); }
+.insight-card-success .insight-card-icon { background-color: var(--color-success); }
+
+.insight-card-info { background-color: var(--color-primary-soft); }
+.insight-card-info .insight-card-icon { background-color: var(--color-primary); }
+
+.insight-card-primary { background-color: var(--color-primary-soft); }
+.insight-card-primary .insight-card-icon { background-color: var(--color-accent-2); }
+
+.donut-widget {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.donut-chart {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.donut-chart-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    background-color: var(--color-surface);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    box-shadow: var(--shadow-card);
+}
+
+.donut-chart-center strong {
+    font-size: 15px;
+    line-height: 1.2;
+    color: var(--color-text);
+    word-break: break-word;
+}
+
+.donut-chart-center span {
+    font-size: 11px;
+    color: var(--color-text-secondary);
+}
+
+.donut-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    flex: 1;
+    min-width: 160px;
+}
+
+.donut-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--color-text);
+}
+
+.donut-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.donut-legend-label {
+    flex: 1;
+}
+
+.donut-legend-value {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.analyses-compact-table th,
+.analyses-compact-table td {
+    font-size: 13px;
+}
+
 /* Responsive : tablette et mobile */
 
 @media (max-width: 1100px) {
