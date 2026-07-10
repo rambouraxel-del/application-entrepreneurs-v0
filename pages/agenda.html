@@ -81,13 +81,12 @@
                         <button type="button" class="btn-secondary" id="calendar-prev-btn" aria-label="Précédent">‹ Précédent</button>
                         <button type="button" class="btn-secondary" id="calendar-today-btn">Aujourd'hui</button>
                         <button type="button" class="btn-secondary" id="calendar-next-btn" aria-label="Suivant">Suivant ›</button>
-                        <input type="date" id="calendar-date-picker" class="table-select" aria-label="Aller à une date">
+                        <input type="date" id="calendar-date-picker" class="table-select" aria-label="Aller à une date" min="2000-01-01" max="2099-12-31">
                         <select id="calendar-week-select" class="table-select" aria-label="Aller à une semaine" style="display: none;"></select>
                         <select id="calendar-week-year-select" class="table-select" aria-label="Année" style="display: none;"></select>
                         <select id="calendar-month-select" class="table-select" aria-label="Aller à un mois" style="display: none;"></select>
                         <select id="calendar-month-year-select" class="table-select" aria-label="Année" style="display: none;"></select>
                     </div>
-                    <p class="table-counter" id="calendar-range-label"></p>
                 </div>
 
                 <div id="view-panel-jour" class="calendar-panel calendar-day-layout" style="display: none;">
@@ -165,7 +164,7 @@
                             <td><span class="badge badge-neutral">Prévu</span></td>
                             <td><span class="badge badge-info">Normale</span></td>
                             <td><span class="badge badge-warning">Moyen</span></td>
-                            <td><a href="fiche-rdv.html?rdv=rdv-0001" class="btn-table-action">Voir la fiche</a></td>
+                            <td><a href="fiche-rdv.html?rdv=rdv-0001" class="btn-table-action" target="_blank">Voir la fiche</a></td>
                         </tr>
                         <tr data-id="rdv-0002" data-status="confirme" data-confirmation="confirme" data-date="11/07/2026" data-client="atelier-leroy" data-search="présentation site vitrine atelier leroy chez le client">
                             <td>Présentation site vitrine</td>
@@ -176,7 +175,7 @@
                             <td><span class="badge badge-info">Confirmé</span></td>
                             <td><span class="badge badge-danger">Haute</span></td>
                             <td><span class="badge badge-success">Fort</span></td>
-                            <td><a href="fiche-rdv.html?rdv=rdv-0002" class="btn-table-action">Voir la fiche</a></td>
+                            <td><a href="fiche-rdv.html?rdv=rdv-0002" class="btn-table-action" target="_blank">Voir la fiche</a></td>
                         </tr>
                         <tr data-id="rdv-0003" data-status="reporte" data-confirmation="a-confirmer" data-date="16/07/2026" data-client="boucherie-morel" data-search="renégociation contrat annuel boucherie morel téléphone">
                             <td>Renégociation contrat annuel</td>
@@ -187,7 +186,7 @@
                             <td><span class="badge badge-warning">Reporté</span></td>
                             <td><span class="badge badge-info">Normale</span></td>
                             <td><span class="badge badge-warning">Moyen</span></td>
-                            <td><a href="fiche-rdv.html?rdv=rdv-0003" class="btn-table-action">Voir la fiche</a></td>
+                            <td><a href="fiche-rdv.html?rdv=rdv-0003" class="btn-table-action" target="_blank">Voir la fiche</a></td>
                         </tr>
                         <tr data-id="rdv-0004" data-status="realise" data-confirmation="confirme" data-date="15/03/2026" data-client="martin-dupont" data-search="signature devis site vitrine audit martin dupont chez le client">
                             <td>Signature devis site vitrine + audit</td>
@@ -198,7 +197,7 @@
                             <td><span class="badge badge-success">Réalisé</span></td>
                             <td><span class="badge badge-danger">Haute</span></td>
                             <td><span class="badge badge-success">Fort</span></td>
-                            <td><a href="fiche-rdv.html?rdv=rdv-0004" class="btn-table-action">Voir la fiche</a></td>
+                            <td><a href="fiche-rdv.html?rdv=rdv-0004" class="btn-table-action" target="_blank">Voir la fiche</a></td>
                         </tr>
                         <tr data-id="rdv-0005" data-status="sans_suite" data-confirmation="confirme" data-date="20/06/2026" data-client="sophie-bernard" data-search="découverte besoin formation sophie bernard visioconférence">
                             <td>Découverte besoin formation</td>
@@ -209,7 +208,7 @@
                             <td><span class="badge badge-neutral">Sans suite</span></td>
                             <td><span class="badge badge-neutral">Basse</span></td>
                             <td><span class="badge badge-neutral">Faible</span></td>
-                            <td><a href="fiche-rdv.html?rdv=rdv-0005" class="btn-table-action">Voir la fiche</a></td>
+                            <td><a href="fiche-rdv.html?rdv=rdv-0005" class="btn-table-action" target="_blank">Voir la fiche</a></td>
                         </tr>
                         <tr data-id="rdv-0006" data-status="prevu" data-confirmation="a-confirmer" data-date="10/07/2026" data-client="techni-bois-sarl" data-search="premier rendez-vous découverte techni-bois sarl chez le client">
                             <td>Premier rendez-vous découverte</td>
@@ -220,7 +219,7 @@
                             <td><span class="badge badge-neutral">Prévu</span></td>
                             <td><span class="badge badge-info">Normale</span></td>
                             <td><span class="badge badge-warning">Moyen</span></td>
-                            <td><a href="fiche-rdv.html?rdv=rdv-0006" class="btn-table-action">Voir la fiche</a></td>
+                            <td><a href="fiche-rdv.html?rdv=rdv-0006" class="btn-table-action" target="_blank">Voir la fiche</a></td>
                         </tr>
                     </tbody>
                 </table>

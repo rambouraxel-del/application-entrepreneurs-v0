@@ -1793,6 +1793,19 @@ svg {
 .modal-select {
     width: 100%;
     max-width: none;
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-btn);
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    cursor: pointer;
+}
+
+.modal-select:focus {
+    outline: none;
+    border-color: var(--color-primary);
 }
 
 .modal-textarea {

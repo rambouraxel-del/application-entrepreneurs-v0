@@ -1288,6 +1288,45 @@ document.addEventListener('DOMContentLoaded', function () {
         return !dejaConvertiEnFacture;
     }
 
+    function appliquerPropositionCommerciale(rdv) {
+        var proposition = rdv.propositionCommerciale;
+        if (!proposition || !proposition.produits || proposition.produits.length === 0) {
+            return false;
+        }
+        if (!peutSupprimerDevisBrouillonLie(rdv)) {
+            // Devis introuvable, déjà envoyé/accepté/refusé, ou déjà converti en
+            // facture : on ne réécrit jamais un devis qui n'est plus un simple
+            // brouillon lié à ce RDV.
+            return false;
+        }
+        var devis = trouverDevisLie(rdv);
+        var PRODUCT_DETAILS = window.COCKPIT_PRODUCT_DETAILS || {};
+        var remisePourcent = proposition.remiseMaxPourcent || 0;
+        var lignes = proposition.produits.map(function (p) {
+            var product = PRODUCT_DETAILS[p.slug];
+            if (!product) {
+                return null;
+            }
+            return {
+                designation: product.nom,
+                description: product.descriptionCourte || '',
+                quantite: p.quantite,
+                prixUnitaireHT: product.prixHT,
+                tauxTVA: product.tva,
+                remisePourcent: remisePourcent
+            };
+        }).filter(function (l) {
+            return !!l;
+        });
+        if (lignes.length === 0) {
+            return false;
+        }
+        var versionActive = devis.versions[devis.versions.length - 1];
+        versionActive.lignes = lignes;
+        versionActive.dateModification = formatDateFr(new Date());
+        return true;
+    }
+
     function supprimerDevisBrouillonLie(rdv) {
         if (!peutSupprimerDevisBrouillonLie(rdv)) {
             return false;
@@ -1623,6 +1662,7 @@ document.addEventListener('DOMContentLoaded', function () {
         peutSupprimerDevisBrouillonLie: peutSupprimerDevisBrouillonLie,
         supprimerDevisBrouillonLie: supprimerDevisBrouillonLie,
         transformerDevisBrouillonEnClassique: transformerDevisBrouillonEnClassique,
+        appliquerPropositionCommerciale: appliquerPropositionCommerciale,
         compterReports: compterReports,
         estReportePlusieursFois: estReportePlusieursFois,
         snapshotClient: snapshotClient,
@@ -6425,7 +6465,6 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     var weekGridEl = document.getElementById('calendar-week-grid');
     var monthGridEl = document.getElementById('calendar-month-grid');
-    var rangeLabelEl = document.getElementById('calendar-range-label');
     var prevBtn = document.getElementById('calendar-prev-btn');
     var nextBtn = document.getElementById('calendar-next-btn');
     var todayBtn = document.getElementById('calendar-today-btn');
@@ -6481,7 +6520,15 @@ document.addEventListener('DOMContentLoaded', function () {
         if (parts.length !== 3) {
             return null;
         }
-        var d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+        var year = parseInt(parts[0], 10);
+        // Garde-fou contre la saisie clavier incomplète du champ année d'un
+        // <input type="date"> natif (ex. "0026"/"19XX" avant que les 4 chiffres
+        // ne soient tapés) : une année hors d'une plage raisonnable est ignorée
+        // plutôt que d'appliquer une date visiblement erronée.
+        if (isNaN(year) || year < 2000 || year > 2099) {
+            return null;
+        }
+        var d = new Date(year, parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
         return isNaN(d.getTime()) ? null : d;
     }
 
@@ -6611,6 +6658,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var statusClass = statutInfo ? (STATUS_TO_EVENT_CLASS[statutInfo.badgeClass] || 'calendar-event-neutral') : 'calendar-event-neutral';
         link.className = 'calendar-event ' + statusClass;
         link.href = 'fiche-rdv.html?rdv=' + encodeURIComponent(rdv.id);
+        link.target = '_blank';
         link.title = rdvTooltip(rdv);
 
         var topRow = makeEl('span', 'calendar-event-top');
@@ -6681,8 +6729,6 @@ document.addEventListener('DOMContentLoaded', function () {
         days.forEach(function (day) {
             renderDayColumn(weekGridEl, day, range.startHour, totalHeight, sameDay(day, today));
         });
-
-        rangeLabelEl.textContent = 'Semaine du ' + formatDateFr(monday) + ' au ' + formatDateFr(addDays(monday, 6));
     }
 
     function renderJour() {
@@ -6700,7 +6746,6 @@ document.addEventListener('DOMContentLoaded', function () {
         renderTimeColumn(dayGridEl, range.startHour, range.endHour, totalHeight);
         renderDayColumn(dayGridEl, refDate, range.startHour, totalHeight, isToday);
 
-        rangeLabelEl.textContent = formatDateFr(refDate);
         renderDaySummary();
     }
 
@@ -6741,6 +6786,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 var item = document.createElement('a');
                 item.className = 'calendar-day-summary-item';
                 item.href = 'fiche-rdv.html?rdv=' + encodeURIComponent(rdv.id);
+                item.target = '_blank';
                 item.textContent = rdv.date + ' · ' + (rdv.heureDebut || '—') + ' — ' + (rdv.titre || 'Rendez-vous');
                 list.appendChild(item);
             });
@@ -6773,6 +6819,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     var link = document.createElement('a');
                     link.className = 'calendar-month-event ' + monthClass;
                     link.href = 'fiche-rdv.html?rdv=' + encodeURIComponent(rdv.id);
+                    link.target = '_blank';
                     link.title = rdvTooltip(rdv);
                     link.textContent = (rdv.heureDebut ? rdv.heureDebut + ' ' : '') + (rdv.titre || 'Rendez-vous');
                     link.addEventListener('click', function (evt) {
@@ -6792,8 +6839,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 monthGridEl.appendChild(cell);
             })(addDays(gridStart, i));
         }
-
-        rangeLabelEl.textContent = MONTH_NAMES[refDate.getMonth()] + ' ' + refDate.getFullYear();
     }
 
     function populateWeekSelectors() {
@@ -6918,6 +6963,10 @@ document.addEventListener('DOMContentLoaded', function () {
         if (parsed) {
             refDate = parsed;
             renderActiveView();
+        } else {
+            // Valeur incomplète ou hors plage (ex. année à 2 chiffres) : on
+            // revient à la date active plutôt que de laisser un champ invalide.
+            datePickerEl.value = toISODate(refDate);
         }
     });
 
@@ -7134,7 +7183,13 @@ document.addEventListener('DOMContentLoaded', function () {
         if (parts.length !== 3) {
             return '';
         }
-        return pad2(parseInt(parts[2], 10)) + '/' + pad2(parseInt(parts[1], 10)) + '/' + parts[0];
+        var year = parseInt(parts[0], 10);
+        // Même garde-fou que sur l'agenda : ignore une année incomplète/hors
+        // plage plutôt que d'enregistrer une date visiblement erronée.
+        if (isNaN(year) || year < 2000 || year > 2099) {
+            return '';
+        }
+        return pad2(parseInt(parts[2], 10)) + '/' + pad2(parseInt(parts[1], 10)) + '/' + year;
     }
 
     var clientSearchOutsideClickHandler = null;
@@ -7438,13 +7493,15 @@ document.addEventListener('DOMContentLoaded', function () {
         var viewLink = document.createElement('a');
         viewLink.className = 'btn-table-action';
         viewLink.textContent = 'Voir le devis';
+        viewLink.target = '_blank';
         viewLink.href = 'devis-edition.html?devis=' + encodeURIComponent(devis.numero) + '&version=' + versionActive.version +
             (rdv.clientSlug ? '&client=' + encodeURIComponent(rdv.clientSlug) : '');
         actions.appendChild(viewLink);
 
         var docLink = document.createElement('a');
         docLink.className = 'table-action-secondary';
-        docLink.textContent = 'Document';
+        docLink.textContent = 'Aperçu / imprimer';
+        docLink.target = '_blank';
         docLink.href = 'devis-document.html?devis=' + encodeURIComponent(devis.numero) + '&version=' + versionActive.version;
         actions.appendChild(docLink);
 
@@ -7453,19 +7510,10 @@ document.addEventListener('DOMContentLoaded', function () {
             var factureLink = document.createElement('a');
             factureLink.className = 'table-action-secondary';
             factureLink.textContent = 'Voir la facture';
+            factureLink.target = '_blank';
             factureLink.href = 'facture-edition.html?facture=' + encodeURIComponent(factureKey);
             actions.appendChild(factureLink);
         } else if (agendaCalc.peutSupprimerDevisBrouillonLie(rdv)) {
-            var transformBtn = document.createElement('button');
-            transformBtn.type = 'button';
-            transformBtn.className = 'btn-secondary';
-            transformBtn.textContent = 'Transformer en devis classique';
-            transformBtn.addEventListener('click', function () {
-                agendaCalc.transformerDevisBrouillonEnClassique(rdv);
-                renderAll();
-            });
-            actions.appendChild(transformBtn);
-
             var deleteDevisBtn = document.createElement('button');
             deleteDevisBtn.type = 'button';
             deleteDevisBtn.className = 'btn-danger';
@@ -7519,6 +7567,8 @@ document.addEventListener('DOMContentLoaded', function () {
         dateInput.type = 'date';
         dateInput.id = 'rdv-form-date';
         dateInput.className = 'modal-input';
+        dateInput.min = '2000-01-01';
+        dateInput.max = '2099-12-31';
         dateInput.value = toISODateRdv(rdv.date);
         dateWrap.appendChild(dateInput);
         grid.appendChild(dateWrap);
@@ -7830,8 +7880,6 @@ document.addEventListener('DOMContentLoaded', function () {
         var lastComputedTotal = null;
 
         function recomputeProposition() {
-            var companySettings = window.COCKPIT_COMPANY_SETTINGS || {};
-            var isAssujetti = !!(companySettings.tva && companySettings.tva.trim());
             var remisePourcent = Math.max(0, Math.min(100, parseFloat(remiseInput.value) || 0));
 
             var lignes = Object.keys(selectedProductState).map(function (slug) {
@@ -7859,25 +7907,20 @@ document.addEventListener('DOMContentLoaded', function () {
                 row.appendChild(makeEl('span', null, value));
                 summaryEl.appendChild(row);
             }
-            addRow('Total HT brut', devisCalc.formatMoney(totals.totalBrutHT));
-            if (remisePourcent > 0) {
-                addRow('Remise (' + remisePourcent + ' %)', '– ' + devisCalc.formatMoney(totals.totalRemises));
-            }
-            if (isAssujetti) {
-                addRow('Total HT net', devisCalc.formatMoney(totals.totalHT));
-                addRow('TVA', devisCalc.formatMoney(totals.totalTVA));
-                var ttcRow = makeEl('div', 'devis-summary-row devis-summary-row-total');
-                ttcRow.appendChild(makeEl('span', null, 'Total TTC'));
-                ttcRow.appendChild(makeEl('span', null, devisCalc.formatMoney(totals.totalTTC)));
-                summaryEl.appendChild(ttcRow);
-                lastComputedTotal = totals.totalTTC;
-            } else {
-                var totalRow = makeEl('div', 'devis-summary-row devis-summary-row-total');
-                totalRow.appendChild(makeEl('span', null, 'Montant total (TVA non applicable)'));
-                totalRow.appendChild(makeEl('span', null, devisCalc.formatMoney(totals.totalHT)));
-                summaryEl.appendChild(totalRow);
-                lastComputedTotal = totals.totalHT;
-            }
+            // Mêmes libellés et même logique que le récapitulatif devis/facture
+            // (COCKPIT_DEVIS_CALC.computeDevisTotals) : TVA toujours affichée,
+            // par ligne selon le taux propre à chaque produit/service — aucune
+            // condition d'assujettissement de l'entreprise, cohérent avec le
+            // fonctionnement existant des devis et factures.
+            addRow('Total HT avant remise', devisCalc.formatMoney(totals.totalBrutHT));
+            addRow('Remises', (totals.totalRemises > 0 ? '- ' : '') + devisCalc.formatMoney(totals.totalRemises));
+            addRow('Total HT net', devisCalc.formatMoney(totals.totalHT));
+            addRow('Total TVA', devisCalc.formatMoney(totals.totalTVA));
+            var ttcRow = makeEl('div', 'devis-summary-row devis-summary-row-total');
+            ttcRow.appendChild(makeEl('span', null, 'Total TTC'));
+            ttcRow.appendChild(makeEl('span', null, devisCalc.formatMoney(totals.totalTTC)));
+            summaryEl.appendChild(ttcRow);
+            lastComputedTotal = totals.totalTTC;
         }
 
         remiseInput.addEventListener('input', recomputeProposition);
@@ -7957,6 +8000,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (oldStatut !== rdv.statut) {
                     agendaCalc.pushHistorique(rdv, 'statut', 'Statut modifié.');
                 }
+            }
+
+            if (agendaCalc.appliquerPropositionCommerciale && agendaCalc.appliquerPropositionCommerciale(rdv)) {
+                agendaCalc.pushHistorique(rdv, 'devis', 'Devis brouillon mis à jour depuis la proposition commerciale du rendez-vous.');
             }
 
             renderAll();
