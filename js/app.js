@@ -2068,7 +2068,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function computeSerie(soldeDepart, mouvements, today, periodEnd) {
-        var points = [{ date: new Date(today), solde: soldeDepart }];
+        var points = [{ date: new Date(today), solde: soldeDepart, mouvementPrincipal: null }];
         var running = soldeDepart;
         var cursor = new Date(today);
 
@@ -2078,14 +2078,18 @@ document.addEventListener('DOMContentLoaded', function () {
             if (cursor > periodEnd) {
                 cursor = new Date(periodEnd);
             }
+            var mouvementPrincipal = null;
             mouvements.forEach(function (m) {
                 var d = parseDate(m.date);
                 if (!d || d <= previous || d > cursor) {
                     return;
                 }
                 running = devisCalc.roundMoney(running + (m.type === 'encaissement' ? m.montant : -m.montant));
+                if (!mouvementPrincipal || m.montant > mouvementPrincipal.montant) {
+                    mouvementPrincipal = m;
+                }
             });
-            points.push({ date: new Date(cursor), solde: running });
+            points.push({ date: new Date(cursor), solde: running, mouvementPrincipal: mouvementPrincipal });
             if (cursor.getTime() === periodEnd.getTime()) {
                 break;
             }
@@ -9085,6 +9089,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (isLien && mouvement.lien.type === 'facture') {
             item.href = 'facture-edition.html?facture=' + encodeURIComponent(mouvement.lien.key);
             item.target = '_blank';
+            item.rel = 'noopener noreferrer';
         }
 
         var shortDate = formatShortDate(mouvement.date);
@@ -9140,7 +9145,7 @@ document.addEventListener('DOMContentLoaded', function () {
             row.appendChild(makeEl('td', null, calc.labelForCategorie(op.categorie)));
             row.appendChild(makeEl('td', null, op.libelle));
             row.appendChild(makeEl('td', null, op.date));
-            row.appendChild(makeEl('td', null, devisCalc.formatMoney(op.montant)));
+            row.appendChild(makeEl('td', 'amount-cell', devisCalc.formatMoney(op.montant)));
             var statutCell = document.createElement('td');
             statutCell.appendChild(statutBadge(op.statut));
             row.appendChild(statutCell);
@@ -9157,11 +9162,22 @@ document.addEventListener('DOMContentLoaded', function () {
         facturesEmptyEl.style.display = 'none';
         snapshot.facturesAEncaisser.forEach(function (f) {
             var row = document.createElement('tr');
-            row.appendChild(makeEl('td', null, f.numero));
+
+            var numeroCell = document.createElement('td');
+            var factureLink = document.createElement('a');
+            factureLink.href = 'facture-edition.html?facture=' + encodeURIComponent(f.key);
+            factureLink.target = '_blank';
+            factureLink.rel = 'noopener noreferrer';
+            factureLink.textContent = f.numero;
+            numeroCell.appendChild(factureLink);
+            row.appendChild(numeroCell);
+
             var clientCell = document.createElement('td');
             if (f.clientSlug) {
                 var link = document.createElement('a');
                 link.href = 'fiche-client.html?client=' + encodeURIComponent(f.clientSlug);
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
                 link.textContent = f.clientNom;
                 clientCell.appendChild(link);
             } else {
@@ -9169,7 +9185,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             row.appendChild(clientCell);
             row.appendChild(makeEl('td', null, f.dateEcheance || '—'));
-            row.appendChild(makeEl('td', null, devisCalc.formatMoney(f.resteAPayer)));
+            row.appendChild(makeEl('td', 'amount-cell', devisCalc.formatMoney(f.resteAPayer)));
             var statutCell = document.createElement('td');
             var info = FACTURE_STATUT_INFO[f.statut];
             statutCell.appendChild(makeEl('span', 'badge ' + (info ? info.badgeClass : 'badge-neutral'), info ? info.label : f.statut));
@@ -9211,6 +9227,13 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    function escapeXml(value) {
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+    }
+
     function renderChart(snapshot) {
         var points = snapshot.serie;
         chartContainerEl.innerHTML = '';
@@ -9225,13 +9248,16 @@ document.addEventListener('DOMContentLoaded', function () {
         if (maxValue === minValue) {
             maxValue = minValue + 1;
         }
-        var width = 600;
-        var height = 200;
+        var width = 640;
+        var height = 220;
+        var leftMargin = 78;
+        var rightPad = 12;
         var topMargin = 16;
         var bottomMargin = 30;
+        var plotWidth = width - leftMargin - rightPad;
 
         function xFor(index) {
-            return (index / (points.length - 1)) * width;
+            return leftMargin + (index / (points.length - 1)) * plotWidth;
         }
         function yFor(value) {
             var ratio = (value - minValue) / (maxValue - minValue);
@@ -9244,20 +9270,34 @@ document.addEventListener('DOMContentLoaded', function () {
         var linePoints = coords.join(' ');
         var fillPoints = coords.join(' ') + ' ' + xFor(points.length - 1) + ',' + (height - bottomMargin) + ' ' + xFor(0) + ',' + (height - bottomMargin);
 
+        var TICK_COUNT = 4;
+        var ticks = '';
+        for (var i = 0; i <= TICK_COUNT; i++) {
+            var tickValue = minValue + (maxValue - minValue) * (i / TICK_COUNT);
+            var tickY = yFor(tickValue);
+            ticks += '<line x1="' + leftMargin + '" y1="' + tickY + '" x2="' + (width - rightPad) + '" y2="' + tickY + '" stroke="#e5e7eb" stroke-width="1"></line>';
+            ticks += '<text class="chart-axis-label" x="' + (leftMargin - 10) + '" y="' + (tickY + 4) + '" text-anchor="end">' + escapeXml(devisCalc.formatMoney(tickValue)) + '</text>';
+        }
+
         var circles = points.map(function (p, index) {
-            return '<circle cx="' + xFor(index) + '" cy="' + yFor(p.solde) + '" r="4" fill="#4f46e5"></circle>';
+            var tooltip = formatDateFr(p.date) + ' : ' + devisCalc.formatMoney(p.solde);
+            if (p.mouvementPrincipal) {
+                tooltip += ' — ' + p.mouvementPrincipal.libelle + ' (' + (p.mouvementPrincipal.type === 'encaissement' ? '+ ' : '- ') + devisCalc.formatMoney(p.mouvementPrincipal.montant) + ')';
+            }
+            return '<circle class="tresorerie-chart-point" cx="' + xFor(index) + '" cy="' + yFor(p.solde) + '" r="5" fill="#4f46e5"><title>' + escapeXml(tooltip) + '</title></circle>';
         }).join('');
 
         var zeroLine = (minValue < 0 && maxValue > 0)
-            ? '<line x1="0" y1="' + yFor(0) + '" x2="' + width + '" y2="' + yFor(0) + '" stroke="#d1d5db" stroke-width="1" stroke-dasharray="4 4"></line>'
+            ? '<line x1="' + leftMargin + '" y1="' + yFor(0) + '" x2="' + (width - rightPad) + '" y2="' + yFor(0) + '" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="4 4"></line>'
             : '';
 
         var svg = document.createElement('div');
-        svg.innerHTML = '<svg class="chart-container" viewBox="0 0 ' + width + ' ' + height + '" preserveAspectRatio="none">' +
+        svg.innerHTML = '<svg class="chart-container tresorerie-chart" viewBox="0 0 ' + width + ' ' + height + '" preserveAspectRatio="xMidYMid meet">' +
             '<defs><linearGradient id="tresorerieChartFill" x1="0" y1="0" x2="0" y2="1">' +
             '<stop offset="0%" stop-color="#4f46e5" stop-opacity="0.25"></stop>' +
             '<stop offset="100%" stop-color="#4f46e5" stop-opacity="0"></stop>' +
             '</linearGradient></defs>' +
+            ticks +
             zeroLine +
             '<polygon points="' + fillPoints + '" fill="url(#tresorerieChartFill)"></polygon>' +
             '<polyline points="' + linePoints + '" fill="none" stroke="#4f46e5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>' +
@@ -9266,6 +9306,7 @@ document.addEventListener('DOMContentLoaded', function () {
         chartContainerEl.appendChild(svg.firstChild);
 
         var labels = makeEl('div', 'chart-labels');
+        labels.style.marginLeft = leftMargin + 'px';
         points.forEach(function (p) {
             labels.appendChild(makeEl('span', null, pad2(p.date.getDate()) + '/' + pad2(p.date.getMonth() + 1)));
         });
