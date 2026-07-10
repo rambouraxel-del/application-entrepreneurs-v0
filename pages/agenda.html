@@ -81,13 +81,22 @@
                         <button type="button" class="btn-secondary" id="calendar-prev-btn" aria-label="Précédent">‹ Précédent</button>
                         <button type="button" class="btn-secondary" id="calendar-today-btn">Aujourd'hui</button>
                         <button type="button" class="btn-secondary" id="calendar-next-btn" aria-label="Suivant">Suivant ›</button>
-                        <input type="text" id="calendar-date-picker" class="modal-input" placeholder="JJ/MM/AAAA" style="max-width: 130px;" aria-label="Aller à une date">
+                        <input type="date" id="calendar-date-picker" class="table-select" aria-label="Aller à une date">
+                        <select id="calendar-week-select" class="table-select" aria-label="Aller à une semaine" style="display: none;"></select>
+                        <select id="calendar-week-year-select" class="table-select" aria-label="Année" style="display: none;"></select>
+                        <select id="calendar-month-select" class="table-select" aria-label="Aller à un mois" style="display: none;"></select>
+                        <select id="calendar-month-year-select" class="table-select" aria-label="Année" style="display: none;"></select>
                     </div>
                     <p class="table-counter" id="calendar-range-label"></p>
                 </div>
 
-                <div id="view-panel-jour" class="calendar-panel" style="display: none;">
+                <div id="view-panel-jour" class="calendar-panel calendar-day-layout" style="display: none;">
                     <div class="calendar-grid calendar-grid-day" id="calendar-day-grid"></div>
+                    <div class="calendar-day-summary" id="calendar-day-summary">
+                        <h3>Résumé du jour</h3>
+                        <div id="calendar-day-summary-stats"></div>
+                        <div id="calendar-day-summary-lists"></div>
+                    </div>
                 </div>
 
                 <div id="view-panel-semaine" class="calendar-panel">

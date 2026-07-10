@@ -6414,7 +6414,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var agendaCalc = window.COCKPIT_AGENDA_CALC || {};
     var RDV_STATUSES = window.COCKPIT_RDV_STATUSES || [];
-    var RDV_PRIORITES = window.COCKPIT_RDV_PRIORITES || [];
     var CLIENT_DETAILS = window.COCKPIT_CLIENT_DETAILS || {};
 
     var navToolbarEl = document.getElementById('calendar-nav-toolbar');
@@ -6431,12 +6430,32 @@ document.addEventListener('DOMContentLoaded', function () {
     var nextBtn = document.getElementById('calendar-next-btn');
     var todayBtn = document.getElementById('calendar-today-btn');
     var datePickerEl = document.getElementById('calendar-date-picker');
+    var weekSelectEl = document.getElementById('calendar-week-select');
+    var weekYearSelectEl = document.getElementById('calendar-week-year-select');
+    var monthSelectEl = document.getElementById('calendar-month-select');
+    var monthYearSelectEl = document.getElementById('calendar-month-year-select');
+    var daySummaryStatsEl = document.getElementById('calendar-day-summary-stats');
+    var daySummaryListsEl = document.getElementById('calendar-day-summary-lists');
 
     var DAY_NAMES = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
     var MONTH_NAMES = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
     var DEFAULT_START_HOUR = 7;
     var DEFAULT_END_HOUR = 20;
     var PX_PER_MIN = 1;
+    var STATUS_TO_EVENT_CLASS = {
+        'badge-neutral': 'calendar-event-neutral',
+        'badge-info': 'calendar-event-info',
+        'badge-warning': 'calendar-event-warning',
+        'badge-success': 'calendar-event-success',
+        'badge-danger': 'calendar-event-danger'
+    };
+    var STATUS_TO_MONTH_CLASS = {
+        'badge-neutral': 'calendar-month-event-neutral',
+        'badge-info': 'calendar-month-event-info',
+        'badge-warning': 'calendar-month-event-warning',
+        'badge-success': 'calendar-month-event-success',
+        'badge-danger': 'calendar-month-event-danger'
+    };
 
     var activeView = 'semaine';
     var refDate = new Date();
@@ -6448,6 +6467,22 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function formatDateFr(date) {
         return pad2(date.getDate()) + '/' + pad2(date.getMonth() + 1) + '/' + date.getFullYear();
+    }
+
+    function toISODate(date) {
+        return date.getFullYear() + '-' + pad2(date.getMonth() + 1) + '-' + pad2(date.getDate());
+    }
+
+    function fromISODate(value) {
+        if (!value) {
+            return null;
+        }
+        var parts = value.split('-');
+        if (parts.length !== 3) {
+            return null;
+        }
+        var d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+        return isNaN(d.getTime()) ? null : d;
     }
 
     function sameDay(a, b) {
@@ -6472,6 +6507,24 @@ document.addEventListener('DOMContentLoaded', function () {
         var offset = dow === 0 ? -6 : 1 - dow;
         d.setDate(d.getDate() + offset);
         return d;
+    }
+
+    function getISOWeekAndYear(date) {
+        var d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+        var dayNum = d.getUTCDay() || 7;
+        d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+        var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+        var week = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+        return { week: week, year: d.getUTCFullYear() };
+    }
+
+    function dateFromISOWeek(week, year) {
+        var jan4 = new Date(year, 0, 4);
+        var dayNum = jan4.getDay() || 7;
+        var monday = new Date(jan4);
+        monday.setDate(jan4.getDate() - dayNum + 1 + (week - 1) * 7);
+        monday.setHours(0, 0, 0, 0);
+        return monday;
     }
 
     function parseHM(value) {
@@ -6540,29 +6593,37 @@ document.addEventListener('DOMContentLoaded', function () {
         return { startHour: startHour, endHour: endHour };
     }
 
-    function buildEventCard(rdv) {
-        var link = document.createElement('a');
-        link.className = 'calendar-event';
-        link.href = 'fiche-rdv.html?rdv=' + encodeURIComponent(rdv.id);
+    function rdvTooltip(rdv) {
+        var statutInfo = badgeInfo(RDV_STATUSES, rdv.statut);
+        var lines = [
+            rdv.titre || 'Rendez-vous',
+            (rdv.heureDebut || '—') + (rdv.heureFin ? ' – ' + rdv.heureFin : ''),
+            clientName(rdv.clientSlug) || 'Aucun client associé',
+            rdv.lieu || '',
+            'Statut : ' + (statutInfo ? statutInfo.label : rdv.statut)
+        ];
+        return lines.filter(function (l) { return !!l; }).join('\n');
+    }
 
-        link.appendChild(makeEl('span', 'calendar-event-time', (rdv.heureDebut || '—') + (rdv.heureFin ? '–' + rdv.heureFin : '')));
+    function buildEventCard(rdv, compact) {
+        var link = document.createElement('a');
+        var statutInfo = badgeInfo(RDV_STATUSES, rdv.statut);
+        var statusClass = statutInfo ? (STATUS_TO_EVENT_CLASS[statutInfo.badgeClass] || 'calendar-event-neutral') : 'calendar-event-neutral';
+        link.className = 'calendar-event ' + statusClass;
+        link.href = 'fiche-rdv.html?rdv=' + encodeURIComponent(rdv.id);
+        link.title = rdvTooltip(rdv);
+
+        var topRow = makeEl('span', 'calendar-event-top');
+        topRow.appendChild(makeEl('span', 'calendar-event-priority-dot ' + statusClass));
+        topRow.appendChild(makeEl('span', 'calendar-event-time', (rdv.heureDebut || '—') + (rdv.heureFin ? '–' + rdv.heureFin : '')));
+        link.appendChild(topRow);
+
         link.appendChild(makeEl('span', 'calendar-event-title', rdv.titre || 'Rendez-vous'));
 
         var clientNom = clientName(rdv.clientSlug);
-        if (clientNom) {
+        if (clientNom && !compact) {
             link.appendChild(makeEl('span', 'calendar-event-client', clientNom));
         }
-
-        var badgesWrap = makeEl('span', 'calendar-event-badges');
-        var statutInfo = badgeInfo(RDV_STATUSES, rdv.statut);
-        if (statutInfo) {
-            badgesWrap.appendChild(makeEl('span', 'badge ' + statutInfo.badgeClass, statutInfo.label));
-        }
-        var prioriteInfo = badgeInfo(RDV_PRIORITES, rdv.priorite);
-        if (prioriteInfo) {
-            badgesWrap.appendChild(makeEl('span', 'badge ' + prioriteInfo.badgeClass, prioriteInfo.label));
-        }
-        link.appendChild(badgesWrap);
 
         return link;
     }
@@ -6587,9 +6648,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
             var end = parseHM(rdv.heureFin) || (start + 30);
-            var card = buildEventCard(rdv);
+            var height = Math.max(34, (end - start) * PX_PER_MIN);
+            var card = buildEventCard(rdv, height < 46);
             card.style.top = ((start - startHour * 60) * PX_PER_MIN) + 'px';
-            card.style.height = Math.max(28, (end - start) * PX_PER_MIN) + 'px';
+            card.style.height = height + 'px';
             col.appendChild(card);
         });
         container.appendChild(col);
@@ -6639,6 +6701,51 @@ document.addEventListener('DOMContentLoaded', function () {
         renderDayColumn(dayGridEl, refDate, range.startHour, totalHeight, isToday);
 
         rangeLabelEl.textContent = formatDateFr(refDate);
+        renderDaySummary();
+    }
+
+    function makeSummaryRow(label, value) {
+        var row = makeEl('div', 'calendar-day-summary-row');
+        row.appendChild(makeEl('span', 'calendar-day-summary-label', label));
+        row.appendChild(makeEl('span', 'calendar-day-summary-value', value));
+        return row;
+    }
+
+    function renderDaySummary() {
+        if (!daySummaryStatsEl || !daySummaryListsEl) {
+            return;
+        }
+        daySummaryStatsEl.innerHTML = '';
+        daySummaryListsEl.innerHTML = '';
+
+        var dayRdvs = rdvsForDay(refDate);
+        var nonConfirmes = dayRdvs.filter(function (rdv) {
+            return !rdv.communication.confirme && rdv.statut !== 'realise' && rdv.statut !== 'annule' && rdv.statut !== 'sans_suite';
+        }).length;
+        var devisBrouillon = dayRdvs.filter(function (rdv) {
+            var devis = agendaCalc.trouverDevisLie ? agendaCalc.trouverDevisLie(rdv) : null;
+            return !!(devis && devis.versions[devis.versions.length - 1].statut === 'brouillon');
+        }).length;
+
+        daySummaryStatsEl.appendChild(makeSummaryRow('RDV ce jour', String(dayRdvs.length)));
+        daySummaryStatsEl.appendChild(makeSummaryRow('Non confirmés', String(nonConfirmes)));
+        daySummaryStatsEl.appendChild(makeSummaryRow('Devis brouillon en attente', String(devisBrouillon)));
+
+        var stats = agendaCalc.computeDashboardStats ? agendaCalc.computeDashboardStats() : null;
+        daySummaryListsEl.appendChild(makeEl('h3', null, 'Prochains rendez-vous'));
+        if (!stats || stats.rdvProchains.length === 0) {
+            daySummaryListsEl.appendChild(makeEl('p', 'empty-state-inline', 'Aucun rendez-vous à venir.'));
+        } else {
+            var list = makeEl('div', 'calendar-day-summary-list');
+            stats.rdvProchains.slice(0, 3).forEach(function (rdv) {
+                var item = document.createElement('a');
+                item.className = 'calendar-day-summary-item';
+                item.href = 'fiche-rdv.html?rdv=' + encodeURIComponent(rdv.id);
+                item.textContent = rdv.date + ' · ' + (rdv.heureDebut || '—') + ' — ' + (rdv.titre || 'Rendez-vous');
+                list.appendChild(item);
+            });
+            daySummaryListsEl.appendChild(list);
+        }
     }
 
     function renderMois() {
@@ -6661,9 +6768,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 var dayRdvs = rdvsForDay(day);
                 dayRdvs.slice(0, 3).forEach(function (rdv) {
+                    var statutInfo = badgeInfo(RDV_STATUSES, rdv.statut);
+                    var monthClass = statutInfo ? (STATUS_TO_MONTH_CLASS[statutInfo.badgeClass] || 'calendar-month-event-neutral') : 'calendar-month-event-neutral';
                     var link = document.createElement('a');
-                    link.className = 'calendar-month-event';
+                    link.className = 'calendar-month-event ' + monthClass;
                     link.href = 'fiche-rdv.html?rdv=' + encodeURIComponent(rdv.id);
+                    link.title = rdvTooltip(rdv);
                     link.textContent = (rdv.heureDebut ? rdv.heureDebut + ' ' : '') + (rdv.titre || 'Rendez-vous');
                     link.addEventListener('click', function (evt) {
                         evt.stopPropagation();
@@ -6686,12 +6796,65 @@ document.addEventListener('DOMContentLoaded', function () {
         rangeLabelEl.textContent = MONTH_NAMES[refDate.getMonth()] + ' ' + refDate.getFullYear();
     }
 
+    function populateWeekSelectors() {
+        var isoInfo = getISOWeekAndYear(refDate);
+        weekYearSelectEl.innerHTML = '';
+        for (var y = isoInfo.year - 2; y <= isoInfo.year + 2; y++) {
+            var yOption = document.createElement('option');
+            yOption.value = String(y);
+            yOption.textContent = String(y);
+            if (y === isoInfo.year) {
+                yOption.selected = true;
+            }
+            weekYearSelectEl.appendChild(yOption);
+        }
+
+        weekSelectEl.innerHTML = '';
+        for (var w = 1; w <= 53; w++) {
+            var monday = dateFromISOWeek(w, isoInfo.year);
+            var option = document.createElement('option');
+            option.value = String(w);
+            option.textContent = 'Semaine ' + w + ' — du ' + formatDateFr(monday) + ' au ' + formatDateFr(addDays(monday, 6));
+            if (w === isoInfo.week) {
+                option.selected = true;
+            }
+            weekSelectEl.appendChild(option);
+        }
+    }
+
+    function populateMonthSelectors() {
+        monthYearSelectEl.innerHTML = '';
+        for (var y = refDate.getFullYear() - 2; y <= refDate.getFullYear() + 2; y++) {
+            var yOption = document.createElement('option');
+            yOption.value = String(y);
+            yOption.textContent = String(y);
+            if (y === refDate.getFullYear()) {
+                yOption.selected = true;
+            }
+            monthYearSelectEl.appendChild(yOption);
+        }
+
+        monthSelectEl.innerHTML = '';
+        MONTH_NAMES.forEach(function (name, index) {
+            var option = document.createElement('option');
+            option.value = String(index);
+            option.textContent = name;
+            if (index === refDate.getMonth()) {
+                option.selected = true;
+            }
+            monthSelectEl.appendChild(option);
+        });
+    }
+
     function renderActiveView() {
+        datePickerEl.value = toISODate(refDate);
         if (activeView === 'semaine') {
+            populateWeekSelectors();
             renderSemaine();
         } else if (activeView === 'jour') {
             renderJour();
         } else if (activeView === 'mois') {
+            populateMonthSelectors();
             renderMois();
         }
     }
@@ -6707,6 +6870,10 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
         navToolbarEl.style.display = view === 'liste' ? 'none' : '';
+        weekSelectEl.style.display = view === 'semaine' ? '' : 'none';
+        weekYearSelectEl.style.display = view === 'semaine' ? '' : 'none';
+        monthSelectEl.style.display = view === 'mois' ? '' : 'none';
+        monthYearSelectEl.style.display = view === 'mois' ? '' : 'none';
         if (view !== 'liste') {
             renderActiveView();
         }
@@ -6747,12 +6914,38 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     datePickerEl.addEventListener('change', function () {
-        var parsed = agendaCalc.parseDateFr ? agendaCalc.parseDateFr(datePickerEl.value.trim()) : null;
+        var parsed = fromISODate(datePickerEl.value);
         if (parsed) {
             refDate = parsed;
             renderActiveView();
         }
     });
+
+    function goToSelectedWeek() {
+        var week = parseInt(weekSelectEl.value, 10);
+        var year = parseInt(weekYearSelectEl.value, 10);
+        if (!isNaN(week) && !isNaN(year)) {
+            refDate = dateFromISOWeek(week, year);
+            renderActiveView();
+        }
+    }
+    weekSelectEl.addEventListener('change', goToSelectedWeek);
+    weekYearSelectEl.addEventListener('change', function () {
+        var isoInfo = getISOWeekAndYear(refDate);
+        refDate = dateFromISOWeek(isoInfo.week, parseInt(weekYearSelectEl.value, 10));
+        renderActiveView();
+    });
+
+    function goToSelectedMonth() {
+        var month = parseInt(monthSelectEl.value, 10);
+        var year = parseInt(monthYearSelectEl.value, 10);
+        if (!isNaN(month) && !isNaN(year)) {
+            refDate = new Date(year, month, 1);
+            renderActiveView();
+        }
+    }
+    monthSelectEl.addEventListener('change', goToSelectedMonth);
+    monthYearSelectEl.addEventListener('change', goToSelectedMonth);
 
     setActiveView('semaine');
 })();
@@ -6873,6 +7066,79 @@ document.addEventListener('DOMContentLoaded', function () {
         modification: { label: 'Modification', badgeClass: 'badge-neutral' }
     };
 
+    var LIEU_FORMATS = [
+        { value: 'visio', label: 'Visio' },
+        { value: 'sur-place', label: 'Sur place' },
+        { value: 'bureau', label: 'Au bureau' },
+        { value: 'telephonique', label: 'Téléphonique' },
+        { value: 'autre', label: 'Autre' }
+    ];
+    var LIEU_LEGACY_MAP = {
+        'Visioconférence': 'visio',
+        'Chez le client': 'sur-place',
+        'Téléphone': 'telephonique',
+        'Bureau': 'bureau'
+    };
+    var LIEU_PRECISION_FORMATS = { visio: true, 'sur-place': true, autre: true };
+
+    function parseLieuForEdit(value) {
+        if (!value) {
+            return { format: 'visio', precision: '' };
+        }
+        var mapped = LIEU_LEGACY_MAP[value];
+        if (mapped) {
+            return { format: mapped, precision: '' };
+        }
+        return { format: 'autre', precision: value };
+    }
+
+    function buildLieuValue(format, precision) {
+        var info = LIEU_FORMATS.filter(function (f) { return f.value === format; })[0];
+        var label = info ? info.label : 'Autre';
+        if (format === 'autre') {
+            return precision.trim() || 'Autre';
+        }
+        return precision.trim() ? (label + ' — ' + precision.trim()) : label;
+    }
+
+    function buildTimeOptions() {
+        var options = [];
+        for (var h = 7; h <= 21; h++) {
+            for (var m = 0; m < 60; m += 15) {
+                if (h === 21 && m > 0) {
+                    break;
+                }
+                options.push(pad2(h) + ':' + pad2(m));
+            }
+        }
+        return options;
+    }
+
+    function pad2(n) {
+        return (n < 10 ? '0' : '') + n;
+    }
+
+    function toISODateRdv(dateFr) {
+        var d = agendaCalc.parseDateFr ? agendaCalc.parseDateFr(dateFr) : null;
+        if (!d) {
+            return '';
+        }
+        return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+    }
+
+    function fromISODateRdv(value) {
+        if (!value) {
+            return '';
+        }
+        var parts = value.split('-');
+        if (parts.length !== 3) {
+            return '';
+        }
+        return pad2(parseInt(parts[2], 10)) + '/' + pad2(parseInt(parts[1], 10)) + '/' + parts[0];
+    }
+
+    var clientSearchOutsideClickHandler = null;
+
     var mode = 'view';
     var rdv = null;
 
@@ -6933,6 +7199,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 confirme: false, rappelsEffectues: 0, relances: 0,
                 dateDerniereCommunication: null, prochaineCommunicationPrevue: null, commentaireSuivi: ''
             },
+            propositionCommerciale: { produits: [], remiseMaxPourcent: 0 },
             devisRef: null,
             historique: []
         };
@@ -7220,82 +7487,126 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function openEditHeaderModal() {
         var body = document.createElement('div');
+        var lieuParsed = parseLieuForEdit(rdv.lieu);
+        var timeOptions = buildTimeOptions();
+        var proposition = rdv.propositionCommerciale || { produits: [], remiseMaxPourcent: 0 };
+        var selectedProductState = {};
+        proposition.produits.forEach(function (p) {
+            selectedProductState[p.slug] = p.quantite;
+        });
 
-        body.appendChild(makeLabel('Titre', 'rdv-form-titre'));
+        if (clientSearchOutsideClickHandler) {
+            document.removeEventListener('click', clientSearchOutsideClickHandler);
+            clientSearchOutsideClickHandler = null;
+        }
+
+        // --- Section 1 : Informations du rendez-vous ---
+        var infoSection = makeEl('div', 'modal-section');
+        infoSection.appendChild(makeEl('p', 'document-section-title', 'Informations du rendez-vous'));
+
+        infoSection.appendChild(makeLabel('Titre', 'rdv-form-titre'));
         var titreInput = document.createElement('input');
         titreInput.type = 'text';
         titreInput.id = 'rdv-form-titre';
         titreInput.className = 'modal-input';
         titreInput.value = rdv.titre || '';
-        body.appendChild(titreInput);
+        infoSection.appendChild(titreInput);
 
         var grid = makeEl('div', 'form-grid-2');
         var dateWrap = document.createElement('div');
-        dateWrap.appendChild(makeLabel('Date (JJ/MM/AAAA)', 'rdv-form-date'));
+        dateWrap.appendChild(makeLabel('Date', 'rdv-form-date'));
         var dateInput = document.createElement('input');
-        dateInput.type = 'text';
+        dateInput.type = 'date';
         dateInput.id = 'rdv-form-date';
         dateInput.className = 'modal-input';
-        dateInput.placeholder = 'JJ/MM/AAAA';
-        dateInput.value = rdv.date || '';
+        dateInput.value = toISODateRdv(rdv.date);
         dateWrap.appendChild(dateInput);
         grid.appendChild(dateWrap);
 
         var lieuWrap = document.createElement('div');
         lieuWrap.appendChild(makeLabel('Lieu / format', 'rdv-form-lieu'));
-        var lieuInput = document.createElement('input');
-        lieuInput.type = 'text';
-        lieuInput.id = 'rdv-form-lieu';
-        lieuInput.className = 'modal-input';
-        lieuInput.value = rdv.lieu || '';
-        lieuWrap.appendChild(lieuInput);
+        var lieuSelect = document.createElement('select');
+        lieuSelect.id = 'rdv-form-lieu';
+        lieuSelect.className = 'modal-select';
+        LIEU_FORMATS.forEach(function (f) {
+            var option = document.createElement('option');
+            option.value = f.value;
+            option.textContent = f.label;
+            if (f.value === lieuParsed.format) {
+                option.selected = true;
+            }
+            lieuSelect.appendChild(option);
+        });
+        lieuWrap.appendChild(lieuSelect);
         grid.appendChild(lieuWrap);
-        body.appendChild(grid);
+        infoSection.appendChild(grid);
+
+        var precisionWrap = document.createElement('div');
+        precisionWrap.style.marginTop = '10px';
+        precisionWrap.appendChild(makeLabel('Précision du lieu (adresse, lien visio...)', 'rdv-form-lieu-precision'));
+        var precisionInput = document.createElement('input');
+        precisionInput.type = 'text';
+        precisionInput.id = 'rdv-form-lieu-precision';
+        precisionInput.className = 'modal-input';
+        precisionInput.value = lieuParsed.precision || '';
+        precisionWrap.appendChild(precisionInput);
+        infoSection.appendChild(precisionWrap);
+
+        function updatePrecisionVisibility() {
+            precisionWrap.style.display = LIEU_PRECISION_FORMATS[lieuSelect.value] ? '' : 'none';
+        }
+        lieuSelect.addEventListener('change', updatePrecisionVisibility);
+        updatePrecisionVisibility();
 
         var grid2 = makeEl('div', 'form-grid-2');
+        grid2.style.marginTop = '10px';
         var debutWrap = document.createElement('div');
         debutWrap.appendChild(makeLabel('Heure de début', 'rdv-form-heure-debut'));
-        var debutInput = document.createElement('input');
-        debutInput.type = 'text';
-        debutInput.id = 'rdv-form-heure-debut';
-        debutInput.className = 'modal-input';
-        debutInput.placeholder = '09:30';
-        debutInput.value = rdv.heureDebut || '';
-        debutWrap.appendChild(debutInput);
+        var debutSelect = document.createElement('select');
+        debutSelect.id = 'rdv-form-heure-debut';
+        debutSelect.className = 'modal-select';
+        var debutOptions = timeOptions.slice();
+        if (rdv.heureDebut && debutOptions.indexOf(rdv.heureDebut) === -1) {
+            debutOptions.push(rdv.heureDebut);
+            debutOptions.sort();
+        }
+        debutOptions.forEach(function (t) {
+            var option = document.createElement('option');
+            option.value = t;
+            option.textContent = t;
+            if (t === rdv.heureDebut) {
+                option.selected = true;
+            }
+            debutSelect.appendChild(option);
+        });
+        debutWrap.appendChild(debutSelect);
         grid2.appendChild(debutWrap);
 
         var finWrap = document.createElement('div');
         finWrap.appendChild(makeLabel('Heure de fin', 'rdv-form-heure-fin'));
-        var finInput = document.createElement('input');
-        finInput.type = 'text';
-        finInput.id = 'rdv-form-heure-fin';
-        finInput.className = 'modal-input';
-        finInput.placeholder = '10:30';
-        finInput.value = rdv.heureFin || '';
-        finWrap.appendChild(finInput);
-        grid2.appendChild(finWrap);
-        body.appendChild(grid2);
-
-        body.appendChild(makeLabel('Client', 'rdv-form-client'));
-        var clientSelect = document.createElement('select');
-        clientSelect.id = 'rdv-form-client';
-        clientSelect.className = 'modal-select';
-        var emptyOption = document.createElement('option');
-        emptyOption.value = '';
-        emptyOption.textContent = 'Aucun client';
-        clientSelect.appendChild(emptyOption);
-        Object.keys(CLIENT_DETAILS).forEach(function (slug) {
+        var finSelect = document.createElement('select');
+        finSelect.id = 'rdv-form-heure-fin';
+        finSelect.className = 'modal-select';
+        var finOptions = timeOptions.slice();
+        if (rdv.heureFin && finOptions.indexOf(rdv.heureFin) === -1) {
+            finOptions.push(rdv.heureFin);
+            finOptions.sort();
+        }
+        finOptions.forEach(function (t) {
             var option = document.createElement('option');
-            option.value = slug;
-            option.textContent = CLIENT_DETAILS[slug].nom;
-            if (slug === rdv.clientSlug) {
+            option.value = t;
+            option.textContent = t;
+            if (t === rdv.heureFin) {
                 option.selected = true;
             }
-            clientSelect.appendChild(option);
+            finSelect.appendChild(option);
         });
-        body.appendChild(clientSelect);
+        finWrap.appendChild(finSelect);
+        grid2.appendChild(finWrap);
+        infoSection.appendChild(grid2);
 
         var grid3 = makeEl('div', 'form-grid-2');
+        grid3.style.marginTop = '10px';
         var prioriteWrap = document.createElement('div');
         prioriteWrap.appendChild(makeLabel('Priorité', 'rdv-form-priorite'));
         var prioriteSelect = document.createElement('select');
@@ -7329,23 +7640,267 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         opportuniteWrap.appendChild(opportuniteSelect);
         grid3.appendChild(opportuniteWrap);
-        body.appendChild(grid3);
+        infoSection.appendChild(grid3);
 
-        body.appendChild(makeLabel('Montant potentiel estimé (€)', 'rdv-form-montant'));
+        body.appendChild(infoSection);
+
+        // --- Section 2 : Client ---
+        var clientSection = makeEl('div', 'modal-section');
+        clientSection.appendChild(makeEl('p', 'document-section-title', 'Client'));
+
+        var searchWrap = document.createElement('div');
+        searchWrap.className = 'client-search';
+
+        var clientSearchInput = document.createElement('input');
+        clientSearchInput.type = 'text';
+        clientSearchInput.className = 'modal-input';
+        clientSearchInput.placeholder = 'Rechercher un client (nom, société, tél., e-mail, adresse)...';
+        clientSearchInput.setAttribute('aria-label', 'Rechercher un client');
+
+        var selectedClientSlug = rdv.clientSlug || null;
+        if (selectedClientSlug && CLIENT_DETAILS[selectedClientSlug]) {
+            clientSearchInput.value = CLIENT_DETAILS[selectedClientSlug].nom;
+        }
+
+        var resultsEl = document.createElement('div');
+        resultsEl.className = 'client-search-results';
+        resultsEl.style.display = 'none';
+
+        var selectedClientInfoEl = document.createElement('div');
+        selectedClientInfoEl.style.marginTop = '8px';
+
+        function renderSelectedClientInfo() {
+            selectedClientInfoEl.innerHTML = '';
+            if (!selectedClientSlug || !CLIENT_DETAILS[selectedClientSlug]) {
+                selectedClientInfoEl.appendChild(makeEl('p', 'empty-state-inline', 'Aucun client sélectionné.'));
+                return;
+            }
+            var c = CLIENT_DETAILS[selectedClientSlug];
+            selectedClientInfoEl.appendChild(makeEl('p', 'document-party-name', c.nom));
+            [(c.entreprise && c.entreprise !== '—') ? c.entreprise : null, c.adresse, c.telephone, c.email].forEach(function (line) {
+                if (line) {
+                    selectedClientInfoEl.appendChild(makeEl('p', null, line));
+                }
+            });
+        }
+
+        function matchesQuery(client, query) {
+            var haystack = [client.nom, client.entreprise, client.telephone, client.email, client.adresse]
+                .filter(function (v) { return !!v; }).join(' ').toLowerCase();
+            return haystack.indexOf(query) !== -1;
+        }
+
+        function renderClientResults() {
+            var query = clientSearchInput.value.trim().toLowerCase();
+            resultsEl.innerHTML = '';
+            if (!query) {
+                resultsEl.style.display = 'none';
+                return;
+            }
+            var matches = Object.keys(CLIENT_DETAILS).filter(function (slug) {
+                return matchesQuery(CLIENT_DETAILS[slug], query);
+            });
+            if (matches.length === 0) {
+                resultsEl.appendChild(makeEl('p', 'empty-state-inline', 'Aucun client trouvé.'));
+            } else {
+                matches.forEach(function (slug) {
+                    var client = CLIENT_DETAILS[slug];
+                    var item = document.createElement('button');
+                    item.type = 'button';
+                    item.className = 'client-search-result-item';
+                    item.appendChild(makeEl('span', 'client-search-result-name', client.nom + (client.entreprise && client.entreprise !== '—' ? ' — ' + client.entreprise : '')));
+                    item.appendChild(makeEl('span', 'client-search-result-detail', [client.telephone, client.email, client.adresse].filter(function (v) { return !!v; }).join(' · ')));
+                    item.addEventListener('click', function () {
+                        selectedClientSlug = slug;
+                        clientSearchInput.value = client.nom;
+                        resultsEl.innerHTML = '';
+                        resultsEl.style.display = 'none';
+                        renderSelectedClientInfo();
+                    });
+                    resultsEl.appendChild(item);
+                });
+            }
+            resultsEl.style.display = '';
+        }
+
+        clientSearchInput.addEventListener('input', renderClientResults);
+        clientSearchInput.addEventListener('focus', renderClientResults);
+
+        clientSearchOutsideClickHandler = function (evt) {
+            if (!searchWrap.contains(evt.target)) {
+                resultsEl.style.display = 'none';
+            }
+        };
+        document.addEventListener('click', clientSearchOutsideClickHandler);
+
+        searchWrap.appendChild(clientSearchInput);
+        searchWrap.appendChild(resultsEl);
+        clientSection.appendChild(searchWrap);
+        clientSection.appendChild(selectedClientInfoEl);
+        renderSelectedClientInfo();
+
+        body.appendChild(clientSection);
+
+        // --- Section 3 : Proposition commerciale ---
+        var propositionSection = makeEl('div', 'modal-section');
+        propositionSection.appendChild(makeEl('p', 'document-section-title', 'Proposition commerciale'));
+
+        propositionSection.appendChild(makeLabel('Montant potentiel estimé (€)', 'rdv-form-montant'));
         var montantInput = document.createElement('input');
         montantInput.type = 'number';
         montantInput.id = 'rdv-form-montant';
         montantInput.className = 'modal-input';
         montantInput.value = (rdv.montantPotentiel !== null && rdv.montantPotentiel !== undefined) ? rdv.montantPotentiel : '';
-        body.appendChild(montantInput);
+        propositionSection.appendChild(montantInput);
 
-        body.appendChild(makeLabel('Notes internes', 'rdv-form-notes'));
+        var productsLabel = makeEl('p', 'modal-label', 'Produits / services à proposer');
+        productsLabel.style.marginTop = '12px';
+        propositionSection.appendChild(productsLabel);
+
+        var productDetails = window.COCKPIT_PRODUCT_DETAILS || {};
+        var activeSlugs = Object.keys(productDetails).filter(function (slug) {
+            return productDetails[slug].statut === 'actif';
+        });
+
+        var summaryEl = makeEl('div', 'proposition-summary');
+
+        var remiseWrap = document.createElement('div');
+        remiseWrap.style.marginTop = '10px';
+        remiseWrap.appendChild(makeLabel('Remise maximum acceptée (%)', 'rdv-form-remise'));
+        var remiseInput = document.createElement('input');
+        remiseInput.type = 'number';
+        remiseInput.id = 'rdv-form-remise';
+        remiseInput.className = 'modal-input';
+        remiseInput.min = '0';
+        remiseInput.max = '100';
+        remiseInput.value = proposition.remiseMaxPourcent || 0;
+        remiseWrap.appendChild(remiseInput);
+
+        if (activeSlugs.length === 0) {
+            propositionSection.appendChild(makeEl('p', 'empty-state-inline', 'Aucun produit/service actif dans le catalogue.'));
+        } else {
+            var productsListEl = document.createElement('div');
+            activeSlugs.forEach(function (slug) {
+                var product = productDetails[slug];
+                var row = makeEl('div', 'proposition-product-row');
+                var checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.checked = !!selectedProductState[slug];
+                var qtyInput = document.createElement('input');
+                qtyInput.type = 'number';
+                qtyInput.className = 'proposition-product-qty';
+                qtyInput.min = '1';
+                qtyInput.value = selectedProductState[slug] || 1;
+                qtyInput.disabled = !checkbox.checked;
+
+                checkbox.addEventListener('change', function () {
+                    qtyInput.disabled = !checkbox.checked;
+                    if (checkbox.checked) {
+                        selectedProductState[slug] = parseInt(qtyInput.value, 10) || 1;
+                    } else {
+                        delete selectedProductState[slug];
+                    }
+                    recomputeProposition();
+                });
+                qtyInput.addEventListener('input', function () {
+                    if (checkbox.checked) {
+                        selectedProductState[slug] = parseInt(qtyInput.value, 10) || 1;
+                        recomputeProposition();
+                    }
+                });
+
+                row.appendChild(checkbox);
+                row.appendChild(makeEl('span', 'proposition-product-name', product.nom + ' — ' + devisCalc.formatMoney(product.prixHT) + ' HT'));
+                row.appendChild(qtyInput);
+                productsListEl.appendChild(row);
+            });
+            propositionSection.appendChild(productsListEl);
+        }
+
+        propositionSection.appendChild(remiseWrap);
+        propositionSection.appendChild(summaryEl);
+
+        var useAmountBtn = document.createElement('button');
+        useAmountBtn.type = 'button';
+        useAmountBtn.className = 'btn-secondary';
+        useAmountBtn.style.marginTop = '10px';
+        useAmountBtn.textContent = 'Utiliser ce montant comme montant potentiel estimé';
+        propositionSection.appendChild(useAmountBtn);
+
+        var lastComputedTotal = null;
+
+        function recomputeProposition() {
+            var companySettings = window.COCKPIT_COMPANY_SETTINGS || {};
+            var isAssujetti = !!(companySettings.tva && companySettings.tva.trim());
+            var remisePourcent = Math.max(0, Math.min(100, parseFloat(remiseInput.value) || 0));
+
+            var lignes = Object.keys(selectedProductState).map(function (slug) {
+                var product = productDetails[slug];
+                return {
+                    designation: product.nom,
+                    quantite: selectedProductState[slug],
+                    prixUnitaireHT: product.prixHT,
+                    tauxTVA: product.tva,
+                    remisePourcent: remisePourcent
+                };
+            });
+
+            summaryEl.innerHTML = '';
+            if (lignes.length === 0) {
+                summaryEl.appendChild(makeEl('p', 'empty-state-inline', 'Sélectionnez un ou plusieurs produits/services pour estimer un montant.'));
+                lastComputedTotal = null;
+                return;
+            }
+
+            var totals = devisCalc.computeDevisTotals(lignes);
+            function addRow(label, value) {
+                var row = makeEl('div', 'devis-summary-row');
+                row.appendChild(makeEl('span', null, label));
+                row.appendChild(makeEl('span', null, value));
+                summaryEl.appendChild(row);
+            }
+            addRow('Total HT brut', devisCalc.formatMoney(totals.totalBrutHT));
+            if (remisePourcent > 0) {
+                addRow('Remise (' + remisePourcent + ' %)', '– ' + devisCalc.formatMoney(totals.totalRemises));
+            }
+            if (isAssujetti) {
+                addRow('Total HT net', devisCalc.formatMoney(totals.totalHT));
+                addRow('TVA', devisCalc.formatMoney(totals.totalTVA));
+                var ttcRow = makeEl('div', 'devis-summary-row devis-summary-row-total');
+                ttcRow.appendChild(makeEl('span', null, 'Total TTC'));
+                ttcRow.appendChild(makeEl('span', null, devisCalc.formatMoney(totals.totalTTC)));
+                summaryEl.appendChild(ttcRow);
+                lastComputedTotal = totals.totalTTC;
+            } else {
+                var totalRow = makeEl('div', 'devis-summary-row devis-summary-row-total');
+                totalRow.appendChild(makeEl('span', null, 'Montant total (TVA non applicable)'));
+                totalRow.appendChild(makeEl('span', null, devisCalc.formatMoney(totals.totalHT)));
+                summaryEl.appendChild(totalRow);
+                lastComputedTotal = totals.totalHT;
+            }
+        }
+
+        remiseInput.addEventListener('input', recomputeProposition);
+        useAmountBtn.addEventListener('click', function () {
+            if (lastComputedTotal !== null) {
+                montantInput.value = lastComputedTotal;
+            }
+        });
+        recomputeProposition();
+
+        body.appendChild(propositionSection);
+
+        // --- Section 4 : Notes ---
+        var notesSection = makeEl('div', 'modal-section');
+        notesSection.appendChild(makeEl('p', 'document-section-title', 'Notes'));
+        notesSection.appendChild(makeLabel('Notes internes', 'rdv-form-notes'));
         var notesTextarea = document.createElement('textarea');
         notesTextarea.id = 'rdv-form-notes';
         notesTextarea.className = 'modal-textarea';
         notesTextarea.rows = 3;
         notesTextarea.value = rdv.notesInternes || '';
-        body.appendChild(notesTextarea);
+        notesSection.appendChild(notesTextarea);
+        body.appendChild(notesSection);
 
         var cancelButton = document.createElement('button');
         cancelButton.type = 'button';
@@ -7367,16 +7922,22 @@ document.addEventListener('DOMContentLoaded', function () {
             var wasNew = mode === 'new';
 
             rdv.titre = titreInput.value.trim() || 'Rendez-vous sans titre';
-            rdv.date = dateInput.value.trim();
-            rdv.heureDebut = debutInput.value.trim();
-            rdv.heureFin = finInput.value.trim();
-            rdv.lieu = lieuInput.value.trim();
-            rdv.clientSlug = clientSelect.value || null;
+            rdv.date = fromISODateRdv(dateInput.value) || rdv.date;
+            rdv.heureDebut = debutSelect.value;
+            rdv.heureFin = finSelect.value;
+            rdv.lieu = buildLieuValue(lieuSelect.value, precisionInput.value);
+            rdv.clientSlug = selectedClientSlug;
             rdv.priorite = prioriteSelect.value;
             rdv.opportunite = opportuniteSelect.value;
             var montantValue = parseFloat(montantInput.value);
             rdv.montantPotentiel = isNaN(montantValue) ? null : montantValue;
             rdv.notesInternes = notesTextarea.value.trim();
+            rdv.propositionCommerciale = {
+                produits: Object.keys(selectedProductState).map(function (slug) {
+                    return { slug: slug, quantite: selectedProductState[slug] };
+                }),
+                remiseMaxPourcent: Math.max(0, Math.min(100, parseFloat(remiseInput.value) || 0))
+            };
 
             if (wasNew) {
                 rdv.id = agendaCalc.computeNextRdvId();

@@ -2034,6 +2034,77 @@ svg {
 
 .calendar-grid-day {
     grid-template-columns: 64px 1fr;
+    min-width: 280px;
+}
+
+.calendar-day-layout {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+}
+
+.calendar-day-layout .calendar-grid-day {
+    flex: 1 1 420px;
+    max-width: 480px;
+}
+
+.calendar-day-summary {
+    flex: 1 1 260px;
+    min-width: 220px;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    background: var(--color-surface);
+    padding: 14px 16px;
+}
+
+.calendar-day-summary h3 {
+    font-size: 13px;
+    font-weight: 700;
+    margin: 0 0 10px;
+    color: var(--color-text);
+}
+
+.calendar-day-summary-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 13px;
+}
+
+.calendar-day-summary-row:last-child {
+    border-bottom: none;
+}
+
+.calendar-day-summary-label {
+    color: var(--color-text-secondary);
+}
+
+.calendar-day-summary-value {
+    font-weight: 600;
+}
+
+.calendar-day-summary-list {
+    margin: 8px 0 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.calendar-day-summary-item {
+    display: block;
+    font-size: 12px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: var(--color-neutral-bg);
+    color: var(--color-text);
+    text-decoration: none;
+    border-left: 3px solid var(--color-primary);
+}
+
+.calendar-day-summary-item:hover {
+    filter: brightness(0.97);
 }
 
 .calendar-head-row {
@@ -2103,25 +2174,31 @@ svg {
     right: 2px;
     background: var(--color-primary-soft);
     border-left: 3px solid var(--color-primary);
-    border-radius: 6px;
-    padding: 3px 6px;
+    border-radius: 5px;
+    padding: 2px 5px;
     font-size: 11px;
-    line-height: 1.3;
+    line-height: 1.25;
     overflow: hidden;
     text-decoration: none;
     color: var(--color-text);
     display: flex;
     flex-direction: column;
-    gap: 1px;
 }
 
 .calendar-event:hover {
     filter: brightness(0.96);
 }
 
+.calendar-event-top {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
 .calendar-event-time {
     font-weight: 700;
     color: var(--color-primary);
+    white-space: nowrap;
 }
 
 .calendar-event-title {
@@ -2138,11 +2215,23 @@ svg {
     text-overflow: ellipsis;
 }
 
-.calendar-event-badges {
-    display: flex;
-    gap: 3px;
-    flex-wrap: wrap;
+.calendar-event-priority-dot {
+    flex: none;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
 }
+
+.calendar-event-neutral { border-left-color: var(--color-text-secondary); }
+.calendar-event-info { border-left-color: var(--color-primary); }
+.calendar-event-warning { border-left-color: var(--color-warning); }
+.calendar-event-success { border-left-color: var(--color-success); }
+.calendar-event-danger { border-left-color: var(--color-danger); }
+
+.calendar-event-priority-dot.calendar-event-danger { color: var(--color-danger); }
+.calendar-event-priority-dot.calendar-event-info { color: var(--color-primary); }
+.calendar-event-priority-dot.calendar-event-neutral { color: var(--color-text-secondary); }
 
 .calendar-month-grid {
     display: grid;
@@ -2191,10 +2280,11 @@ svg {
 .calendar-month-event {
     display: block;
     font-size: 10px;
-    padding: 1px 4px;
+    font-weight: 600;
+    padding: 2px 5px;
     border-radius: 4px;
-    background: var(--color-surface);
-    border-left: 2px solid var(--color-primary);
+    background: var(--color-primary-soft);
+    border-left: 3px solid var(--color-primary);
     color: var(--color-text);
     margin-bottom: 2px;
     white-space: nowrap;
@@ -2202,6 +2292,16 @@ svg {
     text-overflow: ellipsis;
     text-decoration: none;
 }
+
+.calendar-month-event:hover {
+    filter: brightness(0.95);
+}
+
+.calendar-month-event-neutral { border-left-color: var(--color-text-secondary); background: var(--color-neutral-bg); }
+.calendar-month-event-info { border-left-color: var(--color-primary); background: var(--color-primary-soft); }
+.calendar-month-event-warning { border-left-color: var(--color-warning); background: var(--color-warning-bg); }
+.calendar-month-event-success { border-left-color: var(--color-success); background: var(--color-success-bg); }
+.calendar-month-event-danger { border-left-color: var(--color-danger); background: var(--color-danger-bg); }
 
 .calendar-month-more {
     font-size: 10px;
@@ -2212,6 +2312,50 @@ svg {
     font-size: 12px;
     color: var(--color-text-secondary);
     font-weight: 500;
+}
+
+.modal-section {
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid var(--color-border);
+}
+
+.modal-section:first-child {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+}
+
+.proposition-product-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 13px;
+}
+
+.proposition-product-row:last-child {
+    border-bottom: none;
+}
+
+.proposition-product-name {
+    flex: 1;
+}
+
+.proposition-product-qty {
+    width: 56px;
+    padding: 4px 6px;
+    border: 1px solid var(--color-border-strong);
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+.proposition-summary {
+    margin-top: 10px;
+    background: var(--color-neutral-bg);
+    border-radius: 8px;
+    padding: 10px 12px;
 }
 
 /* Document devis (V0.6.1) : en-tête, parties, lignes éditables, récapitulatif */
