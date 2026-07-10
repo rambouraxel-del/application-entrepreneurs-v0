@@ -2183,6 +2183,374 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 })();
 
+// Données/calc Analyses (V0.9). Cockpit d'analyse transversal (commercial,
+// clients, activité, trésorerie) : n'introduit aucune nouvelle donnée
+// métier, ne fait que recouper CLIENT_DETAILS/DEVIS_DETAILS/FACTURE_DETAILS/
+// RDV_DETAILS via les helpers déjà existants (COCKPIT_DEVIS_CALC,
+// COCKPIT_FACTURE_CALC, COCKPIT_AGENDA_CALC, COCKPIT_FACTURATION_STATS,
+// COCKPIT_TRESORERIE_CALC). Le sélecteur de période ne s'applique qu'aux
+// agrégations recalculables simplement ici (devis/factures/rendez-vous créés
+// dans la période) ; le solde de trésorerie et les indicateurs "clients"
+// restent des instantanés courants, cohérents avec le comportement des
+// modules Trésorerie/Clients dont ils sont la synthèse.
+
+(function () {
+    var devisCalc = window.COCKPIT_DEVIS_CALC;
+    var factureCalc = window.COCKPIT_FACTURE_CALC;
+
+    function computePeriodRange(preset) {
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+        var start;
+        if (preset === 'mois') {
+            start = new Date(today.getFullYear(), today.getMonth(), 1);
+        } else if (preset === 'trimestre') {
+            var quarter = Math.floor(today.getMonth() / 3);
+            start = new Date(today.getFullYear(), quarter * 3, 1);
+        } else if (preset === 'annee') {
+            start = new Date(today.getFullYear(), 0, 1);
+        } else {
+            start = new Date(2000, 0, 1);
+        }
+        return { start: start, end: today };
+    }
+
+    function inRange(dateObj, range) {
+        return !!dateObj && dateObj >= range.start && dateObj <= range.end;
+    }
+
+    function computeCommercial(range) {
+        var agendaCalc = window.COCKPIT_AGENDA_CALC;
+        var DEVIS_DETAILS = window.COCKPIT_DEVIS_DETAILS || {};
+        var CLIENT_DETAILS = window.COCKPIT_CLIENT_DETAILS || {};
+        var FACTURE_DETAILS = window.COCKPIT_FACTURE_DETAILS || {};
+
+        var counts = { total: 0, brouillon: 0, envoye: 0, accepte: 0, refuse: 0 };
+        var montantEnAttente = 0;
+        var montantsHorsBrouillon = [];
+        var topDevis = [];
+
+        Object.keys(DEVIS_DETAILS).forEach(function (numero) {
+            var devis = DEVIS_DETAILS[numero];
+            var version = devisCalc.getActiveVersion(devis);
+            if (!version) {
+                return;
+            }
+            var dateCreation = agendaCalc.parseDateFr(version.dateCreation);
+            if (!inRange(dateCreation, range)) {
+                return;
+            }
+            counts.total += 1;
+            counts[version.statut] = (counts[version.statut] || 0) + 1;
+
+            var totals = devisCalc.computeDevisTotals(version.lignes);
+            if (version.statut === 'envoye') {
+                montantEnAttente = devisCalc.roundMoney(montantEnAttente + totals.totalTTC);
+            }
+            if (version.statut !== 'brouillon') {
+                montantsHorsBrouillon.push(totals.totalTTC);
+            }
+
+            var clientNom = (CLIENT_DETAILS[version.clientSlug] || version.clientSnapshot || {}).nom || version.clientSlug || '—';
+            topDevis.push({ numero: numero, clientNom: clientNom, montant: totals.totalTTC, statut: version.statut });
+        });
+
+        var montantMoyenDevis = montantsHorsBrouillon.length
+            ? devisCalc.roundMoney(montantsHorsBrouillon.reduce(function (s, v) { return s + v; }, 0) / montantsHorsBrouillon.length)
+            : 0;
+
+        var montantsFactures = [];
+        Object.keys(FACTURE_DETAILS).forEach(function (key) {
+            var facture = FACTURE_DETAILS[key];
+            if (facture.statutEmission !== 'emise') {
+                return;
+            }
+            var dateEmission = agendaCalc.parseDateFr(facture.dateEmission);
+            if (!inRange(dateEmission, range)) {
+                return;
+            }
+            var totals = devisCalc.computeDevisTotals(facture.lignes);
+            montantsFactures.push(totals.totalTTC);
+        });
+        var montantMoyenFacture = montantsFactures.length
+            ? devisCalc.roundMoney(montantsFactures.reduce(function (s, v) { return s + v; }, 0) / montantsFactures.length)
+            : 0;
+
+        var tauxTransformation = (counts.accepte + counts.refuse)
+            ? Math.round((counts.accepte / (counts.accepte + counts.refuse)) * 100)
+            : 0;
+
+        topDevis.sort(function (a, b) { return b.montant - a.montant; });
+        topDevis = topDevis.slice(0, 5);
+
+        return {
+            total: counts.total,
+            brouillon: counts.brouillon || 0,
+            envoye: counts.envoye || 0,
+            accepte: counts.accepte || 0,
+            refuse: counts.refuse || 0,
+            tauxTransformation: tauxTransformation,
+            montantMoyenDevis: montantMoyenDevis,
+            montantMoyenFacture: montantMoyenFacture,
+            montantEnAttente: montantEnAttente,
+            topDevis: topDevis
+        };
+    }
+
+    function computeClients() {
+        var CLIENT_DETAILS = window.COCKPIT_CLIENT_DETAILS || {};
+        var DEVIS_DETAILS = window.COCKPIT_DEVIS_DETAILS || {};
+        var FACTURE_DETAILS = window.COCKPIT_FACTURE_DETAILS || {};
+        var RDV_DETAILS = window.COCKPIT_RDV_DETAILS || {};
+
+        var parClient = {};
+        function getEntry(slug, nomFallback) {
+            if (!parClient[slug]) {
+                parClient[slug] = {
+                    slug: slug,
+                    nom: (CLIENT_DETAILS[slug] || {}).nom || nomFallback || slug,
+                    caFacture: 0,
+                    caEncaisse: 0,
+                    resteAEncaisser: 0,
+                    nbDevis: 0,
+                    nbRdv: 0,
+                    enRetard: false
+                };
+            }
+            return parClient[slug];
+        }
+
+        Object.keys(FACTURE_DETAILS).forEach(function (key) {
+            var facture = FACTURE_DETAILS[key];
+            if (facture.statutEmission !== 'emise' || !facture.clientSlug) {
+                return;
+            }
+            var totals = devisCalc.computeDevisTotals(facture.lignes);
+            var paiementsInfo = factureCalc.computePaiements(facture.paiements, totals.totalTTC);
+            var statutAffiche = factureCalc.computeStatutAffiche({
+                statutEmission: facture.statutEmission,
+                totalTTC: totals.totalTTC,
+                paiements: facture.paiements,
+                dateEcheance: facture.dateEcheance
+            });
+            var entry = getEntry(facture.clientSlug, (facture.clientSnapshot || {}).nom);
+            entry.caFacture = devisCalc.roundMoney(entry.caFacture + totals.totalTTC);
+            entry.caEncaisse = devisCalc.roundMoney(entry.caEncaisse + paiementsInfo.totalPaye);
+            entry.resteAEncaisser = devisCalc.roundMoney(entry.resteAEncaisser + paiementsInfo.resteAPayer);
+            if (statutAffiche === 'en-retard') {
+                entry.enRetard = true;
+            }
+        });
+
+        Object.keys(DEVIS_DETAILS).forEach(function (numero) {
+            var version = devisCalc.getActiveVersion(DEVIS_DETAILS[numero]);
+            if (!version || !version.clientSlug) {
+                return;
+            }
+            var entry = getEntry(version.clientSlug, (version.clientSnapshot || {}).nom);
+            entry.nbDevis += 1;
+        });
+
+        Object.keys(RDV_DETAILS).forEach(function (id) {
+            var rdv = RDV_DETAILS[id];
+            if (!rdv.clientSlug) {
+                return;
+            }
+            var entry = getEntry(rdv.clientSlug, null);
+            entry.nbRdv += 1;
+        });
+
+        var clientsList = Object.keys(parClient).map(function (slug) { return parClient[slug]; });
+
+        var clientsActifs = Object.keys(CLIENT_DETAILS).filter(function (slug) {
+            return CLIENT_DETAILS[slug].statut === 'client-actif' || CLIENT_DETAILS[slug].statut === 'fidele';
+        }).length;
+        var clientsInactifs = Object.keys(CLIENT_DETAILS).filter(function (slug) {
+            return CLIENT_DETAILS[slug].statut === 'inactif';
+        }).length;
+        var clientsEnRetard = clientsList.filter(function (c) { return c.enRetard; });
+
+        var topParCA = clientsList.filter(function (c) { return c.caFacture > 0; })
+            .sort(function (a, b) { return b.caFacture - a.caFacture; }).slice(0, 5);
+        var topParReste = clientsList.filter(function (c) { return c.resteAEncaisser > 0; })
+            .sort(function (a, b) { return b.resteAEncaisser - a.resteAEncaisser; }).slice(0, 5);
+        var topParRdv = clientsList.filter(function (c) { return c.nbRdv > 0; })
+            .sort(function (a, b) { return b.nbRdv - a.nbRdv; }).slice(0, 5);
+        var topParDevis = clientsList.filter(function (c) { return c.nbDevis > 0; })
+            .sort(function (a, b) { return b.nbDevis - a.nbDevis; }).slice(0, 5);
+
+        return {
+            clientsActifs: clientsActifs,
+            clientsInactifs: clientsInactifs,
+            clientsEnRetard: clientsEnRetard,
+            topParCA: topParCA,
+            topParReste: topParReste,
+            topParRdv: topParRdv,
+            topParDevis: topParDevis
+        };
+    }
+
+    function computeActivite(range) {
+        var agendaCalc = window.COCKPIT_AGENDA_CALC;
+        var RDV_DETAILS = window.COCKPIT_RDV_DETAILS || {};
+        var FACTURE_DETAILS = window.COCKPIT_FACTURE_DETAILS || {};
+
+        function devisADoncFacture(devis) {
+            return Object.keys(FACTURE_DETAILS).some(function (key) {
+                var f = FACTURE_DETAILS[key];
+                return f.devisRef && f.devisRef.numero === devis.numero;
+            });
+        }
+
+        var rdvDansPeriode = [];
+        Object.keys(RDV_DETAILS).forEach(function (id) {
+            var rdv = RDV_DETAILS[id];
+            var d = agendaCalc.parseDateFr(rdv.date);
+            if (inRange(d, range)) {
+                rdvDansPeriode.push(rdv);
+            }
+        });
+
+        var counts = { prevu: 0, confirme: 0, reporte: 0, realise: 0, annule: 0, sans_suite: 0 };
+        var avecDevis = 0;
+        var avecFacture = 0;
+        rdvDansPeriode.forEach(function (rdv) {
+            counts[rdv.statut] = (counts[rdv.statut] || 0) + 1;
+            var devis = agendaCalc.trouverDevisLie(rdv);
+            if (devis) {
+                avecDevis += 1;
+                if (devisADoncFacture(devis)) {
+                    avecFacture += 1;
+                }
+            }
+        });
+
+        var total = rdvDansPeriode.length;
+        var tauxRdvDevis = total ? Math.round((avecDevis / total) * 100) : 0;
+        var tauxRdvFacture = total ? Math.round((avecFacture / total) * 100) : 0;
+        var reportesPlusieurs = rdvDansPeriode.filter(function (rdv) {
+            return agendaCalc.estReportePlusieursFois(rdv);
+        }).length;
+
+        var pointsAttention = [];
+        var toutRdv = Object.keys(RDV_DETAILS).map(function (id) { return RDV_DETAILS[id]; });
+        toutRdv.forEach(function (rdv) {
+            if (agendaCalc.estReportePlusieursFois(rdv)) {
+                pointsAttention.push({ rdv: rdv, texte: '« ' + (rdv.titre || 'Rendez-vous') + ' » a été reporté plusieurs fois.' });
+            } else if (rdv.statut === 'sans_suite') {
+                pointsAttention.push({ rdv: rdv, texte: '« ' + (rdv.titre || 'Rendez-vous') + ' » est resté sans suite.' });
+            } else {
+                var devis = agendaCalc.trouverDevisLie(rdv);
+                if (devis && devis.versions[devis.versions.length - 1].statut === 'brouillon') {
+                    pointsAttention.push({ rdv: rdv, texte: '« ' + (rdv.titre || 'Rendez-vous') + ' » a un devis brouillon en attente.' });
+                } else if (!devis && rdv.statut !== 'annule' && rdv.statut !== 'sans_suite') {
+                    pointsAttention.push({ rdv: rdv, texte: '« ' + (rdv.titre || 'Rendez-vous') + ' » n\'a pas de devis lié.' });
+                }
+            }
+        });
+
+        return {
+            total: total,
+            prevu: counts.prevu,
+            confirme: counts.confirme,
+            reporte: counts.reporte,
+            realise: counts.realise,
+            annule: counts.annule,
+            sansSuite: counts.sans_suite,
+            avecDevis: avecDevis,
+            avecFacture: avecFacture,
+            tauxRdvDevis: tauxRdvDevis,
+            tauxRdvFacture: tauxRdvFacture,
+            reportesPlusieurs: reportesPlusieurs,
+            pointsAttention: pointsAttention.slice(0, 6)
+        };
+    }
+
+    function computePointsCles(ctx) {
+        var points = [];
+        if (ctx.facturationStats.facturesEnRetard > 0) {
+            points.push(ctx.facturationStats.facturesEnRetard + ' facture(s) en retard.');
+        }
+        if (ctx.clients.topParCA.length > 0) {
+            points.push('Le client ' + ctx.clients.topParCA[0].nom + ' représente la plus forte part du CA facturé.');
+        }
+        if (ctx.tresorerieSnapshot.soldePrevisionnel < 0) {
+            points.push('Le solde prévisionnel devient négatif sur la période trésorerie.');
+        }
+        if (ctx.activite.avecDevis > 0) {
+            points.push(ctx.activite.avecDevis + ' rendez-vous ont généré un devis.');
+        }
+        points.push('Le taux de transformation devis → facture est de ' + ctx.commercial.tauxTransformation + ' %.');
+        return points.slice(0, 5);
+    }
+
+    function computeSnapshot(periodPreset) {
+        var range = computePeriodRange(periodPreset);
+        var facturationStats = (window.COCKPIT_FACTURATION_STATS || {}).computeStats
+            ? window.COCKPIT_FACTURATION_STATS.computeStats()
+            : { caFacture: 0, caEncaisse: 0, resteAEncaisser: 0, facturesEnRetard: 0 };
+        var tresorerieSnapshot = (window.COCKPIT_TRESORERIE_CALC || {}).computeSnapshot
+            ? window.COCKPIT_TRESORERIE_CALC.computeSnapshot(30)
+            : null;
+
+        var commercial = computeCommercial(range);
+        var clients = computeClients();
+        var activite = computeActivite(range);
+
+        var pointsCles = computePointsCles({
+            facturationStats: facturationStats,
+            clients: clients,
+            tresorerieSnapshot: tresorerieSnapshot || { soldePrevisionnel: 0 },
+            activite: activite,
+            commercial: commercial
+        });
+
+        var alertesPrincipales = [];
+        if (tresorerieSnapshot && tresorerieSnapshot.alertes.length > 0) {
+            alertesPrincipales = alertesPrincipales.concat(tresorerieSnapshot.alertes.slice(0, 3));
+        } else if (facturationStats.facturesEnRetard > 0) {
+            alertesPrincipales.push({
+                niveau: 'critical',
+                titre: facturationStats.facturesEnRetard + ' facture(s) en retard',
+                sousTexte: 'Montant facturé : ' + devisCalc.formatMoney(facturationStats.caFacture),
+                lien: 'facturation.html'
+            });
+        }
+        if (activite.pointsAttention.length > 0) {
+            alertesPrincipales.push({
+                niveau: 'warning',
+                titre: activite.pointsAttention.length + ' point(s) d\'attention côté agenda',
+                sousTexte: activite.pointsAttention[0].texte,
+                lien: 'agenda.html'
+            });
+        }
+        alertesPrincipales = alertesPrincipales.slice(0, 4);
+
+        return {
+            range: range,
+            vueEnsemble: {
+                caFacture: facturationStats.caFacture,
+                caEncaisse: facturationStats.caEncaisse,
+                resteAEncaisser: facturationStats.resteAEncaisser,
+                tauxTransformation: commercial.tauxTransformation,
+                clientsActifs: clients.clientsActifs,
+                rdvRealises: activite.realise,
+                soldeTresorerie: tresorerieSnapshot ? tresorerieSnapshot.soldeEstime : 0
+            },
+            commercial: commercial,
+            clients: clients,
+            activite: activite,
+            tresorerie: tresorerieSnapshot,
+            pointsCles: pointsCles,
+            alertesPrincipales: alertesPrincipales
+        };
+    }
+
+    window.COCKPIT_ANALYSES_CALC = {
+        computeSnapshot: computeSnapshot
+    };
+})();
+
 // Page Fiche client : fiche CRM complète à partir de données statiques (V0.4.2)
 // Le rendu (historique, rendez-vous, notes, documents & facturation) utilise
 // CLIENT_DETAILS (ci-dessus) et, depuis la V0.6.4, DEVIS_DETAILS/
@@ -6800,6 +7168,50 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 })();
 
+// Page Tableau de bord : bloc "Aperçu Analyses" (V0.9). Carte compacte et
+// unique (pas de gros bloc) : taux de transformation, top client, alerte
+// principale, lien vers le module Analyses. Calculée depuis
+// COCKPIT_ANALYSES_CALC.computeSnapshot('tout'), qui recoupe lui-même les
+// modules existants sans nouveau calcul dupliqué.
+
+(function () {
+    var statsEl = document.getElementById('dashboard-analyses-stats');
+    if (!statsEl) {
+        return;
+    }
+
+    var devisCalc = window.COCKPIT_DEVIS_CALC;
+    var analysesCalc = window.COCKPIT_ANALYSES_CALC;
+    var snapshot = analysesCalc && analysesCalc.computeSnapshot ? analysesCalc.computeSnapshot('tout') : null;
+    if (!snapshot || !devisCalc) {
+        return;
+    }
+
+    function makeStatRow(label, value) {
+        var row = document.createElement('div');
+        row.className = 'devis-summary-row';
+        var labelEl = document.createElement('span');
+        labelEl.textContent = label;
+        var valueEl = document.createElement('span');
+        valueEl.textContent = value;
+        row.appendChild(labelEl);
+        row.appendChild(valueEl);
+        return row;
+    }
+
+    var tauxRow = makeStatRow('Taux de transformation devis → facture', snapshot.commercial.tauxTransformation + ' %');
+    tauxRow.classList.add('devis-summary-row-total');
+    statsEl.appendChild(tauxRow);
+
+    var topClientLabel = snapshot.clients.topParCA.length > 0
+        ? snapshot.clients.topParCA[0].nom + ' (' + devisCalc.formatMoney(snapshot.clients.topParCA[0].caFacture) + ')'
+        : 'Aucun client facturé';
+    statsEl.appendChild(makeStatRow('Top client', topClientLabel));
+
+    var alertePrincipale = snapshot.alertesPrincipales.length > 0 ? snapshot.alertesPrincipales[0].titre : 'Aucune alerte';
+    statsEl.appendChild(makeStatRow('Alerte principale', alertePrincipale));
+})();
+
 // Page Tableau de bord : bloc "Agenda commercial" réel (V0.7). Remplace
 // l'ancienne liste statique "Agenda du jour" par un rendu calculé depuis
 // COCKPIT_AGENDA_CALC.computeDashboardStats() : rendez-vous du jour (liste),
@@ -9530,6 +9942,365 @@ document.addEventListener('DOMContentLoaded', function () {
 
     periodSelectEl.addEventListener('change', render);
     addOperationBtn.addEventListener('click', openAddOperationModal);
+
+    render();
+})();
+
+// Page Analyses : cockpit d'analyse transversal (V0.9). Renommage du module
+// Finance en Analyses ; la page lit exclusivement COCKPIT_ANALYSES_CALC, qui
+// recoupe lui-même les modules Facturation/Clients/Agenda/Trésorerie sans
+// dupliquer leurs calculs. Onglets Vue d'ensemble/Commercial/Clients/
+// Activité/Trésorerie, sélecteur de période (Toutes périodes par défaut,
+// pour que la démo reste lisible d'entrée).
+
+(function () {
+    var tabsEl = document.getElementById('analyses-tabs');
+    if (!tabsEl) {
+        return;
+    }
+
+    var devisCalc = window.COCKPIT_DEVIS_CALC;
+    var analysesCalc = window.COCKPIT_ANALYSES_CALC;
+    var DEVIS_STATUSES = window.COCKPIT_DEVIS_STATUSES || [];
+
+    var periodSelectEl = document.getElementById('analyses-period-select');
+    var panels = {
+        'vue-ensemble': document.getElementById('panel-vue-ensemble'),
+        commercial: document.getElementById('panel-commercial'),
+        clients: document.getElementById('panel-clients'),
+        activite: document.getElementById('panel-activite'),
+        tresorerie: document.getElementById('panel-tresorerie')
+    };
+
+    var BADGE_COLOR_VAR = {
+        'badge-neutral': '#9096b3',
+        'badge-info': '#4f46e5',
+        'badge-success': '#16a34a',
+        'badge-danger': '#dc2626',
+        'badge-warning': '#d97706'
+    };
+
+    var KPI_ICON_CYCLE = ['kpi-icon-1', 'kpi-icon-2', 'kpi-icon-3', 'kpi-icon-4'];
+
+    function makeEl(tag, className, text) {
+        var node = document.createElement(tag);
+        if (className) {
+            node.className = className;
+        }
+        if (text !== undefined) {
+            node.textContent = text;
+        }
+        return node;
+    }
+
+    function statusInfo(list, value) {
+        return list.filter(function (s) { return s.value === value; })[0] || null;
+    }
+
+    function setActiveTab(tabKey) {
+        Array.prototype.forEach.call(tabsEl.querySelectorAll('.page-tab'), function (btn) {
+            btn.classList.toggle('page-tab-active', btn.getAttribute('data-tab') === tabKey);
+        });
+        Object.keys(panels).forEach(function (key) {
+            panels[key].style.display = key === tabKey ? '' : 'none';
+        });
+    }
+
+    tabsEl.addEventListener('click', function (evt) {
+        var btn = evt.target.closest('.page-tab');
+        if (!btn) {
+            return;
+        }
+        setActiveTab(btn.getAttribute('data-tab'));
+    });
+
+    function buildKpiCard(iconClass, label, value, detail) {
+        var card = makeEl('div', 'dashboard-card kpi-card');
+        var icon = makeEl('div', 'kpi-icon ' + iconClass);
+        icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle></svg>';
+        card.appendChild(icon);
+        var body = makeEl('div', 'kpi-card-body');
+        body.appendChild(makeEl('h2', null, label));
+        body.appendChild(makeEl('p', 'kpi-value', value));
+        if (detail) {
+            body.appendChild(makeEl('p', 'kpi-variation status-neutral', detail));
+        }
+        card.appendChild(body);
+        return card;
+    }
+
+    function renderAlertList(listEl, emptyEl, alertes) {
+        listEl.innerHTML = '';
+        if (!alertes || alertes.length === 0) {
+            emptyEl.style.display = '';
+            return;
+        }
+        emptyEl.style.display = 'none';
+        var ICONS = {
+            critical: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>',
+            warning: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>',
+            info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>'
+        };
+        var CLASS_MAP = { critical: 'alert-critical', warning: 'alert-warning', info: 'alert-info' };
+        alertes.forEach(function (alerte) {
+            var li = document.createElement('li');
+            var link = document.createElement('a');
+            link.className = 'alert-item ' + (CLASS_MAP[alerte.niveau] || 'alert-info');
+            link.href = alerte.lien || '#';
+            var iconEl = makeEl('span', 'alert-icon');
+            iconEl.innerHTML = ICONS[alerte.niveau] || ICONS.info;
+            link.appendChild(iconEl);
+            var bodyEl = makeEl('div', 'alert-item-body');
+            bodyEl.appendChild(makeEl('p', 'alert-item-title', alerte.titre));
+            bodyEl.appendChild(makeEl('p', 'alert-item-subtext', alerte.sousTexte));
+            link.appendChild(bodyEl);
+            var chevronEl = makeEl('span', 'alert-chevron');
+            chevronEl.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>';
+            link.appendChild(chevronEl);
+            li.appendChild(link);
+            listEl.appendChild(li);
+        });
+    }
+
+    function buildSummaryRow(label, value) {
+        var row = makeEl('div', 'devis-summary-row');
+        row.appendChild(makeEl('span', null, label));
+        row.appendChild(makeEl('span', null, value));
+        return row;
+    }
+
+    function buildBarRow(label, value, max, colorHex) {
+        var row = makeEl('div', 'bar-chart-row');
+        row.appendChild(makeEl('span', 'bar-chart-label', label));
+        var track = makeEl('div', 'bar-chart-track');
+        var fill = makeEl('div', 'bar-chart-fill');
+        var pct = max > 0 ? Math.max(4, Math.round((value / max) * 100)) : 0;
+        fill.style.width = pct + '%';
+        fill.style.backgroundColor = colorHex;
+        track.appendChild(fill);
+        row.appendChild(track);
+        row.appendChild(makeEl('span', 'bar-chart-value', String(value)));
+        return row;
+    }
+
+    function renderVueEnsemble(snapshot) {
+        var kpisEl = document.getElementById('analyses-vue-kpis');
+        kpisEl.innerHTML = '';
+        var ve = snapshot.vueEnsemble;
+        var cards = [
+            ['CA facturé', devisCalc.formatMoney(ve.caFacture), null],
+            ['CA encaissé', devisCalc.formatMoney(ve.caEncaisse), null],
+            ['Reste à encaisser', devisCalc.formatMoney(ve.resteAEncaisser), null],
+            ['Taux de transformation', ve.tauxTransformation + ' %', 'devis → facture'],
+            ['Clients actifs', String(ve.clientsActifs), null],
+            ['Rendez-vous réalisés', String(ve.rdvRealises), null],
+            ['Solde trésorerie estimé', devisCalc.formatMoney(ve.soldeTresorerie), null]
+        ];
+        cards.forEach(function (c, index) {
+            kpisEl.appendChild(buildKpiCard(KPI_ICON_CYCLE[index % KPI_ICON_CYCLE.length], c[0], c[1], c[2]));
+        });
+
+        var pointsEl = document.getElementById('analyses-points-cles');
+        pointsEl.innerHTML = '';
+        if (snapshot.pointsCles.length === 0) {
+            pointsEl.appendChild(makeEl('li', 'empty-state-inline', 'Aucun constat particulier.'));
+        } else {
+            snapshot.pointsCles.forEach(function (texte) {
+                pointsEl.appendChild(makeEl('li', 'insight-item', texte));
+            });
+        }
+
+        renderAlertList(
+            document.getElementById('analyses-alertes-principales'),
+            document.getElementById('analyses-alertes-empty'),
+            snapshot.alertesPrincipales
+        );
+    }
+
+    function renderCommercial(snapshot) {
+        var c = snapshot.commercial;
+        var summaryEl = document.getElementById('analyses-commercial-summary');
+        summaryEl.innerHTML = '';
+        summaryEl.appendChild(buildSummaryRow('Devis créés', String(c.total)));
+        summaryEl.appendChild(buildSummaryRow('Devis acceptés', String(c.accepte)));
+        summaryEl.appendChild(buildSummaryRow('Devis refusés', String(c.refuse)));
+        summaryEl.appendChild(buildSummaryRow('Devis en attente (envoyés)', String(c.envoye)));
+        summaryEl.appendChild(buildSummaryRow('Taux de transformation', c.tauxTransformation + ' %'));
+        summaryEl.appendChild(buildSummaryRow('Montant moyen des devis', devisCalc.formatMoney(c.montantMoyenDevis)));
+        summaryEl.appendChild(buildSummaryRow('Montant moyen des factures', devisCalc.formatMoney(c.montantMoyenFacture)));
+        summaryEl.appendChild(buildSummaryRow('Total des devis en attente', devisCalc.formatMoney(c.montantEnAttente)));
+
+        var repartitionEl = document.getElementById('analyses-devis-repartition');
+        repartitionEl.innerHTML = '';
+        var repartitionCounts = { brouillon: c.brouillon, envoye: c.envoye, accepte: c.accepte, refuse: c.refuse };
+        var maxCount = Math.max.apply(null, Object.keys(repartitionCounts).map(function (k) { return repartitionCounts[k]; }).concat([1]));
+        DEVIS_STATUSES.forEach(function (status) {
+            var value = repartitionCounts[status.value] || 0;
+            repartitionEl.appendChild(buildBarRow(status.label, value, maxCount, BADGE_COLOR_VAR[status.badgeClass]));
+        });
+
+        var topDevisBodyEl = document.getElementById('analyses-top-devis-body');
+        var topDevisEmptyEl = document.getElementById('analyses-top-devis-empty');
+        topDevisBodyEl.innerHTML = '';
+        if (c.topDevis.length === 0) {
+            topDevisEmptyEl.style.display = '';
+        } else {
+            topDevisEmptyEl.style.display = 'none';
+            c.topDevis.forEach(function (d) {
+                var row = document.createElement('tr');
+                var numeroCell = makeEl('td', 'nowrap-cell');
+                var link = document.createElement('a');
+                link.href = 'devis-edition.html?devis=' + encodeURIComponent(d.numero);
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.textContent = d.numero;
+                numeroCell.appendChild(link);
+                row.appendChild(numeroCell);
+                row.appendChild(makeEl('td', null, d.clientNom));
+                row.appendChild(makeEl('td', 'amount-cell', devisCalc.formatMoney(d.montant)));
+                var statutCell = document.createElement('td');
+                var info = statusInfo(DEVIS_STATUSES, d.statut);
+                statutCell.appendChild(makeEl('span', 'badge ' + (info ? info.badgeClass : 'badge-neutral'), info ? info.label : d.statut));
+                row.appendChild(statutCell);
+                topDevisBodyEl.appendChild(row);
+            });
+        }
+    }
+
+    function renderClients(snapshot) {
+        var cl = snapshot.clients;
+        var summaryEl = document.getElementById('analyses-clients-summary');
+        summaryEl.innerHTML = '';
+        summaryEl.appendChild(buildSummaryRow('Clients actifs', String(cl.clientsActifs)));
+        summaryEl.appendChild(buildSummaryRow('Clients inactifs', String(cl.clientsInactifs)));
+        summaryEl.appendChild(buildSummaryRow('Clients avec facture(s) en retard', String(cl.clientsEnRetard.length)));
+
+        var barEl = document.getElementById('analyses-clients-bar-chart');
+        barEl.innerHTML = '';
+        var maxCA = Math.max.apply(null, cl.topParCA.map(function (c) { return c.caFacture; }).concat([1]));
+        if (cl.topParCA.length === 0) {
+            barEl.appendChild(makeEl('p', 'empty-state-inline', 'Aucun client avec CA facturé.'));
+        } else {
+            cl.topParCA.forEach(function (c) {
+                barEl.appendChild(buildBarRow(c.nom, c.caFacture, maxCA, '#4f46e5'));
+            });
+        }
+
+        var bodyEl = document.getElementById('analyses-top-clients-body');
+        var emptyEl = document.getElementById('analyses-top-clients-empty');
+        bodyEl.innerHTML = '';
+        if (cl.topParCA.length === 0) {
+            emptyEl.style.display = '';
+        } else {
+            emptyEl.style.display = 'none';
+            cl.topParCA.forEach(function (c) {
+                var row = document.createElement('tr');
+                var clientCell = makeEl('td', 'nowrap-cell');
+                var link = document.createElement('a');
+                link.href = 'fiche-client.html?client=' + encodeURIComponent(c.slug);
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.textContent = c.nom;
+                clientCell.appendChild(link);
+                row.appendChild(clientCell);
+                row.appendChild(makeEl('td', 'amount-cell', devisCalc.formatMoney(c.caFacture)));
+                row.appendChild(makeEl('td', 'amount-cell', devisCalc.formatMoney(c.caEncaisse)));
+                row.appendChild(makeEl('td', 'amount-cell', devisCalc.formatMoney(c.resteAEncaisser)));
+                row.appendChild(makeEl('td', null, String(c.nbDevis)));
+                row.appendChild(makeEl('td', null, String(c.nbRdv)));
+                var attentionCell = document.createElement('td');
+                if (c.enRetard) {
+                    attentionCell.appendChild(makeEl('span', 'badge badge-danger', 'Facture en retard'));
+                } else {
+                    attentionCell.textContent = '—';
+                }
+                row.appendChild(attentionCell);
+                bodyEl.appendChild(row);
+            });
+        }
+    }
+
+    function renderActivite(snapshot) {
+        var a = snapshot.activite;
+        var summaryEl = document.getElementById('analyses-activite-summary');
+        summaryEl.innerHTML = '';
+        summaryEl.appendChild(buildSummaryRow('RDV prévus / confirmés', String(a.prevu + a.confirme)));
+        summaryEl.appendChild(buildSummaryRow('RDV réalisés', String(a.realise)));
+        summaryEl.appendChild(buildSummaryRow('RDV reportés', String(a.reporte)));
+        summaryEl.appendChild(buildSummaryRow('RDV sans suite', String(a.sansSuite)));
+        summaryEl.appendChild(buildSummaryRow('Taux RDV → devis', a.tauxRdvDevis + ' %'));
+        summaryEl.appendChild(buildSummaryRow('Taux RDV → facture', a.tauxRdvFacture + ' %'));
+        summaryEl.appendChild(buildSummaryRow('Reportés plusieurs fois', String(a.reportesPlusieurs)));
+
+        var funnelEl = document.getElementById('analyses-funnel');
+        funnelEl.innerHTML = '';
+        var steps = [
+            ['Rendez-vous', a.total],
+            ['→ Devis', a.avecDevis],
+            ['→ Facture', a.avecFacture]
+        ];
+        var maxStep = Math.max(a.total, 1);
+        steps.forEach(function (step) {
+            var box = makeEl('div', 'analyses-funnel-step');
+            var widthPct = Math.max(20, Math.round((step[1] / maxStep) * 100));
+            box.style.width = widthPct + '%';
+            box.appendChild(makeEl('span', 'analyses-funnel-value', String(step[1])));
+            box.appendChild(makeEl('span', 'analyses-funnel-label', step[0]));
+            funnelEl.appendChild(box);
+        });
+
+        var attentionEl = document.getElementById('analyses-activite-attention');
+        var attentionEmptyEl = document.getElementById('analyses-activite-attention-empty');
+        attentionEl.innerHTML = '';
+        if (a.pointsAttention.length === 0) {
+            attentionEmptyEl.style.display = '';
+        } else {
+            attentionEmptyEl.style.display = 'none';
+            a.pointsAttention.forEach(function (p) {
+                var li = document.createElement('li');
+                li.className = 'insight-item';
+                var link = document.createElement('a');
+                link.href = 'fiche-rdv.html?rdv=' + encodeURIComponent(p.rdv.id);
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.textContent = p.texte;
+                li.appendChild(link);
+                attentionEl.appendChild(li);
+            });
+        }
+    }
+
+    function renderTresorerie(snapshot) {
+        var t = snapshot.tresorerie;
+        var summaryEl = document.getElementById('analyses-tresorerie-summary');
+        summaryEl.innerHTML = '';
+        if (!t) {
+            summaryEl.appendChild(makeEl('p', 'empty-state-inline', 'Données de trésorerie indisponibles.'));
+        } else {
+            summaryEl.appendChild(buildSummaryRow('Solde estimé', devisCalc.formatMoney(t.soldeEstime)));
+            summaryEl.appendChild(buildSummaryRow('À encaisser', devisCalc.formatMoney(t.aEncaisser)));
+            summaryEl.appendChild(buildSummaryRow('À décaisser', devisCalc.formatMoney(t.aDecaisser)));
+            summaryEl.appendChild(buildSummaryRow('Solde prévisionnel', devisCalc.formatMoney(t.soldePrevisionnel)));
+            summaryEl.appendChild(buildSummaryRow('Charges prévues', String(t.chargesPrevues.length)));
+        }
+
+        renderAlertList(
+            document.getElementById('analyses-tresorerie-alertes'),
+            document.getElementById('analyses-tresorerie-alertes-empty'),
+            t ? t.alertes : []
+        );
+    }
+
+    function render() {
+        var snapshot = analysesCalc.computeSnapshot(periodSelectEl.value);
+        renderVueEnsemble(snapshot);
+        renderCommercial(snapshot);
+        renderClients(snapshot);
+        renderActivite(snapshot);
+        renderTresorerie(snapshot);
+    }
+
+    periodSelectEl.addEventListener('change', render);
 
     render();
 })();
