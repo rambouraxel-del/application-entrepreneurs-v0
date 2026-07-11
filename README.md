@@ -21,20 +21,19 @@ Les modules travaillent sur un jeu de données fictif chargé dans `js/app.js`. 
 - **Facturation** : devis versionnés, factures, paiements, conversion devis → facture et documents imprimables.
 - **Trésorerie** : mouvements, charges, factures à encaisser, projection et alertes.
 - **Analyses** : vues transversales Commercial, Clients, Activité et Trésorerie.
-- **Centre de paramètres V0.11** : configuration locale centralisée, recherche, import/export JSON, profil de démonstration distinct et raccordements aux modules compatibles.
+- **Centre de paramètres V0.11** : configuration locale centralisée, recherche, maintenance de l’affichage et raccordements aux modules compatibles.
 
 ## Centre de paramètres V0.11 — validé
 
 Le centre est accessible depuis `pages/settings.html`. Il comprend :
 
-- profil utilisateur, entreprise et profil de démonstration séparés ;
+- profil utilisateur et informations de l’entreprise séparés ;
 - apparence globale : densité, accent, pagination et décimales ;
 - objectifs et préférences du Dashboard ;
 - activation et seuils des alertes internes ;
 - référentiels Clients, Agenda, Produits/Services et Trésorerie ;
 - valeurs par défaut des nouveaux documents ;
-- import/export strict de la configuration sans données métier ;
-- indication explicite des réglages limités par la V0 ou réservés à la V1.
+- maintenance locale limitée au vidage du cache et à la réinitialisation des préférences d’affichage.
 
 Les snapshots historiques des devis et factures restent figés. Les paramètres documentaires courants sont appliqués aux nouveaux documents seulement.
 
