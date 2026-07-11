@@ -577,4 +577,4 @@ Réalisée sur la branche dédiée `v0.10.2-dashboard-cockpit` (créée depuis `
 
 **Correction pendant la recette** : à 375px, `.dashboard-chart-block` débordait le viewport (jusqu'à 426px) à cause d'un piège classique de CSS Grid — une piste de grille en `1fr` s'agrandit par défaut pour accueillir le contenu non enveloppé de ses descendants (`min-width: auto` implicite sur les items de grille), même quand ce contenu est visuellement plus étroit une fois affiché. Corrigé en ajoutant `min-width: 0` sur les blocs enfants de `.dashboard-journee-grid` et `.dashboard-performance-grid`, plus `flex-wrap: wrap` sur l'en-tête et les contrôles du bloc graphique.
 
-Commit créé sur la branche `v0.10.2-dashboard-cockpit`. Pas de merge dans `main`, pas de tag `v0.10.2` — décision laissée à la revue humaine visuelle.
+Validée après revue humaine visuelle. Fusionnée dans `main` (fast-forward) et taguée `v0.10.2`.
