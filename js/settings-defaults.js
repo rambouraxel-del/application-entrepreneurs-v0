@@ -1,4 +1,4 @@
-// Cockpit Entrepreneur — V0.11
+// Cockpit Entrepreneur — V0.11.1
 // Schéma et valeurs par défaut du centre de paramètres.
 (function () {
     'use strict';
@@ -52,7 +52,7 @@
                 { id: 'litige', label: 'Litige', color: 'danger', active: true, order: 6 }
             ],
             initialStatus: 'prospect', pageSize: 5, followUpDays: 7,
-            visibleFields: ['name', 'company', 'status', 'phone', 'email', 'lastContact'], customFields: []
+            visibleFields: ['name', 'company', 'status', 'phone', 'email', 'lastContact']
         },
         agenda: {
             defaultView: 'week', weekStartsOn: 'monday',
