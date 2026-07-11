@@ -1,13 +1,14 @@
 # Dossier pages
 
 ## Rôle
-Ce dossier contient les pages du prototype. Il a beaucoup grandi depuis la V0 initiale (login, dashboard, clients, agenda, facturation, database, settings) : modules Clients/CRM, Produits/Services, Facturation (devis/factures/documents imprimables), Agenda commercial (liste, calendrier, fiche rendez-vous), Trésorerie et Analyses s'y sont ajoutés au fil des versions. Pour la liste à jour et le détail de chaque page, voir le `README.md` principal du projet (section "Ce qui a été livré") — ce fichier ne maintient plus une liste exhaustive pour éviter la duplication.
+Ce dossier contient les pages du prototype : connexion, Dashboard, Clients, Agenda, Facturation, Trésorerie, Produits/Services, Analyses et pages détaillées associées.
 
-Toutes ces pages (sauf `login.html`) partagent la même barre latérale de navigation. Les boutons non encore fonctionnels affichent le pop-up "Work in progress" (géré depuis `js/app.js`). Les données affichées restent fictives, sans persistance réelle au-delà de la mémoire de la page courante — voir le `README.md` principal pour le détail des limites de la V0.
+`settings.html` est, depuis la V0.11, le Centre de paramètres central. Il propose une navigation secondaire, une recherche transverse, une sauvegarde par section, l'import/export JSON et les états honnêtes des fonctions indisponibles. L'ancienne URL `parametres-entreprise.html` redirige vers `settings.html#company` afin d'éviter deux sources de vérité.
 
-## Ce qui ne doit pas être rangé ici
-- Les composants réutilisables (réservés au dossier `components/`).
-- Les ressources graphiques (réservées au dossier `assets/`).
+Toutes les pages post-connexion chargent `demo-config.js` avant `app.js`. Ce point d'entrée initialise le store de configuration et les adaptateurs sans dupliquer les scripts dans chaque page.
 
-## Règles pour les futures modifications
-Chaque page devra respecter la même identité visuelle et les mêmes composants que les autres, conformément à la charte de conception.
+## Règles
+- Conserver la même sidebar, la même topbar et la même identité visuelle.
+- Ne pas dupliquer un formulaire de réglage déjà présent dans le Centre de paramètres.
+- Les contrôles temporaires d'une page métier restent utilisables, mais les valeurs persistantes par défaut viennent du store central.
+- Les fonctions nécessitant un backend doivent être indiquées comme indisponibles, jamais simulées.

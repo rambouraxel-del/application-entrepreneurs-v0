@@ -1,17 +1,22 @@
 # Dossier js
 
 ## Rôle
-Ce dossier contient toute la logique JavaScript de l'application : interactions (navigation, clics, pop-up), mais aussi — depuis la V0.4 — les données de démonstration et les calculs métier réels des modules (Clients, Produits/Services, Devis/Factures, Agenda, Trésorerie, Analyses), le tout dans un unique `app.js` organisé en IIFE indépendantes.
+Ce dossier contient la logique JavaScript de l'application : interactions, données de démonstration et calculs métier des modules Clients, Produits/Services, Devis/Factures, Agenda, Trésorerie et Analyses.
 
-## Ce qui doit être rangé ici
-- Les scripts JavaScript de l'application, y compris les données fictives en mémoire (`CLIENT_DETAILS`, `DEVIS_DETAILS`, `FACTURE_DETAILS`, `RDV_DETAILS`, `TRESORERIE_OPERATIONS`...) et leurs helpers de calcul associés (`window.COCKPIT_*`), aucun n'ayant de persistance réelle au-delà de la mémoire de la page courante.
-- La logique centralisée du pop-up "Work in progress" (génération dynamique, ouverture/fermeture, détection des éléments `.btn-wip`) et du moteur de modale générique (`window.COCKPIT_MODAL`).
+Depuis la V0.11, la configuration locale est volontairement séparée de `app.js` :
+- `settings-defaults.js` définit le schéma versionné et les valeurs par défaut ;
+- `settings-store.js` filtre, migre et persiste uniquement la configuration dans `localStorage` ;
+- `demo-config.js` reste le point d'entrée historique chargé avant `app.js` et initialise le socle ;
+- `demo-config-adapter.js` et `pilotage-config.js` maintiennent la compatibilité des anciennes interfaces globales ;
+- `settings-consumers.js` raccorde les réglages aux modules existants ;
+- `settings-referentials.js` applique les référentiels configurables et les alertes internes ;
+- `settings-ui.js` pilote l'interface du Centre de paramètres.
 
-La navigation entre les pages principales ne nécessite pas de JavaScript : elle repose sur de simples liens HTML (voir `pages/README.md`).
+Les données métier fictives restent en mémoire de page et ne sont jamais incluses dans l'export de configuration.
 
-## Ce qui ne doit pas être rangé ici
-- Du style visuel (réservé au dossier `css/`).
-- Un vrai backend, une authentification ou une persistance réelle (hors périmètre de la V0, qui reste un prototype cliquable sur données fictives).
-
-## Règles pour les futures modifications
-Un même comportement (par exemple le pop-up "Work in progress") doit être écrit une seule fois et réutilisé partout, conformément au principe de non-duplication du projet.
+## Règles
+- Aucun secret, mot de passe ou jeton ne doit être stocké dans le store de paramètres.
+- Les propriétés inconnues d'un import doivent être refusées, jamais fusionnées arbitrairement.
+- Un réglage consommé par plusieurs pages doit passer par un adaptateur partagé plutôt que par une duplication.
+- Les documents historiques conservent leur snapshot ; seuls les nouveaux documents utilisent les réglages courants.
+- Un backend, l'authentification réelle, la synchronisation et les notifications externes restent hors périmètre de la V0.

@@ -158,12 +158,7 @@
         } finally { renderingAlerts = false; }
     }
     function apply() { applyClients(); applyProducts(); applyAgendaStatuses(); renderAlerts(); }
-    document.addEventListener('DOMContentLoaded', function () {
-        apply();
-        ['clients-table','products-table','dashboard-alerts-list','tresorerie-alertes-list','analyses-alertes-principales','tresorerie-kpi-previsionnel'].forEach(function (id) {
-            var node=document.getElementById(id); if(node && window.MutationObserver) new MutationObserver(function(){setTimeout(apply,0);}).observe(node,{childList:true,subtree:true,characterData:true});
-        });
-    });
+    document.addEventListener('DOMContentLoaded', apply);
     window.addEventListener('load', apply);
     store.subscribe(apply);
 })();
