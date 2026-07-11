@@ -479,3 +479,31 @@ Réalisée sur la branche dédiée `v0.9-analyses` (créée depuis `v0.8-tresore
 Vérifications effectuées : test fonctionnel réel dans le navigateur. `analyses.html` sans erreur console, cinq onglets fonctionnels, KPI Vue d'ensemble cohérents avec `computeStats()` existant (7 314,60 €/4 644,00 €/2 670,60 €/67 %), synthèse Trésorerie identique aux valeurs déjà vérifiées en V0.8 (solde estimé 8 044,00 €, solde prévisionnel -3 424,40 €), top clients et détails cohérents avec les factures/paiements réels, tunnel RDV→Devis→Facture et points d'attention agenda corrects, sélecteur de période testé (Mois en cours réduit correctement les compteurs). Bloc dashboard "Aperçu Analyses" vérifié cohérent. Une incohérence a été détectée et corrigée pendant les vérifications : l'alerte "factures en retard" apparaissait en double (une fois construite directement, une fois déjà incluse dans la synthèse Trésorerie) — la construction directe a été retirée au profit de la synthèse Trésorerie déjà correcte. Non-régression ciblée confirmée sur `facturation.html`, `agenda.html` et `tresorerie.html` — aucune erreur console sur aucune page testée. Pas de non-régression complète de toute l'application.
 
 Commit créé sur la branche `v0.9-analyses`. Pas de merge dans `main`, pas de tag, pas de push — décision laissée à la revue humaine.
+
+## V0.9.1 — Refonte visuelle du module Analyses
+
+Réalisée sur la même branche `v0.9-analyses`. Amélioration purement visuelle du module Analyses livré en V0.9, sans aucun changement de logique métier ni de calcul.
+
+- Onglets en pilule (fond gris, actif surélevé en blanc/violet) et sélecteur de période stylé, scopés à la page (`#analyses-tabs`, `#analyses-period-select`) pour ne pas affecter les onglets Devis/Factures de `facturation.html`.
+- KPI et bloc "Lecture rapide" transformés en cartes colorées (icône + titre + sous-texte) — mêmes faits qu'avant, juste restructurés pour l'affichage (`computePointsCles` retourne désormais des objets structurés plutôt que des phrases toutes faites).
+- "Répartition des devis" et nouveau "Charges prévues par catégorie" (onglet Trésorerie) en donuts CSS (`conic-gradient` + légende), à la place de listes de barres.
+- Tunnel Rendez-vous → Devis → Facture enrichi de flèches et de taux de conversion entre étapes.
+- Vue d'ensemble enrichie d'un aperçu compact "Top clients" et d'un mini-donut "Répartition des devis", réutilisant les données déjà calculées par `COCKPIT_ANALYSES_CALC`.
+
+Vérifications effectuées : rechargements successifs sans erreur console ; contenu vérifié sur les 5 onglets (cartes lecture rapide, donut devis, top clients, funnel avec pourcentages, donut charges par catégorie) ; non-régression rapide sur `dashboard.html`, `facturation.html` et `tresorerie.html` (aucune erreur console, composants partagés `.kpi-value`/`.alert-item`/`.page-tab` intacts).
+
+Commit créé sur la branche `v0.9-analyses`. Pas de merge dans `main`, pas de tag, pas de push — décision laissée à la revue humaine.
+
+## Régularisation Git — V0.7 à V0.9.1 fusionnées dans `main`
+
+`origin/main` s'était arrêté à la V0.6.4 pendant que les versions suivantes (V0.7, V0.7.1, V0.8, V0.8.1, V0.8.2, V0.9, V0.9.1) avaient été développées sur une chaîne de branches locales (`v0.7-agenda-commercial` → `v0.8-tresorerie` → `v0.9-analyses`), jamais fusionnées ni poussées. Un audit Git complet (branches, tags, `merge-base`, `fsck`) a confirmé un historique **linéaire et propre** : chaque branche démarre exactement de la pointe de la précédente, sans divergence ni commit perdu.
+
+Une branche de sauvegarde `backup/pre-regularisation-v0.9` a été créée avant toute opération. `main` a ensuite été avancée par un simple **fast-forward** jusqu'à la pointe de `v0.9-analyses` (`125d533`) — aucun commit recréé, aucun merge artificiel. Les tags suivants ont été posés sur les commits correspondant à chaque étape validée :
+
+- `v0.7` → `bc8e8a3` (module Agenda commercial)
+- `v0.7.1` → `86cee37` (vues calendrier et enrichissements Agenda)
+- `v0.8` → `5050dc9` (module Trésorerie, incluant les correctifs V0.8.1/V0.8.2)
+- `v0.9` → `8aeb13a` (module Analyses)
+- `v0.9.1` → `125d533` (refonte visuelle Analyses)
+
+`main` et `origin/main` ont ensuite été resynchronisés (`git push origin main --tags`). Documentation mise à jour en conséquence (`README.md`, `docs/roadmap-v0bis.md`, `docs/backlog.md`, `PROJECT_INDEX.md`, README internes) pour refléter la V0.9.1 comme dernière version présente sur `main`.

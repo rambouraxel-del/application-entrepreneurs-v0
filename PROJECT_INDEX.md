@@ -1,6 +1,8 @@
 # Sommaire du projet
 
-Arborescence finale de la V0 (livrée à l'étape 10) :
+> Ce fichier montre l'arborescence **initiale** de la V0 (livrée à l'étape 10). Le projet a depuis évolué jusqu'à la V0.9.1 (Clients/CRM, Produits/Services, Facturation, Agenda commercial, Trésorerie, Analyses...) — voir `README.md` pour la liste à jour des modules et `docs/changelog.md` pour le détail de chaque étape/version.
+
+Arborescence initiale de la V0 (livrée à l'étape 10) :
 
 ```text
 Application-Entrepreneurs-V0/

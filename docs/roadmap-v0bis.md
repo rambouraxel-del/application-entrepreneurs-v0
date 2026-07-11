@@ -25,9 +25,10 @@ Cette roadmap présente les phases prévues après la V0 initiale (livrée à l'
 | V0.6.2 | Module Factures & Paiements : liste de factures, éditeur de facture (brouillon/émission/verrouillage), conversion devis → facture, suivi des paiements et statuts calculés | Validée |
 | V0.6.3 | Documents PDF / Impression : pages document dédiées pour devis et factures, impression navigateur (CSS print + `window.print()`), sans bibliothèque externe | Validée |
 | V0.6.4 | Intégration commerciale : devis/factures liés dans la fiche client, aperçu Facturation au dashboard, statistiques commerciales sur `facturation.html`, navigation croisée client ↔ devis/facture | Validée |
-| V0.7 | Agenda commercial : rendez-vous, préparation commerciale, communication client, devis brouillon lié, historique, export PDF, aperçu au dashboard | En cours |
-| V0.8 | Page Trésorerie | À venir |
-| V0.9 | Finance / Pilotage avancé | À venir |
+| V0.7 | Agenda commercial : rendez-vous, préparation commerciale, communication client, devis brouillon lié, historique, export PDF, aperçu au dashboard | Validée |
+| V0.7.1 | Vues calendrier Jour/Semaine/Mois et enrichissements du module Agenda (formulaire de rendez-vous en sections, recherche client, proposition commerciale, navigation temporelle fiable) | Validée |
+| V0.8 | Module Trésorerie : solde estimé, à encaisser/à décaisser, prochains mouvements, charges prévues, factures à encaisser, projection et alertes | Validée |
+| V0.9 | Analyses et performance (renommage du module Finance) : cockpit d'analyse transversal recoupant Facturation/Clients/Agenda/Trésorerie | Validée |
 | V0.10 | Cohérence globale des parcours / Dashboard | À venir |
 | V1 | Version fonctionnelle stable | À venir |
 
@@ -37,11 +38,11 @@ Cette roadmap présente les phases prévues après la V0 initiale (livrée à l'
 - L'ordre des phases V0.4 à V0.9 pourra être réévalué selon les priorités du chef de projet — cette roadmap n'est pas un engagement contractuel, mais un fil conducteur.
 - Les idées qui ne rentrent pas dans la phase en cours sont conservées dans `docs/backlog.md` plutôt que d'être perdues ou traitées hors périmètre.
 
-## Précision importante — V0.2 vs V0.7 / V0.8 / V0.9
+## Précision importante — V0.2 vs V0.8 / V0.9
 
 La V0.2 ajoute Trésorerie, Produits / Services et Finance dans la navigation principale, sous forme de **pages placeholder** (portes d'entrée visuelles cohérentes avec la charte V0.1.1, sans logique métier). Cela ne signifie pas que ces modules sont fonctionnels dès la V0.2.
 
-Les phases V0.7 (Trésorerie), V0.8 (Produits / Services) et V0.9 (Finance) restent celles dédiées à leur **développement fonctionnel réel** (calculs, données réelles, création/modification, etc.). La V0.2 pose uniquement la structure de navigation ; ces phases ultérieures y ajouteront la logique métier.
+Les phases dédiées à leur **développement fonctionnel réel** (calculs, données réelles, création/modification, etc.) sont, après le réordonnancement décrit plus bas : V0.5 pour Produits / Services, V0.8 pour Trésorerie, V0.9 pour Finance (devenu Analyses). La V0.2 pose uniquement la structure de navigation ; ces phases ultérieures y ajoutent la logique métier.
 
 Le module **Statistiques / Pilotage** n'est volontairement pas ajouté à la sidebar en V0.2 (voir `docs/backlog.md`) : il sera étudié plus tard, une fois la distinction entre Finance, Trésorerie et indicateurs de pilotage plus claire.
 
@@ -70,3 +71,9 @@ Comme pour la V0.4 et la V0.5, la V0.6 (Facturation) est découpée en sous-vers
 L'ordre fixé par la précision précédente (V0.7 Trésorerie, V0.8 Agenda) a été révisé une nouvelle fois par le chef de projet : **l'Agenda commercial passe en V0.7**, avant Trésorerie et Finance, car il complète directement le parcours commercial déjà construit en V0.6 (Facturation) — un rendez-vous commercial y génère un devis brouillon lié, qui peut devenir un devis classique puis une facture, prolongeant ainsi le même fil (Client → Rendez-vous → Devis → Facture) sans dépendre des modules Trésorerie ou Finance. L'ordre devient : V0.7 Agenda commercial, V0.8 Trésorerie, V0.9 Finance/Pilotage avancé, V0.10 Cohérence globale des parcours/Dashboard. Comme précisé au principe général de cette roadmap, cet ordre reste indicatif.
 
 **V0.7** construit le module Agenda commercial : liste de rendez-vous avec filtres (`pages/agenda.html`), fiche de rendez-vous complète avec préparation commerciale, communication client, historique et devis brouillon lié (`pages/fiche-rdv.html`), export PDF de la fiche de préparation (`pages/rdv-document.html`), et un bloc "Agenda commercial" réel au tableau de bord. Le lien fort avec la Facturation (V0.6) est la règle "un rendez-vous = un devis brouillon lié" : ce devis brouillon peut être supprimé (si le rendez-vous n'aboutit à rien, sous des conditions strictes évitant toute suppression générale de devis) ou transformé en devis classique, puis suivre le parcours normal jusqu'à la facture. Comme pour toutes les versions précédentes, aucune persistance réelle n'est introduite : la création d'un rendez-vous et de son devis brouillon lié sont des actions réelles en mémoire de page.
+
+**V0.7.1** enrichit le module Agenda livré en V0.7, sans en changer le périmètre : remplace la vue liste seule par de vraies vues calendrier Jour/Semaine/Mois (positionnement horaire, navigation Précédent/Aujourd'hui/Suivant, sélecteurs semaine/mois + année), réorganise le formulaire de rendez-vous en sections claires (informations, client, proposition commerciale, notes) avec recherche client "contient" et proposition commerciale (produits du catalogue, remise, calcul HT/TVA/TTC réutilisant les helpers de la Facturation), et corrige plusieurs points d'ergonomie remontés en revue humaine (cohérence TVA, déversement de la proposition commerciale vers le devis brouillon lié, style des champs, fiabilité de la saisie de date).
+
+**V0.8** construit le module Trésorerie (`pages/tresorerie.html`), jusque-là un simple placeholder depuis la V0.2 : 4 cartes KPI (solde estimé, à encaisser, à décaisser, solde prévisionnel), calculées depuis les factures/paiements réels de la Facturation et des opérations de trésorerie manuelles (charges prévues, encaissements/décaissements divers) ; bloc "Prochains mouvements" (timeline), tableaux "Charges prévues" et "Factures à encaisser", graphique de projection du solde et bloc d'alertes. Volontairement simple : pas de comptabilité complète, pas de rapprochement bancaire.
+
+**V0.9** renomme le module Finance (placeholder depuis la V0.2) en **Analyses** et en fait un cockpit d'analyse transversal (`pages/analyses.html`) plutôt qu'un module de comptabilité : cinq onglets (Vue d'ensemble, Commercial, Clients, Activité, Trésorerie) qui recoupent les données déjà construites dans les modules Facturation, Clients, Agenda et Trésorerie, sans dupliquer leurs calculs. La V0.9.1 (voir `docs/changelog.md`) affine ensuite le rendu visuel de ce module (donuts, tunnel de conversion, cartes de synthèse), sans changement fonctionnel.

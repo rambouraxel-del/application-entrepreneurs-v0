@@ -56,8 +56,8 @@ Ce document regroupe les idées et pistes identifiées au fil du projet, non tra
 - **Fiche client (V0.6.4)** : la section "Documents & facturation" affiche désormais les devis/factures réels, mais reste non paginée (pas de souci avec 6 clients fictifs et peu de documents chacun ; à revoir si le volume augmente un jour) ; les entrées "Contrat" restent purement fictives (`btn-wip`), faute de module Contrats réel dans le projet.
 
 ## Trésorerie
-- Page placeholder ajoutée à la navigation en V0.2 ; développement fonctionnel réel prévu en V0.7 sur la roadmap.
-- Synchronisation bancaire (hors périmètre tant qu'une vraie base de données n'existe pas).
+- Page placeholder ajoutée à la navigation en V0.2 ; module fonctionnel réel construit en V0.8 (solde estimé, à encaisser/à décaisser, prochains mouvements, charges prévues, factures à encaisser, projection, alertes), affiné en V0.8.1/V0.8.2 (lisibilité du graphique, liens factures, montants non coupés).
+- Synchronisation bancaire, rapprochement bancaire, comptabilité complète (hors périmètre tant qu'une vraie base de données n'existe pas — choix assumé, voir `docs/decisions.md`).
 
 ## Produits / Services
 - Page placeholder ajoutée à la navigation en V0.2 ; catalogue consultable (recherche, filtres, accès fiche) construit en V0.5.1 ; fiche produit/service complète construite en V0.5.2 ; interactions préparatoires (modales) ajoutées en V0.5.3, corrigées et enrichies en V0.5.3.1 (bloc Coûts & marge, historique enrichi, badge Type cliquable, modifications bloc par bloc) ; pagination ajoutée en V0.5.4.
@@ -76,12 +76,14 @@ Ce document regroupe les idées et pistes identifiées au fil du projet, non tra
 - Tri des colonnes du catalogue (non traité ; pagination ajoutée en V0.5.4 via `window.COCKPIT_LIST_PAGINATION`, partagé avec la liste Clients).
 - **Sauvegarde du nombre d'éléments par page choisi (V0.5.4)** : repart toujours à 5 au rechargement, aucune préférence n'est mémorisée (pas de `localStorage`).
 
-## Finance
-- Page placeholder ajoutée à la navigation en V0.2 ; développement fonctionnel réel (bilan, compte de résultat, calculs) prévu en V0.9 sur la roadmap.
+## Analyses (anciennement Finance)
+- Page placeholder "Finance" ajoutée à la navigation en V0.2 ; renommée **Analyses** et construite en V0.9 sous forme de cockpit d'analyse transversal (Vue d'ensemble, Commercial, Clients, Activité, Trésorerie), recoupant les données déjà existantes plutôt que de dupliquer leurs calculs ; refonte visuelle en V0.9.1 (donuts, tunnel de conversion, cartes de synthèse).
+- Bilan prévisionnel, compte de résultat, fiscalité avancée, scoring client complet : volontairement hors périmètre de la V0.9 (ce n'est pas un module de comptabilité) ; à réévaluer si un vrai besoin de pilotage financier plus poussé apparaît.
+- Le sélecteur de période de la V0.9 ne recalcule finement que les onglets Commercial et Activité (devis/factures/rendez-vous créés dans la période) ; les agrégats Vue d'ensemble/Trésorerie restent des instantanés courants — à enrichir si un vrai besoin de comparaison période par période apparaît.
 
 ## Statistiques / Pilotage
-- Non ajouté à la sidebar en V0.2, décision explicite pour éviter une navigation trop chargée et pour clarifier d'abord la distinction entre Finance, Trésorerie et indicateurs de pilotage. À réévaluer plus tard.
-- Vrai système de statistiques avancées (le graphique actuel du tableau de bord est fictif et statique).
+- Non ajouté à la sidebar en V0.2 en tant que module séparé ; le besoin de pilotage transversal est désormais couvert par le module **Analyses** (V0.9, ex-Finance — voir plus haut), qui recoupe Facturation/Clients/Agenda/Trésorerie plutôt que d'ajouter un nouveau module dédié.
+- Vrai système de statistiques avancées (le graphique du tableau de bord reste fictif et statique ; les graphiques réels du module Analyses restent simples — donuts et barres CSS, pas de librairie externe).
 - Indicateurs de performance personnalisables.
 
 ## Paramètres
