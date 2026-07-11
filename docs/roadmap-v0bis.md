@@ -31,7 +31,7 @@ Cette roadmap présente les phases prévues après la V0 initiale (livrée à l'
 | V0.9 | Analyses et performance (renommage du module Finance) : cockpit d'analyse transversal recoupant Facturation/Clients/Agenda/Trésorerie | Validée |
 | V0.9.1 | Refonte visuelle du module Analyses (donuts, tunnel de conversion, cartes de synthèse), sans changement fonctionnel | Validée |
 | V0.9.2 | Configuration personnalisable de démonstration (`js/demo-config.js`) : identité fictive centralisée, connectée aux éléments les plus visibles pendant une démo | Validée |
-| V0.10.1 | Cohérence globale UI/UX : harmonisation de composants communs, corrections responsive minimales, nettoyage documentaire, sans nouveau module ni changement métier | En attente de validation visuelle |
+| V0.10.1 | Cohérence globale UI/UX : harmonisation de composants communs, corrections responsive minimales, nettoyage documentaire, sans nouveau module ni changement métier | Validée |
 | V0.10.2 | Refonte structurelle du tableau de bord | À venir |
 | V1 | Version fonctionnelle stable | À venir |
 
