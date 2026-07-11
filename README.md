@@ -69,7 +69,6 @@ Après plusieurs itérations (V0.1 à V0.10.1), la V0 dépasse largement le simp
 - émission réelle d'une facture (numérotation, verrouillage) et ajout de paiements avec recalcul immédiat des montants ;
 - création et suivi d'un rendez-vous (statut, priorité, opportunité, préparation commerciale, communication client, devis brouillon lié) ;
 - ajout d'une opération de trésorerie avec recalcul immédiat des soldes et alertes ;
-- changement de statut et ajout de notes sur les fiches client et produit/service, via de vraies modales ;
 - export PDF des documents (devis, facture, fiche de préparation RDV) via l'impression navigateur.
 
 **Fonctionnalités qui restent en Work in progress** (pop-up dédié au clic) :
@@ -78,7 +77,8 @@ Après plusieurs itérations (V0.1 à V0.10.1), la V0 dépasse largement le simp
 - modification des paramètres généraux (seule la page "Informations de l'entreprise" est réelle, depuis la V0.6.1) ;
 - exports de données hors documents imprimables ;
 - annulation d'une facture déjà émise (renvoyée à un futur module Avoirs) ;
-- menu "Enregistrer" (brouillon/version définitive) d'un devis — seule l'action "Créer une nouvelle version" est réelle.
+- menu "Enregistrer" (brouillon/version définitive) d'un devis — seule l'action "Créer une nouvelle version" est réelle ;
+- changement de statut et gestion des notes sur les fiches client et produit/service : les modales s'ouvrent et se préremplissent réellement (statut actuel, contenu de la note à modifier, etc.), mais leur bouton de validation ne modifie pas `CLIENT_DETAILS`/`PRODUCT_DETAILS` — aucun changement n'est réellement appliqué, et donc rien n'est persisté non plus.
 
 **Absence de persistance durable** : aucune donnée modifiée (client, devis, facture, rendez-vous, opération de trésorerie, note, paramètre) ne survit à un rechargement de la page. Les données affichées par défaut sont fictives et se réinitialisent à chaque chargement.
 

@@ -549,3 +549,10 @@ Réalisée sur la branche dédiée `v0.10.1-coherence-ui-ux` (créée depuis `ma
 **Limites restantes** : la liste "Devis" de `facturation.html` reste en HTML statique (contrairement aux "Factures" en rendu JS) — non traité, changement de pipeline de rendu hors périmètre visuel. La refonte structurelle du tableau de bord est explicitement reportée à une V0.10.2.
 
 Commit créé sur la branche `v0.10.1-coherence-ui-ux`. Pas de merge dans `main`, pas de tag — décision laissée à la revue humaine.
+
+### Correctif de revue V0.10.1 — exactitude README + réévaluation `.kpi-value`
+
+- **`README.md`** : la formulation "changement de statut et ajout de notes sur les fiches client et produit/service, via de vraies modales" exagérait le niveau réel — vérifié dans `js/app.js` (`makeSaveButton`), le bouton de validation de ces modales (statut client, statut/type produit, notes) porte la classe `btn-wip` et ne modifie ni `CLIENT_DETAILS` ni `PRODUCT_DETAILS`. Reformulé et déplacé vers "Work in progress", en distinguant explicitement ouverture/préremplissage réels vs absence de changement effectif vs absence de persistance.
+- **`.kpi-value` (overflow/ellipsis ajoutés en V0.10.1)** : réévalué avec les montants les plus longs réels (Dashboard, Trésorerie, Analyses) à largeur desktop (1280px), tablette (768px) et mobile (375px) — **aucune troncature réelle constatée** dans aucun cas. Test complémentaire avec des montants synthétiques extrêmes (ex. "-12 345 678,90 €") : la carte KPI s'agrandit plutôt que de tronquer (comportement de dimensionnement automatique des grilles CSS, préexistant à la V0.10.1, non introduit par cette version). La règle reste donc un filet de sécurité inerte avec les données actuelles, sans effet de masquage de montant constaté — **conservée telle quelle**, aucune modification nécessaire.
+
+Vérifications : rechargement de `dashboard.html`, `tresorerie.html`, `analyses.html` à desktop/tablette/mobile, aucune erreur console, aucune régression visuelle constatée. Nouveau commit sur `v0.10.1-coherence-ui-ux`. Toujours pas de merge dans `main`, pas de tag.
