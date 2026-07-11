@@ -1,0 +1,8 @@
+{
+  "name": "application-entrepreneurs-v0",
+  "private": true,
+  "description": "Cockpit Entrepreneur — prototype HTML/CSS/JS natif, sans dépendance.",
+  "scripts": {
+    "test": "node tests/run-tests.js"
+  }
+}

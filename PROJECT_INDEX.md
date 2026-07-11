@@ -32,16 +32,22 @@ application-entrepreneurs-v0/
 │   ├── tresorerie.html
 │   └── analyses.html
 ├── tests/
+│   ├── run-tests.js             Lance tous les tests/*.test.js (node tests/run-tests.js)
 │   ├── settings-v0.11.test.js
+│   ├── settings-v0.11.1.test.js
 │   ├── settings-runtime.test.js
-│   └── settings-paths.test.js
+│   ├── settings-paths.test.js
+│   └── settings-agenda-statuses.test.js
+├── package.json                 Script "test" (npm test), sans dépendance externe
 └── docs/
     ├── changelog.md
     ├── decisions.md
     ├── roadmap-v0bis.md
     ├── backlog.md
     ├── versioning.md
-    └── settings-v0.11.md
+    ├── settings-v0.11.md
+    ├── architecture-app-js.md
+    └── archive/                 Documents de revue clôturés (pré-V0.11, V0.11)
 ```
 
 ## Sources de vérité
@@ -49,4 +55,11 @@ application-entrepreneurs-v0/
 - Le store V0.11 contient uniquement la configuration locale.
 - `app.js` conserve les données métier fictives et non persistantes.
 - Les paramètres marqués V1 dans le catalogue ne sont pas simulés.
-- `main` reste la branche validée ; la V0.11 demeure sur `v0.11-settings-center` jusqu'à approbation.
+- `main` contient la V0.11.1 validée ; la V0.12 (assainissement global) demeure sur `v0.12-audit-global` jusqu'à approbation.
+
+## Documents actifs de référence
+
+- `README.md` et `PROJECT_INDEX.md` (racine) : état global et arborescence.
+- `docs/changelog.md`, `docs/roadmap-v0bis.md`, `docs/backlog.md`, `docs/versioning.md`, `docs/decisions.md` : suivi de version courant.
+- `docs/settings-v0.11.md` : architecture et checklist du Centre de paramètres.
+- `docs/archive/` : documents historiques ou de revue clôturée, conservés pour traçabilité mais non tenus à jour.

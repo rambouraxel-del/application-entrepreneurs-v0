@@ -1,8 +1,8 @@
 # Changelog
 
-> Ce fichier synthétise les versions du prototype. L'historique Git conserve le détail des anciens commits. La V0.11 est **en revue humaine**, non fusionnée et non taguée.
+> Ce fichier synthétise les versions du prototype. L'historique Git conserve le détail des anciens commits. La V0.11.1 est fusionnée et validée sur `main`. La V0.12 (assainissement global) est en cours sur `v0.12-audit-global`.
 
-## V0.11 — Centre de paramètres — en revue humaine
+## V0.11 — Centre de paramètres — validée
 
 ### Première implémentation
 

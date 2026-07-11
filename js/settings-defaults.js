@@ -65,7 +65,8 @@
                 { id: 'confirmed', legacyId: 'confirme', label: 'Confirmé', color: 'success', active: true, order: 2 },
                 { id: 'postponed', legacyId: 'reporte', label: 'Reporté', color: 'warning', active: true, order: 3 },
                 { id: 'completed', legacyId: 'realise', label: 'Réalisé', color: 'success', active: true, order: 4 },
-                { id: 'cancelled', legacyId: 'sans-suite', label: 'Sans suite', color: 'neutral', active: true, order: 5 }
+                { id: 'cancelled', legacyId: 'annule', label: 'Annulé', color: 'danger', active: true, order: 5 },
+                { id: 'no-follow-up', legacyId: 'sans_suite', label: 'Sans suite', color: 'neutral', active: true, order: 6 }
             ]
         },
         products: {

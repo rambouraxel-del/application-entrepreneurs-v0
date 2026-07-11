@@ -9,7 +9,7 @@ const html = read('pages/settings.html');
 const ui = read('js/settings-ui.js');
 const css = read('css/settings.css');
 const defaults = read('js/settings-defaults.js');
-const finalize = read('js/settings-finalize.js');
+const consumers = read('js/settings-consumers.js');
 
 assert(html.includes('settings-back-link'), 'Le retour discret doit remplacer le gros bouton');
 assert((html.match(/<svg/g) || []).length >= 8, 'La barre latérale doit réutiliser les icônes SVG');
@@ -31,8 +31,7 @@ assert(ui.includes('syncGlobalPageSize'), 'La taille de liste globale doit être
 
 assert(!defaults.includes('customFields:'), 'Le champ personnalisé Clients doit être supprimé du schéma');
 assert(css.includes('.settings-color-choice') && css.includes('.settings-action-danger'), 'Les nouveaux contrôles visuels doivent être stylés');
-assert(finalize.includes("setPageSize('clients-page-size'"), 'La pagination Clients doit être appliquée');
-assert(finalize.includes("setPageSize('products-page-size'"), 'La pagination Produits doit être appliquée');
-assert(finalize.includes('emitChange(select)'), 'La pagination doit déclencher le recalcul de la liste');
+assert(consumers.includes("setSelect('clients-page-size',String(pageSizeFor('clients-page-size')),true)"), 'La pagination Clients doit être appliquée et déclencher le recalcul de la liste');
+assert(consumers.includes("setSelect('products-page-size',String(pageSizeFor('products-page-size')),true)"), 'La pagination Produits doit être appliquée et déclencher le recalcul de la liste');
 
 console.log('V0.11.1 settings corrective checks: OK');

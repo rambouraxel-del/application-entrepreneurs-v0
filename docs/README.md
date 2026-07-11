@@ -9,6 +9,9 @@ Ce dossier contient la documentation interne du projet : suivi des évolutions e
 - `roadmap-v0bis.md` — phases prévues après la V0 initiale, avec leur statut (Validée / En cours / À venir).
 - `backlog.md` — idées et limites connues, classées par module, non traitées dans la version en cours.
 - `versioning.md` — convention de nommage des versions et règles de commit/tag/branche.
+- `settings-v0.11.md` — architecture et checklist du Centre de paramètres.
+- `architecture-app-js.md` — cartographie de `js/app.js` et piste de découpage pour la V1.
+- `archive/` — documents de revue clôturés (pré-V0.11, V0.11), conservés pour traçabilité mais non tenus à jour ; ne pas s'y référer pour l'état courant du projet.
 
 ## Ce qui ne doit pas être rangé ici
 - La documentation destinée à l'utilisateur final (réservée au `README.md` principal du projet).
