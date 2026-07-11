@@ -13,7 +13,7 @@
 
 ## Persistance
 
-Seule la configuration est enregistrée sous `cockpit.settings.v1`. Les données métier restent fictives et non persistantes. L'import/export n'inclut aucune donnée métier.
+Seule la configuration est enregistrée sous `cockpit.settings.v1`. Les données métier restent fictives et non persistantes.
 
 ## Compatibilité documentaire
 
@@ -25,12 +25,12 @@ Langue complète, format de date global, fuseaux horaires, semaine commençant l
 
 ## Checklist humaine finale
 
-1. Parcourir toutes les sections et vérifier les badges V0/V1.
+1. Parcourir toutes les sections et vérifier leur contenu.
 2. Modifier puis recharger Profil, Entreprise, Apparence, Dashboard et référentiels.
 3. Vérifier les recherches TVA, horaires, objectif, devis, notification, statut client, trésorerie, acompte et week-end.
-4. Tester import/export et le résumé de confirmation.
-5. Activer la démonstration et confirmer que les autres sections sont conservées.
-6. Vérifier Dashboard, Clients, Agenda, Produits, Facturation, Trésorerie et Analyses sur desktop et mobile.
+4. Vérifier que Données et configuration ne contient que « Vider le cache » et « Réinitialiser les préférences d’affichage », et que Compte et sécurité reste vide.
+5. Contrôler les six statuts Agenda, notamment `annule` et `sans_suite` : libellé, couleur, activation et sélection sans doublon.
+6. Vérifier Dashboard, Clients, Agenda, Produits, Facturation, Trésorerie et Analyses sur desktop.
 7. Contrôler un document historique puis créer un nouveau brouillon.
 8. Vérifier qu'une alerte n'apparaît qu'une fois.
 9. Contrôler la console et les ressources réseau.
