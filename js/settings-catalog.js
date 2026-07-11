@@ -4,7 +4,7 @@
 
     var sections = {
         home: { title: 'Vue d’accueil', description: 'Synthèse des réglages actifs et des informations essentielles à compléter.', keywords: 'résumé accueil configuration' },
-        profile: { title: 'Profil utilisateur', description: 'Identité de l’utilisateur, distincte de l’entreprise et du profil de démonstration.', keywords: 'compte utilisateur identité prénom nom' },
+        profile: { title: 'Profil utilisateur', description: 'Identité de l’utilisateur, distincte des informations de l’entreprise.', keywords: 'compte utilisateur identité prénom nom' },
         company: { title: 'Entreprise', description: 'Identité légale, coordonnées, banque et mentions des futurs documents.', keywords: 'société raison sociale siret siren tva banque iban logo' },
         appearance: { title: 'Apparence', description: 'Densité, accent, pagination et affichage monétaire compatibles avec la V0.', keywords: 'thème couleur compact décimales devise affichage' },
         dashboard: { title: 'Tableau de bord et objectifs', description: 'Objectifs, période de pilotage, horizon, graphique et alertes affichées.', keywords: 'dashboard cockpit ca chiffre affaires encaissement trésorerie objectif graphique indicateur' },
@@ -15,7 +15,7 @@
         billing: { title: 'Facturation et documents', description: 'Numérotation indicative et valeurs par défaut des nouveaux devis et factures.', keywords: 'devis facture acompte remise tva paiement signature pied page validité préfixe' },
         treasury: { title: 'Trésorerie', description: 'Horizon, seuils, catégories, récurrences et visibilité des mouvements.', keywords: 'cash encaissement décaissement charge prévision réalisé' },
         analytics: { title: 'Analyses', description: 'Onglet, période, classements et visualisations du module Analyses.', keywords: 'statistiques indicateur graphique tunnel classement performance' },
-        data: { title: 'Données et configuration', description: 'Import, export, démonstration et réinitialisation de la configuration locale.', keywords: 'json sauvegarde navigateur localstorage import export demo' },
+        data: { title: 'Données et configuration', description: 'Maintenance locale : vider le cache et réinitialiser les préférences d’affichage.', keywords: 'cache affichage réinitialisation navigateur localstorage' },
         security: { title: 'Compte et sécurité', description: 'État des fonctions locales et des fonctions nécessitant un backend V1.', keywords: 'mot passe double authentification session permission appareil' }
     };
 
