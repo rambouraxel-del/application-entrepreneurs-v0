@@ -8,7 +8,7 @@
 
     var currentScript = document.currentScript;
     var base = currentScript && currentScript.src ? currentScript.src.replace(/demo-config\.js(?:\?.*)?$/, '') : '../js/';
-    var files = ['settings-defaults.js', 'settings-store.js', 'demo-config-adapter.js', 'settings-consumers.js'];
+    var files = ['settings-defaults.js', 'settings-store.js', 'demo-config-adapter.js', 'settings-consumers.js', 'settings-referentials.js'];
 
     if (document.readyState === 'loading') {
         files.forEach(function (file) {
