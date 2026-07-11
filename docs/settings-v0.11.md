@@ -1,6 +1,6 @@
 # V0.11 — Centre de paramètres
 
-> Statut : **en revue humaine** sur `v0.11-settings-center`. Aucun merge et aucun tag avant validation.
+> Statut : **validé et fusionné** dans `main` (V0.11.1).
 
 ## Architecture
 

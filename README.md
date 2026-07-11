@@ -1,6 +1,6 @@
 # Application Entrepreneurs — Cockpit Entrepreneur
 
-> **État du dépôt** : `main` contient la V0.10.2 validée. La V0.11 « Centre de paramètres » est développée sur `v0.11-settings-center` et reste **en revue humaine**. Elle n'est ni fusionnée ni taguée.
+> **État du dépôt** : `main` contient la V0.11.1 « Centre de paramètres » fusionnée et validée. La V0.12 (assainissement global avant V1) est développée sur `v0.12-audit-global` et reste **en revue humaine**. Elle n'est ni fusionnée ni taguée.
 
 ## Objectif
 
@@ -23,7 +23,7 @@ Les modules travaillent sur un jeu de données fictif chargé dans `js/app.js`. 
 - **Analyses** : vues transversales Commercial, Clients, Activité et Trésorerie.
 - **Centre de paramètres V0.11** : configuration locale centralisée, recherche, import/export JSON, profil de démonstration distinct et raccordements aux modules compatibles.
 
-## Centre de paramètres V0.11 — en revue humaine
+## Centre de paramètres V0.11 — validé
 
 Le centre est accessible depuis `pages/settings.html`. Il comprend :
 
@@ -48,25 +48,16 @@ python -m http.server 8000
 
 Puis ouvrir `http://localhost:8000/`. Un simple double-clic sur `index.html` fonctionne aussi dans la plupart des navigateurs, mais un serveur local facilite le contrôle des ressources.
 
-## Tests V0.11
+## Tests
 
 ```bash
-node --check js/settings-defaults.js
-node --check js/settings-store.js
-node --check js/settings-catalog.js
-node --check js/settings-consumers.js
-node --check js/settings-referentials.js
-node --check js/settings-alerts.js
-node --check js/settings-ui.js
-node tests/settings-v0.11.test.js
-node tests/settings-runtime.test.js
-node tests/settings-paths.test.js
+npm test
 ```
 
-La checklist de validation visuelle se trouve dans `docs/settings-v0.11.md`. La fusion et le tag restent interdits avant validation humaine explicite.
+Lance tous les fichiers `tests/*.test.js` sans dépendance externe (voir `package.json`). La checklist de validation visuelle du Centre de paramètres se trouve dans `docs/settings-v0.11.md`.
 
 ## Limites avant la V1
 
 La V1 devra notamment apporter un backend, une base de données, l'authentification, les rôles, la synchronisation, le stockage sécurisé des fichiers, une numérotation comptable persistante et les notifications externes.
 
-Voir aussi : `docs/changelog.md`, `docs/roadmap-v0bis.md`, `docs/backlog.md`, `docs/versioning.md` et `PROJECT_INDEX.md`.
+Voir aussi : `docs/changelog.md`, `docs/roadmap-v0bis.md`, `docs/backlog.md`, `docs/versioning.md`, `docs/decisions.md`, `docs/settings-v0.11.md`, `docs/architecture-app-js.md` et `PROJECT_INDEX.md`.

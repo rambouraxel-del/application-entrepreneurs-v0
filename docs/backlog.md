@@ -25,3 +25,7 @@
 ## V0.12
 
 Conserver dans la revue humaine globale tous les constats de cohérence UI/UX, responsive, lisibilité, navigation, états vides et messages d'erreur découverts pendant la validation de la V0.11.
+
+Réalisé lors de l'assainissement V0.12 (voir `docs/decisions.md`) : réparation de `settings-consumers.js`, documentation à jour, suppression des fichiers inutiles (`database.html`, `assets/`, `components/`, `settings-finalize.js`), fusion en un seul moteur d'alertes Dashboard, correctifs Agenda/pagination/date, retrait du compteur de notifications factice, commande de tests unifiée.
+
+Reporté à une itération ultérieure (hors périmètre explicite de cette version) : découpage de `app.js` (piste documentée dans `docs/architecture-app-js.md`), factorisation de la duplication assumée entre devis-édition/facture-édition et des helpers `makeEl`/`formatDateFr` répétés par page.

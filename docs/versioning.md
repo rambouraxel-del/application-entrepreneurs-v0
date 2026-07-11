@@ -16,11 +16,11 @@ Un tag marque uniquement une version validée. Aucun tag `v0.11` ne doit être c
 
 ## Branches
 
-- `main` contient la dernière version validée, actuellement V0.10.2.
-- `v0.11-settings-center` contient la V0.11 en revue humaine.
+- `main` contient la dernière version validée, actuellement V0.11.1.
+- `v0.12-audit-global` contient la V0.12 (assainissement global) en revue humaine.
 - Une branche en avance sur `main`, non fusionnée, reste une version en chantier même si ses commits sont propres.
 
-## Validation de la V0.11
+## Validation d'une version
 
 Ordre obligatoire :
 
@@ -29,6 +29,6 @@ Ordre obligatoire :
 3. corrections éventuelles ;
 4. validation explicite du chef de projet ;
 5. merge dans `main` ;
-6. création éventuelle du tag `v0.11`.
+6. création éventuelle du tag correspondant.
 
 La persistance locale de configuration ne transforme pas la V0 en V1 : les données métier restent non persistantes.

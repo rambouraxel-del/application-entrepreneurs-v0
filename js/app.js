@@ -215,6 +215,7 @@ document.addEventListener('DOMContentLoaded', function () {
 (function () {
     function init(config) {
         var currentPage = 1;
+        var defaultPageSize = config.pageSizeSelect.value;
 
         function getPageSize() {
             var value = parseInt(config.pageSizeSelect.value, 10);
@@ -302,7 +303,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 (config.filterSelects || []).forEach(function (select) {
                     select.value = '';
                 });
-                config.pageSizeSelect.value = '5';
+                config.pageSizeSelect.value = defaultPageSize;
                 currentPage = 1;
                 render();
             });
@@ -10483,6 +10484,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var today = startOfDay(new Date());
 
+    var topbarDateEl = document.getElementById('topbar-today-date');
+    if (topbarDateEl) {
+        var todayDayName = DAY_NAMES[today.getDay()];
+        topbarDateEl.textContent = todayDayName.charAt(0).toUpperCase() + todayDayName.slice(1) + ' ' + today.getDate() + ' ' + MONTH_NAMES[today.getMonth()] + ' ' + today.getFullYear();
+    }
+
     var state = {
         period: null,
         chartPeriodMonths: pilotageConfig.graphiquePeriodeMois || 6,
@@ -10683,8 +10690,6 @@ document.addEventListener('DOMContentLoaded', function () {
             : devisCalc.formatMoney(devisCalc.roundMoney(objectifPeriode - caPeriode)) + ' restant pour l\'objectif';
         var objectifStatus = pourcentageObjectif >= 100 ? 'status-positive' : (pourcentageObjectif >= 60 ? 'status-neutral' : 'status-negative');
         kpisEl.appendChild(buildKpiCard('kpi-icon-4', ICON_OBJECTIF, 'Objectif', pourcentageObjectif + ' %', objectifSub, objectifStatus, 'analyses.html'));
-
-        renderAlerts(snapshot, period, pourcentageObjectif);
     }
 
     var periodSelectEl = document.getElementById('dashboard-period-select');
@@ -11056,120 +11061,12 @@ document.addEventListener('DOMContentLoaded', function () {
         renderTodos();
     });
 
-    // ================= Niveau 2 — Ma journée : alertes =================
-
-    // Hypothèses assumées, documentées dans docs/changelog.md : un devis
-    // "envoyé" depuis 7 jours ou plus est considéré à relancer ; un
-    // rendez-vous non confirmé dans les 3 prochains jours est considéré
-    // imminent. Aucune de ces deux règles n'existait ailleurs dans le
-    // projet.
-
-    function computeDevisARelancer() {
-        var result = [];
-        Object.keys(DEVIS_DETAILS).forEach(function (numero) {
-            var devis = DEVIS_DETAILS[numero];
-            var version = devisCalc.getActiveVersion(devis);
-            if (!version || version.statut !== 'envoye') {
-                return;
-            }
-            var d = agendaCalc.parseDateFr(version.dateCreation);
-            if (!d) {
-                return;
-            }
-            var joursEcoules = Math.round((today - d) / 86400000);
-            if (joursEcoules >= 7) {
-                var clientNom = (CLIENT_DETAILS[version.clientSlug] || version.clientSnapshot || {}).nom || version.clientSlug;
-                result.push({ numero: numero, joursEcoules: joursEcoules, clientNom: clientNom });
-            }
-        });
-        return result.sort(function (a, b) { return b.joursEcoules - a.joursEcoules; });
-    }
-
-    function computeRdvNonConfirmesImminents() {
-        return Object.keys(RDV_DETAILS).map(function (id) {
-            return RDV_DETAILS[id];
-        }).filter(function (rdv) {
-            if (rdv.statut === 'realise' || rdv.statut === 'annule' || rdv.statut === 'sans_suite') {
-                return false;
-            }
-            if (rdv.communication.confirme) {
-                return false;
-            }
-            var d = agendaCalc.parseDateFr(rdv.date);
-            if (!d) {
-                return false;
-            }
-            var joursRestants = Math.round((d - today) / 86400000);
-            return joursRestants >= 0 && joursRestants <= 3;
-        });
-    }
-
-    var TRESORERIE_NIVEAU_TO_CLASS = { critical: 'alert-critical', warning: 'alert-warning', info: 'alert-info' };
-
-    function renderAlerts(snapshot, period, pourcentageObjectif) {
-        var listEl = document.getElementById('dashboard-alerts-list');
-        var emptyEl = document.getElementById('dashboard-alerts-empty');
-        listEl.innerHTML = '';
-
-        var alerts = [];
-
-        (snapshot.alertes || []).forEach(function (a) {
-            var gravite = a.niveau === 'critical' ? 3 : (a.niveau === 'warning' ? 2 : 1);
-            alerts.push({ gravite: gravite, titre: a.titre, sousTexte: a.sousTexte, lien: a.lien || 'tresorerie.html', classe: TRESORERIE_NIVEAU_TO_CLASS[a.niveau] || 'alert-info' });
-        });
-
-        computeRdvNonConfirmesImminents().forEach(function (rdv) {
-            alerts.push({ gravite: 2, titre: 'Rendez-vous non confirmé', sousTexte: rdv.titre + ' — ' + rdv.date, lien: 'fiche-rdv.html?rdv=' + rdv.id, classe: 'alert-warning' });
-        });
-
-        Object.keys(RDV_DETAILS).map(function (id) {
-            return RDV_DETAILS[id];
-        }).forEach(function (rdv) {
-            if (agendaCalc.estReportePlusieursFois(rdv)) {
-                alerts.push({ gravite: 2, titre: 'Rendez-vous reporté plusieurs fois', sousTexte: rdv.titre, lien: 'fiche-rdv.html?rdv=' + rdv.id, classe: 'alert-warning' });
-            }
-        });
-
-        computeDevisARelancer().forEach(function (d) {
-            alerts.push({ gravite: 1, titre: 'Devis à relancer', sousTexte: d.numero + ' — ' + d.clientNom + ' (' + d.joursEcoules + ' j sans réponse)', lien: 'devis-edition.html?devis=' + d.numero, classe: 'alert-info' });
-        });
-
-        if (pourcentageObjectif < 50 && period.lengthDays >= 7) {
-            alerts.push({ gravite: 1, titre: 'Objectif en retard', sousTexte: pourcentageObjectif + ' % atteint sur la période', lien: 'analyses.html', classe: 'alert-info' });
-        }
-
-        alerts.sort(function (a, b) { return b.gravite - a.gravite; });
-        alerts = alerts.slice(0, 4);
-
-        if (alerts.length === 0) {
-            emptyEl.style.display = '';
-            return;
-        }
-        emptyEl.style.display = 'none';
-
-        alerts.forEach(function (a) {
-            var li = document.createElement('li');
-            var link = document.createElement('a');
-            link.href = a.lien;
-            link.className = 'alert-item ' + a.classe;
-
-            var icon = makeEl('span', 'alert-icon');
-            icon.innerHTML = ICON_ALERT;
-            link.appendChild(icon);
-
-            var body = makeEl('div', 'alert-item-body');
-            body.appendChild(makeEl('p', 'alert-item-title', a.titre));
-            body.appendChild(makeEl('p', 'alert-item-subtext', a.sousTexte));
-            link.appendChild(body);
-
-            var chevron = makeEl('span', 'alert-chevron');
-            chevron.innerHTML = ICON_CHEVRON;
-            link.appendChild(chevron);
-
-            li.appendChild(link);
-            listEl.appendChild(li);
-        });
-    }
+    // Alertes du Dashboard : source unique js/settings-alerts.js
+    // (COCKPIT_SETTINGS_ALERTS), qui écrit directement dans
+    // #dashboard-alerts-list / #dashboard-alerts-empty. L'ancien moteur
+    // local (computeDevisARelancer/computeRdvNonConfirmesImminents/
+    // renderAlerts) a été retiré en V0.12 : il écrivait dans les mêmes
+    // éléments DOM et était systématiquement écrasé par settings-alerts.js.
 
     // ================= Niveau 3 — Performance financière =================
 
