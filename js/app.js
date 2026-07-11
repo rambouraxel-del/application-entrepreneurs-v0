@@ -665,11 +665,12 @@ document.addEventListener('DOMContentLoaded', function () {
 // CLIENT_DETAILS déjà exposé ci-dessus.
 
 (function () {
+    var demoConfig = window.COCKPIT_DEMO_CONFIG || {};
     var COMPANY_SETTINGS = {
-        nom: 'Cockpit Entrepreneur SARL',
+        nom: demoConfig.entreprise || 'Cockpit Entrepreneur SARL',
         adresse: '10 rue de l\'Innovation, 75011 Paris',
-        telephone: '01 84 12 34 56',
-        email: 'contact@cockpit-entrepreneur.example.com',
+        telephone: demoConfig.telephone || '01 84 12 34 56',
+        email: demoConfig.email || 'contact@cockpit-entrepreneur.example.com',
         siteInternet: 'www.cockpit-entrepreneur.example.com',
         siren: '123 456 789',
         siret: '123 456 789 00012',
@@ -10490,4 +10491,54 @@ document.addEventListener('DOMContentLoaded', function () {
     periodSelectEl.addEventListener('change', render);
 
     render();
+})();
+
+// Page Tableau de bord : connexion à la configuration de démonstration
+// (V0.9.2). Personnalise uniquement les deux éléments les plus visibles à
+// l'ouverture du dashboard (salutation + objectif mensuel) ; le reste du
+// tableau de bord (KPI, agenda, alertes...) n'est pas modifié.
+
+(function () {
+    var titleEl = document.getElementById('dashboard-greeting-title');
+    var subtitleEl = document.getElementById('dashboard-greeting-subtitle');
+    if (!titleEl || !subtitleEl) {
+        return;
+    }
+
+    var demo = window.COCKPIT_DEMO_CONFIG;
+    if (!demo) {
+        return;
+    }
+
+    titleEl.textContent = 'Bonjour, ' + demo.prenom + ' !';
+    subtitleEl.textContent = 'Voici un aperçu de l\'activité de ' + demo.entreprise + ' (' + demo.activite + ') aujourd\'hui.';
+
+    var objectifEl = document.getElementById('dashboard-objectif-caption');
+    if (objectifEl && window.COCKPIT_DEVIS_CALC) {
+        objectifEl.textContent = 'Objectif : ' + window.COCKPIT_DEVIS_CALC.formatMoney(demo.objectifMensuel) + ' / mois';
+    }
+})();
+
+// Page Paramètres : connexion à la configuration de démonstration (V0.9.2).
+// Complète les cartes "Compte utilisateur" et "Objectifs mensuels", qui
+// n'affichaient jusqu'ici aucune donnée (simples placeholders "Modifier").
+
+(function () {
+    var compteEl = document.getElementById('settings-compte-detail');
+    var objectifEl = document.getElementById('settings-objectif-detail');
+    if (!compteEl && !objectifEl) {
+        return;
+    }
+
+    var demo = window.COCKPIT_DEMO_CONFIG;
+    if (!demo) {
+        return;
+    }
+
+    if (compteEl) {
+        compteEl.textContent = demo.nomComplet + ' — ' + demo.fonction + ' · ' + demo.email;
+    }
+    if (objectifEl && window.COCKPIT_DEVIS_CALC) {
+        objectifEl.textContent = 'Objectif actuel : ' + window.COCKPIT_DEVIS_CALC.formatMoney(demo.objectifMensuel) + ' / mois';
+    }
 })();

@@ -47,8 +47,8 @@
         <div class="main">
             <header class="topbar">
                 <div class="topbar-greeting">
-                    <h1>Bonjour, Julien !</h1>
-                    <p>Voici un aperçu de votre activité aujourd'hui.</p>
+                    <h1 id="dashboard-greeting-title">Bonjour, Julien !</h1>
+                    <p id="dashboard-greeting-subtitle">Voici un aperçu de votre activité aujourd'hui.</p>
                 </div>
                 <div class="topbar-actions">
                     <div class="topbar-search">
@@ -96,7 +96,7 @@
                         <div class="kpi-card-body">
                             <h2>Objectif mensuel</h2>
                             <p class="kpi-value">72 %</p>
-                            <p class="kpi-variation status-neutral">atteint</p>
+                            <p class="kpi-variation status-neutral" id="dashboard-objectif-caption">atteint</p>
                         </div>
                     </a>
                     <a href="tresorerie.html" class="dashboard-card kpi-card kpi-card-link">
@@ -303,6 +303,7 @@
         </div>
     </div>
 
+    <script src="../js/demo-config.js"></script>
     <script src="../js/app.js"></script>
 </body>
 </html>

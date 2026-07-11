@@ -1576,6 +1576,11 @@ svg {
     gap: 12px;
 }
 
+.settings-card-detail {
+    font-weight: 600;
+    color: var(--color-text);
+}
+
 /* Pages placeholder de modules (V0.2 : Trésorerie, Produits/Services, Finance) */
 
 .placeholder-grid {

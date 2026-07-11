@@ -29,6 +29,8 @@ Cette roadmap présente les phases prévues après la V0 initiale (livrée à l'
 | V0.7.1 | Vues calendrier Jour/Semaine/Mois et enrichissements du module Agenda (formulaire de rendez-vous en sections, recherche client, proposition commerciale, navigation temporelle fiable) | Validée |
 | V0.8 | Module Trésorerie : solde estimé, à encaisser/à décaisser, prochains mouvements, charges prévues, factures à encaisser, projection et alertes | Validée |
 | V0.9 | Analyses et performance (renommage du module Finance) : cockpit d'analyse transversal recoupant Facturation/Clients/Agenda/Trésorerie | Validée |
+| V0.9.1 | Refonte visuelle du module Analyses (donuts, tunnel de conversion, cartes de synthèse), sans changement fonctionnel | Validée |
+| V0.9.2 | Configuration personnalisable de démonstration (`js/demo-config.js`) : identité fictive centralisée, connectée aux éléments les plus visibles pendant une démo | Validée |
 | V0.10 | Cohérence globale des parcours / Dashboard | À venir |
 | V1 | Version fonctionnelle stable | À venir |
 

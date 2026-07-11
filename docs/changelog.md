@@ -507,3 +507,15 @@ Une branche de sauvegarde `backup/pre-regularisation-v0.9` a été créée avant
 - `v0.9.1` → `125d533` (refonte visuelle Analyses)
 
 `main` et `origin/main` ont ensuite été resynchronisés (`git push origin main --tags`). Documentation mise à jour en conséquence (`README.md`, `docs/roadmap-v0bis.md`, `docs/backlog.md`, `PROJECT_INDEX.md`, README internes) pour refléter la V0.9.1 comme dernière version présente sur `main`.
+
+## V0.9.2 — Configuration personnalisable de démonstration
+
+Réalisée sur la branche dédiée `v0.9.2-demo-config` (créée depuis `main` après la régularisation). Note de nommage : la demande initiale suggérait "V0.9.1" pour cette fonctionnalité, mais ce nom était déjà utilisé par la refonte visuelle du module Analyses (commit déjà poussé) ; comme aucun commit existant n'est jamais réécrit, cette amélioration est numérotée **V0.9.2**.
+
+- **`js/demo-config.js`** (nouveau) : centralise l'identité fictive utilisée pendant une démonstration — `prenom`, `nom`, `fonction`, `entreprise`, `activite`, `ville`, `email`, `telephone`, `objectifMensuel` — avec valeurs par défaut fictives et fallback propre si un champ est vide. Chargé avant `js/app.js` sur les 19 pages qui en dépendent (ajout d'une seule balise `<script>`, aucun autre changement de structure). Aucune donnée personnelle réelle, aucun secret, aucune persistance, aucun backend.
+- **Connexions** (éléments les plus visibles pendant une démo, sans toucher aux données métier fictives ni refondre l'application) : salutation et sous-titre du tableau de bord ; légende "Objectif mensuel" (dashboard et `pages/settings.html`) ; carte "Compte utilisateur" de `pages/settings.html` (jusqu'ici un placeholder sans donnée) ; `window.COCKPIT_COMPANY_SETTINGS.nom/telephone/email`, donc `pages/parametres-entreprise.html` et l'émetteur de tous les devis/factures/documents imprimables. Le reste des données de démonstration (clients, produits/services, devis, factures, rendez-vous, trésorerie) n'est pas concerné.
+- **Documentation** : section "Personnaliser la démo pour un prospect" ajoutée à `docs/README.md`, expliquant qu'il suffit de modifier `DEMO_CONFIG` dans `js/demo-config.js`.
+
+Vérifications effectuées : test fonctionnel réel dans le navigateur avec les valeurs par défaut (volontairement identiques aux données fictives déjà en place, pour ne rien changer visuellement tant que la config n'est pas personnalisée) — `dashboard.html` (salutation, sous-titre, objectif), `settings.html` (comptes utilisateur et objectifs mensuels), `parametres-entreprise.html` et `devis-document.html` (nom d'entreprise cohérent partout via `window.COCKPIT_COMPANY_SETTINGS`) ; non-régression rapide sur `agenda.html` et `tresorerie.html`. Aucune erreur console sur aucune page testée.
+
+Commit créé sur la branche `v0.9.2-demo-config`, fusionnée dans `main` et taguée `v0.9.2`.
