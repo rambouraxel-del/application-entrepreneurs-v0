@@ -7101,205 +7101,6 @@ document.addEventListener('DOMContentLoaded', function () {
     legalEl.textContent = companySettings.mentionsLegales || '';
 })();
 
-// Page Tableau de bord : bloc "Aperçu Facturation" (V0.6.4). Liste compacte
-// et en lecture seule, calculée depuis COCKPIT_FACTURATION_STATS.computeStats() —
-// volontairement pas une nouvelle grosse carte KPI, pour ne pas empiéter sur
-// les futurs modules Trésorerie/Finance (V0.7/V0.9) ni refondre le tableau
-// de bord existant. La carte favorite "Devis envoyés", jusqu'ici statique,
-// devient réelle au passage.
-
-(function () {
-    var statsEl = document.getElementById('dashboard-facturation-stats');
-    if (!statsEl) {
-        return;
-    }
-
-    var devisCalc = window.COCKPIT_DEVIS_CALC;
-    var stats = (window.COCKPIT_FACTURATION_STATS || {}).computeStats ? window.COCKPIT_FACTURATION_STATS.computeStats() : null;
-    if (!stats || !devisCalc) {
-        return;
-    }
-
-    function makeStatRow(label, value) {
-        var row = document.createElement('div');
-        row.className = 'devis-summary-row';
-        var labelEl = document.createElement('span');
-        labelEl.textContent = label;
-        var valueEl = document.createElement('span');
-        valueEl.textContent = value;
-        row.appendChild(labelEl);
-        row.appendChild(valueEl);
-        return row;
-    }
-
-    statsEl.appendChild(makeStatRow('Facturé', devisCalc.formatMoney(stats.caFacture)));
-    statsEl.appendChild(makeStatRow('Encaissé', devisCalc.formatMoney(stats.caEncaisse)));
-    statsEl.appendChild(makeStatRow('Reste à encaisser', devisCalc.formatMoney(stats.resteAEncaisser)));
-    statsEl.appendChild(makeStatRow('Factures en retard', String(stats.facturesEnRetard)));
-    statsEl.appendChild(makeStatRow('Devis en attente', String(stats.devisEnvoyes)));
-    var tauxRow = makeStatRow('Taux de transformation', stats.tauxTransformation + ' %');
-    tauxRow.classList.add('devis-summary-row-total');
-    statsEl.appendChild(tauxRow);
-
-    var devisEnvoyesValueEl = document.getElementById('dashboard-devis-envoyes-value');
-    if (devisEnvoyesValueEl) {
-        devisEnvoyesValueEl.textContent = String(stats.devisEnvoyes);
-    }
-})();
-
-// Page Tableau de bord : bloc "Aperçu Trésorerie" (V0.8). Même principe que
-// "Aperçu Facturation" ci-dessus : liste compacte en lecture seule, calculée
-// depuis COCKPIT_TRESORERIE_CALC.computeSnapshot() (fenêtre de 30 jours par
-// défaut, cohérente avec tresorerie.html). La carte KPI "Trésorerie
-// disponible", jusqu'ici statique, reflète désormais le vrai solde estimé.
-
-(function () {
-    var statsEl = document.getElementById('dashboard-tresorerie-stats');
-    if (!statsEl) {
-        return;
-    }
-
-    var devisCalc = window.COCKPIT_DEVIS_CALC;
-    var calc = window.COCKPIT_TRESORERIE_CALC;
-    var snapshot = calc && calc.computeSnapshot ? calc.computeSnapshot(30) : null;
-    if (!snapshot || !devisCalc) {
-        return;
-    }
-
-    function makeStatRow(label, value) {
-        var row = document.createElement('div');
-        row.className = 'devis-summary-row';
-        var labelEl = document.createElement('span');
-        labelEl.textContent = label;
-        var valueEl = document.createElement('span');
-        valueEl.textContent = value;
-        row.appendChild(labelEl);
-        row.appendChild(valueEl);
-        return row;
-    }
-
-    statsEl.appendChild(makeStatRow('Solde estimé', devisCalc.formatMoney(snapshot.soldeEstime)));
-    statsEl.appendChild(makeStatRow('À encaisser', devisCalc.formatMoney(snapshot.aEncaisser)));
-    statsEl.appendChild(makeStatRow('À décaisser', devisCalc.formatMoney(snapshot.aDecaisser)));
-    var previsionnelRow = makeStatRow('Solde prévisionnel (30 j)', devisCalc.formatMoney(snapshot.soldePrevisionnel));
-    previsionnelRow.classList.add('devis-summary-row-total');
-    statsEl.appendChild(previsionnelRow);
-
-    var alerteRow = makeStatRow('Alerte principale', snapshot.alertes.length > 0 ? snapshot.alertes[0].titre : 'Aucune alerte');
-    statsEl.appendChild(alerteRow);
-
-    var soldeKpiEl = document.getElementById('dashboard-tresorerie-solde');
-    if (soldeKpiEl) {
-        soldeKpiEl.textContent = devisCalc.formatMoney(snapshot.soldeEstime);
-    }
-})();
-
-// Page Tableau de bord : bloc "Aperçu Analyses" (V0.9). Carte compacte et
-// unique (pas de gros bloc) : taux de transformation, top client, alerte
-// principale, lien vers le module Analyses. Calculée depuis
-// COCKPIT_ANALYSES_CALC.computeSnapshot('tout'), qui recoupe lui-même les
-// modules existants sans nouveau calcul dupliqué.
-
-(function () {
-    var statsEl = document.getElementById('dashboard-analyses-stats');
-    if (!statsEl) {
-        return;
-    }
-
-    var devisCalc = window.COCKPIT_DEVIS_CALC;
-    var analysesCalc = window.COCKPIT_ANALYSES_CALC;
-    var snapshot = analysesCalc && analysesCalc.computeSnapshot ? analysesCalc.computeSnapshot('tout') : null;
-    if (!snapshot || !devisCalc) {
-        return;
-    }
-
-    function makeStatRow(label, value) {
-        var row = document.createElement('div');
-        row.className = 'devis-summary-row';
-        var labelEl = document.createElement('span');
-        labelEl.textContent = label;
-        var valueEl = document.createElement('span');
-        valueEl.textContent = value;
-        row.appendChild(labelEl);
-        row.appendChild(valueEl);
-        return row;
-    }
-
-    var tauxRow = makeStatRow('Taux de transformation devis → facture', snapshot.commercial.tauxTransformation + ' %');
-    tauxRow.classList.add('devis-summary-row-total');
-    statsEl.appendChild(tauxRow);
-
-    var topClientLabel = snapshot.clients.topParCA.length > 0
-        ? snapshot.clients.topParCA[0].nom + ' (' + devisCalc.formatMoney(snapshot.clients.topParCA[0].caFacture) + ')'
-        : 'Aucun client facturé';
-    statsEl.appendChild(makeStatRow('Top client', topClientLabel));
-
-    var alertePrincipale = snapshot.alertesPrincipales.length > 0 ? snapshot.alertesPrincipales[0].titre : 'Aucune alerte';
-    statsEl.appendChild(makeStatRow('Alerte principale', alertePrincipale));
-})();
-
-// Page Tableau de bord : bloc "Agenda commercial" réel (V0.7). Remplace
-// l'ancienne liste statique "Agenda du jour" par un rendu calculé depuis
-// COCKPIT_AGENDA_CALC.computeDashboardStats() : rendez-vous du jour (liste),
-// puis prochains rendez-vous / non confirmés / reportés / devis brouillon en
-// attente / reportés plusieurs fois (compteurs), sans redesign du dashboard.
-
-(function () {
-    var todayListEl = document.getElementById('dashboard-agenda-today');
-    var statsEl = document.getElementById('dashboard-agenda-stats');
-    if (!todayListEl || !statsEl) {
-        return;
-    }
-
-    var agendaCalc = window.COCKPIT_AGENDA_CALC || {};
-    var stats = agendaCalc.computeDashboardStats ? agendaCalc.computeDashboardStats() : null;
-    if (!stats) {
-        return;
-    }
-
-    var CLASS_CYCLE = ['agenda-item-a', 'agenda-item-b', 'agenda-item-c'];
-
-    if (stats.rdvAujourdhui.length === 0) {
-        var emptyItem = document.createElement('li');
-        emptyItem.className = 'agenda-item-a';
-        emptyItem.textContent = 'Aucun rendez-vous prévu aujourd\'hui.';
-        todayListEl.appendChild(emptyItem);
-    } else {
-        stats.rdvAujourdhui.forEach(function (rdv, index) {
-            var item = document.createElement('li');
-            item.className = CLASS_CYCLE[index % CLASS_CYCLE.length];
-            var timeEl = document.createElement('span');
-            timeEl.className = 'agenda-time';
-            timeEl.textContent = rdv.heureDebut || '—';
-            item.appendChild(timeEl);
-            item.appendChild(document.createTextNode(rdv.titre));
-            todayListEl.appendChild(item);
-        });
-    }
-
-    function makeStatRow(label, value) {
-        var row = document.createElement('div');
-        row.className = 'devis-summary-row';
-        var labelEl = document.createElement('span');
-        labelEl.textContent = label;
-        var valueEl = document.createElement('span');
-        valueEl.textContent = value;
-        row.appendChild(labelEl);
-        row.appendChild(valueEl);
-        return row;
-    }
-
-    statsEl.appendChild(makeStatRow('Prochains rendez-vous', String(stats.rdvProchains.length)));
-    statsEl.appendChild(makeStatRow('Non confirmés', String(stats.rdvNonConfirmes.length)));
-    statsEl.appendChild(makeStatRow('Reportés', String(stats.rdvReportes.length)));
-    statsEl.appendChild(makeStatRow('Devis brouillon en attente', String(stats.rdvDevisBrouillonEnAttente.length)));
-    if (stats.rdvReportesPlusieurs.length > 0) {
-        var alertRow = makeStatRow('Reportés plusieurs fois', String(stats.rdvReportesPlusieurs.length));
-        alertRow.classList.add('devis-summary-row-total');
-        statsEl.appendChild(alertRow);
-    }
-})();
-
 // Page Agenda : vues calendrier Jour/Semaine/Mois (V0.7.1, correctif
 // d'ergonomie). Semaine est la vue par défaut ; la vue Liste existante
 // (recherche/filtre/pagination, IIFE suivante) devient une vue secondaire
@@ -10494,9 +10295,10 @@ document.addEventListener('DOMContentLoaded', function () {
 })();
 
 // Page Tableau de bord : connexion à la configuration de démonstration
-// (V0.9.2). Personnalise uniquement les deux éléments les plus visibles à
-// l'ouverture du dashboard (salutation + objectif mensuel) ; le reste du
-// tableau de bord (KPI, agenda, alertes...) n'est pas modifié.
+// (V0.9.2). Personnalise l'élément le plus visible à l'ouverture du
+// dashboard (salutation) ; l'objectif mensuel est désormais affiché par le
+// KPI "Objectif" du cockpit (V0.10.2, voir plus bas), qui recalcule son
+// propre sous-texte selon la période de pilotage sélectionnée.
 
 (function () {
     var titleEl = document.getElementById('dashboard-greeting-title');
@@ -10512,11 +10314,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     titleEl.textContent = 'Bonjour, ' + demo.prenom + ' !';
     subtitleEl.textContent = 'Voici un aperçu de l\'activité de ' + demo.entreprise + ' (' + demo.activite + ') aujourd\'hui.';
-
-    var objectifEl = document.getElementById('dashboard-objectif-caption');
-    if (objectifEl && window.COCKPIT_DEVIS_CALC) {
-        objectifEl.textContent = 'Objectif : ' + window.COCKPIT_DEVIS_CALC.formatMoney(demo.objectifMensuel) + ' / mois';
-    }
 })();
 
 // Page Paramètres : connexion à la configuration de démonstration (V0.9.2).
@@ -10541,4 +10338,1230 @@ document.addEventListener('DOMContentLoaded', function () {
     if (objectifEl && window.COCKPIT_DEVIS_CALC) {
         objectifEl.textContent = 'Objectif actuel : ' + window.COCKPIT_DEVIS_CALC.formatMoney(demo.objectifMensuel) + ' / mois';
     }
+})();
+
+// Page Paramètres : carte "Pilotage et activité" (V0.10.2). Affiche les
+// valeurs par défaut réellement utilisées par le tableau de bord
+// (js/pilotage-config.js), sans formulaire d'édition : Paramètres et
+// Dashboard sont deux pages chargées séparément, sans backend ni
+// localStorage, donc une modification ici ne pourrait jamais se propager
+// durablement vers le Dashboard. Plutôt que de simuler un enregistrement
+// trompeur, cette carte reste volontairement une vue honnête des valeurs par
+// défaut ("Modifier" en Work in progress, comme les autres cartes non encore
+// éditables de cette page) ; les vrais contrôles fonctionnels (période,
+// horizon) vivent directement sur le Dashboard.
+
+(function () {
+    var el = document.getElementById('settings-pilotage-detail');
+    if (!el) {
+        return;
+    }
+    var cfg = window.COCKPIT_PILOTAGE_CONFIG;
+    if (!cfg) {
+        return;
+    }
+
+    var PERIODE_LABELS = { mois: 'Mois civil', '30j': '30 derniers jours', trimestre: 'Trimestre civil', custom: 'Période personnalisée' };
+    var HORIZON_LABELS = { 'fin-mois': 'Fin du mois', 'fin-mois-suivant': 'Fin du mois suivant', '30j': '30 jours', '60j': '60 jours', '90j': '90 jours' };
+
+    el.textContent = (PERIODE_LABELS[cfg.periodePilotage] || cfg.periodePilotage) +
+        ' · Horizon trésorerie : ' + (HORIZON_LABELS[cfg.horizonTresorerie] || cfg.horizonTresorerie) +
+        ' · Agenda ' + cfg.agendaHeureDebut + '–' + cfg.agendaHeureFin +
+        ' · Graphique ' + cfg.graphiquePeriodeMois + ' mois';
+})();
+
+// ============================================================================
+// Page Tableau de bord — Cockpit quotidien (V0.10.2)
+// ============================================================================
+// Remplace l'empilement de blocs des versions précédentes (4 KPI statiques,
+// agenda du jour, to-do liste statique, alertes statiques, graphique CA
+// statique, indicateurs favoris, aperçus Facturation/Trésorerie/Analyses)
+// par une structure à trois niveaux : Situation générale (4 KPI calculés sur
+// une période de pilotage choisie), Ma journée (mini-agenda quotidien +
+// to-do fonctionnelle + alertes calculées), Performance (graphique
+// configurable + tunnel commercial).
+//
+// Réutilise directement les calculateurs déjà existants sans jamais
+// réinventer une formule monétaire ou métier : COCKPIT_DEVIS_CALC
+// (formatMoney/roundMoney/computeDevisTotals/getActiveVersion),
+// COCKPIT_FACTURE_CALC (computeStatutAffiche), COCKPIT_AGENDA_CALC
+// (parseDateFr/estReportePlusieursFois), COCKPIT_TRESORERIE_CALC
+// (computeSnapshot, y compris ses propres alertes, reprises telles quelles),
+// COCKPIT_FACTURATION_STATS. Les seules nouveautés sont des agrégations par
+// période (CA/encaissé sur une période choisie, série mensuelle du
+// graphique) : aucun des calculateurs existants n'acceptait de filtre de
+// date, elles étaient donc absentes du projet avant cette version.
+//
+// Limite assumée : "Montant décaissé" et "Reste à encaisser" ne sont pas
+// proposés comme séries du graphique de performance. TRESORERIE_OPERATIONS
+// (6 opérations fictives, concentrées sur juin/juillet 2026) n'offre aucune
+// profondeur historique fiable sur 6 ou 12 mois — les proposer aurait
+// signifié afficher un historique majoritairement inventé. Seules trois
+// séries réellement calculables depuis FACTURE_DETAILS sont proposées : CA
+// facturé, Encaissé, Solde net.
+//
+// Comme le reste de la V0, la to-do list et la période de pilotage restent
+// en mémoire de page : aucune ne survit à un rechargement.
+
+(function () {
+    var kpisEl = document.getElementById('dashboard-kpis-situation');
+    if (!kpisEl) {
+        return;
+    }
+
+    var devisCalc = window.COCKPIT_DEVIS_CALC;
+    var factureCalc = window.COCKPIT_FACTURE_CALC;
+    var agendaCalc = window.COCKPIT_AGENDA_CALC;
+    var tresorerieCalc = window.COCKPIT_TRESORERIE_CALC;
+    var facturationStats = window.COCKPIT_FACTURATION_STATS;
+    var DEVIS_DETAILS = window.COCKPIT_DEVIS_DETAILS || {};
+    var FACTURE_DETAILS = window.COCKPIT_FACTURE_DETAILS || {};
+    var RDV_DETAILS = window.COCKPIT_RDV_DETAILS || {};
+    var CLIENT_DETAILS = window.COCKPIT_CLIENT_DETAILS || {};
+    var demoConfig = window.COCKPIT_DEMO_CONFIG || {};
+    var pilotageConfig = window.COCKPIT_PILOTAGE_CONFIG || {};
+
+    if (!devisCalc || !factureCalc || !agendaCalc || !tresorerieCalc || !facturationStats) {
+        return;
+    }
+
+    // ---------- Utilitaires ----------
+
+    function pad2(n) {
+        return (n < 10 ? '0' : '') + n;
+    }
+    function startOfDay(d) {
+        var r = new Date(d);
+        r.setHours(0, 0, 0, 0);
+        return r;
+    }
+    function addDays(d, n) {
+        var r = new Date(d);
+        r.setDate(r.getDate() + n);
+        return r;
+    }
+    function toISODate(d) {
+        return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+    }
+    function fromISODate(v) {
+        if (!v) {
+            return null;
+        }
+        var p = v.split('-');
+        if (p.length !== 3) {
+            return null;
+        }
+        var d = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10));
+        return isNaN(d.getTime()) ? null : d;
+    }
+    function formatDateFrLocal(d) {
+        return pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1) + '/' + d.getFullYear();
+    }
+    function makeEl(tag, className, text) {
+        var node = document.createElement(tag);
+        if (className) {
+            node.className = className;
+        }
+        if (text !== undefined) {
+            node.textContent = text;
+        }
+        return node;
+    }
+
+    var MONTH_NAMES = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+    var MONTH_ABBR = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+    var DAY_NAMES = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+
+    var ICON_CA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>';
+    var ICON_ENCAISSE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="19 12 12 19 5 12"></polyline><line x1="12" y1="19" x2="12" y2="5"></line></svg>';
+    var ICON_TRESORERIE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4z"></path></svg>';
+    var ICON_OBJECTIF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>';
+    var ICON_ALERT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>';
+    var ICON_CHEVRON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>';
+    var ICON_EDIT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>';
+    var ICON_DELETE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+
+    var today = startOfDay(new Date());
+
+    var state = {
+        period: null,
+        chartPeriodMonths: pilotageConfig.graphiquePeriodeMois || 6,
+        chartIndicators: [pilotageConfig.graphiqueIndicateurDefaut || 'ca_facture'],
+        agendaDate: today,
+        todoFilter: 'a-faire'
+    };
+
+    // ================= Niveau 1 — Situation générale =================
+
+    function computeMonthEnd(d) {
+        return new Date(d.getFullYear(), d.getMonth() + 1, 0);
+    }
+    function computeQuarterStart(d) {
+        var q = Math.floor(d.getMonth() / 3);
+        return new Date(d.getFullYear(), q * 3, 1);
+    }
+
+    function computePeriod(preset, customStart, customEnd) {
+        var start, end;
+        if (preset === '30j') {
+            end = today;
+            start = addDays(today, -29);
+        } else if (preset === 'trimestre') {
+            start = computeQuarterStart(today);
+            end = today;
+        } else if (preset === 'custom' && customStart && customEnd && customStart <= customEnd) {
+            start = customStart;
+            end = customEnd;
+        } else {
+            preset = 'mois';
+            start = new Date(today.getFullYear(), today.getMonth(), 1);
+            end = today;
+        }
+        var lengthDays = Math.round((end - start) / 86400000) + 1;
+        var prevEnd = addDays(start, -1);
+        var prevStart = addDays(prevEnd, -(lengthDays - 1));
+        return { preset: preset, start: start, end: end, lengthDays: lengthDays, prevStart: prevStart, prevEnd: prevEnd };
+    }
+
+    function formatShort(d) {
+        return pad2(d.getDate()) + ' ' + MONTH_ABBR[d.getMonth()];
+    }
+
+    function formatPeriodLabel(period) {
+        if (period.preset === 'mois') {
+            return 'CA de ' + MONTH_NAMES[period.start.getMonth()];
+        }
+        if (period.preset === '30j') {
+            return 'CA sur les 30 derniers jours';
+        }
+        if (period.preset === 'trimestre') {
+            return 'CA du trimestre';
+        }
+        return 'CA du ' + formatShort(period.start) + ' au ' + formatShort(period.end);
+    }
+
+    function inPeriod(dateObj, period) {
+        return !!dateObj && dateObj >= period.start && dateObj <= period.end;
+    }
+
+    function computeCAPeriode(period) {
+        var total = 0;
+        Object.keys(FACTURE_DETAILS).forEach(function (key) {
+            var f = FACTURE_DETAILS[key];
+            if (f.statutEmission !== 'emise') {
+                return;
+            }
+            var d = agendaCalc.parseDateFr(f.dateEmission);
+            if (!inPeriod(d, period)) {
+                return;
+            }
+            var totals = devisCalc.computeDevisTotals(f.lignes);
+            total = devisCalc.roundMoney(total + totals.totalTTC);
+        });
+        return total;
+    }
+
+    function computeEncaissePeriode(period) {
+        var total = 0;
+        Object.keys(FACTURE_DETAILS).forEach(function (key) {
+            var f = FACTURE_DETAILS[key];
+            (f.paiements || []).forEach(function (p) {
+                var d = agendaCalc.parseDateFr(p.date);
+                if (!inPeriod(d, period)) {
+                    return;
+                }
+                total = devisCalc.roundMoney(total + (parseFloat(p.montant) || 0));
+            });
+        });
+        return total;
+    }
+
+    function computeHorizonDays(horizonPreset) {
+        var end;
+        if (horizonPreset === 'fin-mois') {
+            end = computeMonthEnd(today);
+        } else if (horizonPreset === 'fin-mois-suivant') {
+            end = new Date(today.getFullYear(), today.getMonth() + 2, 0);
+        } else if (horizonPreset === '60j') {
+            end = addDays(today, 60);
+        } else if (horizonPreset === '90j') {
+            end = addDays(today, 90);
+        } else {
+            end = addDays(today, 30);
+        }
+        return Math.max(1, Math.round((end - today) / 86400000));
+    }
+
+    function horizonLabel(horizonPreset) {
+        if (horizonPreset === 'fin-mois') {
+            return 'fin ' + MONTH_NAMES[today.getMonth()];
+        }
+        if (horizonPreset === 'fin-mois-suivant') {
+            return 'fin ' + MONTH_NAMES[(today.getMonth() + 1) % 12];
+        }
+        if (horizonPreset === '60j') {
+            return '60 jours';
+        }
+        if (horizonPreset === '90j') {
+            return '90 jours';
+        }
+        return '30 jours';
+    }
+
+    // Objectif mensuel (DEMO_CONFIG) proratisé au nombre de jours de la
+    // période retenue lorsque celle-ci n'est pas un mois civil complet —
+    // approximation documentée (docs/changelog.md), la V0 n'ayant pas de
+    // notion d'objectif par période autre que mensuelle.
+    function computeObjectifPeriode(period) {
+        var objectifMensuel = parseFloat(demoConfig.objectifMensuel) || 0;
+        var joursMoyenParMois = 30.44;
+        return devisCalc.roundMoney(objectifMensuel * (period.lengthDays / joursMoyenParMois));
+    }
+
+    function buildKpiCard(iconClass, iconSvg, title, value, subtext, statusClass, href) {
+        var card = document.createElement('a');
+        card.href = href;
+        card.className = 'dashboard-card kpi-card kpi-card-link';
+        var icon = makeEl('div', 'kpi-icon ' + iconClass);
+        icon.innerHTML = iconSvg;
+        var body = makeEl('div', 'kpi-card-body');
+        body.appendChild(makeEl('h2', null, title));
+        body.appendChild(makeEl('p', 'kpi-value', value));
+        body.appendChild(makeEl('p', 'kpi-variation ' + (statusClass || 'status-neutral'), subtext));
+        card.appendChild(icon);
+        card.appendChild(body);
+        return card;
+    }
+
+    function renderSituation() {
+        var presetSelect = document.getElementById('dashboard-period-select');
+        var customStartEl = document.getElementById('dashboard-period-custom-start');
+        var customEndEl = document.getElementById('dashboard-period-custom-end');
+        var labelEl = document.getElementById('dashboard-period-label');
+
+        var customStart = fromISODate(customStartEl.value);
+        var customEnd = fromISODate(customEndEl.value);
+        var period = computePeriod(presetSelect.value, customStart, customEnd);
+        state.period = period;
+
+        labelEl.textContent = formatShort(period.start) + ' → ' + formatShort(period.end);
+
+        var prevPeriod = { start: period.prevStart, end: period.prevEnd, preset: period.preset, lengthDays: period.lengthDays };
+
+        var caPeriode = computeCAPeriode(period);
+        var caPrecedent = computeCAPeriode(prevPeriod);
+        var encaissePeriode = computeEncaissePeriode(period);
+
+        var horizonDays = computeHorizonDays(pilotageConfig.horizonTresorerie);
+        var snapshot = tresorerieCalc.computeSnapshot(horizonDays);
+
+        var objectifPeriode = computeObjectifPeriode(period);
+        var pourcentageObjectif = objectifPeriode > 0 ? Math.round((caPeriode / objectifPeriode) * 100) : 0;
+
+        kpisEl.innerHTML = '';
+
+        var caVariationTxt, caStatus;
+        if (caPrecedent > 0) {
+            var caDelta = Math.round(((caPeriode - caPrecedent) / caPrecedent) * 100);
+            caVariationTxt = (caDelta >= 0 ? '↗ +' : '↘ ') + caDelta + ' % vs période précédente';
+            caStatus = caDelta >= 0 ? 'status-positive' : 'status-negative';
+        } else {
+            caVariationTxt = 'Aucune donnée sur la période précédente';
+            caStatus = 'status-neutral';
+        }
+        kpisEl.appendChild(buildKpiCard('kpi-icon-1', ICON_CA, formatPeriodLabel(period), devisCalc.formatMoney(caPeriode), caVariationTxt, caStatus, 'facturation.html'));
+
+        var ecart = devisCalc.roundMoney(caPeriode - encaissePeriode);
+        kpisEl.appendChild(buildKpiCard('kpi-icon-2', ICON_ENCAISSE, 'Encaissé sur la période', devisCalc.formatMoney(encaissePeriode), 'Écart avec le facturé : ' + devisCalc.formatMoney(ecart), 'status-neutral', 'facturation.html'));
+
+        var tresorerieSub = 'Prévision ' + horizonLabel(pilotageConfig.horizonTresorerie) + ' : ' + devisCalc.formatMoney(snapshot.soldePrevisionnel);
+        var tresorerieStatus = snapshot.soldePrevisionnel < 0 ? 'status-negative' : 'status-neutral';
+        kpisEl.appendChild(buildKpiCard('kpi-icon-3', ICON_TRESORERIE, 'Trésorerie disponible', devisCalc.formatMoney(snapshot.soldeEstime), tresorerieSub, tresorerieStatus, 'tresorerie.html'));
+
+        var objectifSub = pourcentageObjectif >= 100
+            ? 'Objectif atteint (' + devisCalc.formatMoney(caPeriode) + ' / ' + devisCalc.formatMoney(objectifPeriode) + ')'
+            : devisCalc.formatMoney(devisCalc.roundMoney(objectifPeriode - caPeriode)) + ' restant pour l\'objectif';
+        var objectifStatus = pourcentageObjectif >= 100 ? 'status-positive' : (pourcentageObjectif >= 60 ? 'status-neutral' : 'status-negative');
+        kpisEl.appendChild(buildKpiCard('kpi-icon-4', ICON_OBJECTIF, 'Objectif', pourcentageObjectif + ' %', objectifSub, objectifStatus, 'analyses.html'));
+
+        renderAlerts(snapshot, period, pourcentageObjectif);
+    }
+
+    var periodSelectEl = document.getElementById('dashboard-period-select');
+    var customStartEl = document.getElementById('dashboard-period-custom-start');
+    var customEndEl = document.getElementById('dashboard-period-custom-end');
+
+    periodSelectEl.value = pilotageConfig.periodePilotage || 'mois';
+    if (pilotageConfig.periodeCustomDebut) {
+        customStartEl.value = pilotageConfig.periodeCustomDebut;
+    }
+    if (pilotageConfig.periodeCustomFin) {
+        customEndEl.value = pilotageConfig.periodeCustomFin;
+    }
+
+    function updateCustomVisibility() {
+        var isCustom = periodSelectEl.value === 'custom';
+        customStartEl.style.display = isCustom ? '' : 'none';
+        customEndEl.style.display = isCustom ? '' : 'none';
+    }
+    updateCustomVisibility();
+
+    periodSelectEl.addEventListener('change', function () {
+        updateCustomVisibility();
+        renderSituation();
+    });
+    customStartEl.addEventListener('change', renderSituation);
+    customEndEl.addEventListener('change', renderSituation);
+
+    // ================= Niveau 2 — Ma journée : mini-agenda =================
+
+    var HOUR_PX = 56;
+
+    function heureToMinutes(h) {
+        if (!h) {
+            return null;
+        }
+        var parts = h.split(':');
+        return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+    }
+    function minutesToHeure(m) {
+        return pad2(Math.floor(m / 60)) + ':' + pad2(m % 60);
+    }
+
+    function getRdvForDate(dateObj) {
+        return Object.keys(RDV_DETAILS).map(function (id) {
+            return RDV_DETAILS[id];
+        }).filter(function (rdv) {
+            var d = agendaCalc.parseDateFr(rdv.date);
+            return d && d.getTime() === dateObj.getTime();
+        }).sort(function (a, b) {
+            return (heureToMinutes(a.heureDebut) || 0) - (heureToMinutes(b.heureDebut) || 0);
+        });
+    }
+
+    function computeWindow(rdvList) {
+        if (rdvList.length === 0) {
+            return null;
+        }
+        var starts = rdvList.map(function (r) { return heureToMinutes(r.heureDebut) || 0; });
+        var ends = rdvList.map(function (r) { return heureToMinutes(r.heureFin) || ((heureToMinutes(r.heureDebut) || 0) + 30); });
+        var minStart = Math.min.apply(null, starts);
+        var maxEnd = Math.max.apply(null, ends);
+        var start = Math.max(0, minStart - 30);
+        var end = Math.min(24 * 60, maxEnd + 30);
+        var MIN_WINDOW = 120;
+        if (end - start < MIN_WINDOW) {
+            var padMin = (MIN_WINDOW - (end - start)) / 2;
+            start = Math.max(0, start - padMin);
+            end = Math.min(24 * 60, end + padMin);
+        }
+        return { start: Math.floor(start / 30) * 30, end: Math.ceil(end / 30) * 30 };
+    }
+
+    var RDV_STATUS_DOT_CLASS = {
+        prevu: 'status-neutral',
+        confirme: 'status-positive',
+        reporte: 'status-negative',
+        realise: 'status-positive',
+        annule: 'status-negative',
+        sans_suite: 'status-neutral'
+    };
+
+    function renderMiniAgenda() {
+        var gridEl = document.getElementById('mini-agenda-grid');
+        var scrollEl = document.getElementById('mini-agenda-scroll');
+        var emptyEl = document.getElementById('mini-agenda-empty');
+        var labelEl = document.getElementById('mini-agenda-date-label');
+
+        var isToday = state.agendaDate.getTime() === today.getTime();
+        labelEl.textContent = (isToday ? 'Aujourd\'hui — ' : '') + DAY_NAMES[state.agendaDate.getDay()] + ' ' + state.agendaDate.getDate() + ' ' + MONTH_NAMES[state.agendaDate.getMonth()] + ' ' + state.agendaDate.getFullYear();
+
+        var rdvList = getRdvForDate(state.agendaDate);
+        gridEl.innerHTML = '';
+
+        if (rdvList.length === 0) {
+            scrollEl.style.display = 'none';
+            emptyEl.style.display = '';
+            emptyEl.innerHTML = '';
+            emptyEl.appendChild(makeEl('p', null, 'Aucun rendez-vous ' + (isToday ? 'aujourd\'hui' : 'ce jour-là') + '.'));
+            var linksWrap = makeEl('div', 'mini-agenda-empty-links');
+            var seeLink = makeEl('a', 'btn-secondary', 'Voir l\'agenda');
+            seeLink.href = 'agenda.html';
+            var addLink = makeEl('a', 'btn-primary', 'Ajouter un rendez-vous');
+            addLink.href = 'fiche-rdv.html';
+            linksWrap.appendChild(seeLink);
+            linksWrap.appendChild(addLink);
+            emptyEl.appendChild(linksWrap);
+            return;
+        }
+
+        scrollEl.style.display = '';
+        emptyEl.style.display = 'none';
+
+        var win = computeWindow(rdvList);
+        var gridHeight = ((win.end - win.start) / 60) * HOUR_PX;
+        gridEl.style.height = gridHeight + 'px';
+
+        for (var m = win.start; m <= win.end; m += 30) {
+            var isHour = m % 60 === 0;
+            var lineEl = makeEl('div', 'mini-agenda-hour-line' + (isHour ? ' mini-agenda-hour-line-full' : ''));
+            lineEl.style.top = ((m - win.start) / 60 * HOUR_PX) + 'px';
+            if (isHour) {
+                lineEl.appendChild(makeEl('span', 'mini-agenda-hour-label', minutesToHeure(m)));
+            }
+            gridEl.appendChild(lineEl);
+        }
+
+        if (isToday) {
+            var nowMinutes = new Date().getHours() * 60 + new Date().getMinutes();
+            if (nowMinutes >= win.start && nowMinutes <= win.end) {
+                var nowLine = makeEl('div', 'mini-agenda-now-line');
+                nowLine.style.top = ((nowMinutes - win.start) / 60 * HOUR_PX) + 'px';
+                gridEl.appendChild(nowLine);
+            }
+        }
+
+        rdvList.forEach(function (rdv) {
+            var startMin = heureToMinutes(rdv.heureDebut) || 0;
+            var endMin = heureToMinutes(rdv.heureFin) || (startMin + 30);
+            var top = ((startMin - win.start) / 60) * HOUR_PX;
+            var height = Math.max(((endMin - startMin) / 60) * HOUR_PX, 22);
+
+            var link = document.createElement('a');
+            link.href = 'fiche-rdv.html?rdv=' + rdv.id;
+            link.className = 'mini-agenda-event';
+            link.style.top = top + 'px';
+            link.style.height = height + 'px';
+
+            var clientNom = (CLIENT_DETAILS[rdv.clientSlug] || {}).nom || '';
+
+            var topRow = makeEl('div', 'mini-agenda-event-top');
+            topRow.appendChild(makeEl('span', 'mini-agenda-event-dot ' + (RDV_STATUS_DOT_CLASS[rdv.statut] || 'status-neutral')));
+            topRow.appendChild(makeEl('span', 'mini-agenda-event-time', rdv.heureDebut + (rdv.heureFin ? '–' + rdv.heureFin : '')));
+            link.appendChild(topRow);
+            link.appendChild(makeEl('div', 'mini-agenda-event-title', rdv.titre));
+            if (height >= 44) {
+                link.appendChild(makeEl('div', 'mini-agenda-event-meta', [clientNom, rdv.lieu].filter(Boolean).join(' · ')));
+            }
+            gridEl.appendChild(link);
+        });
+    }
+
+    document.getElementById('mini-agenda-prev').addEventListener('click', function () {
+        state.agendaDate = addDays(state.agendaDate, -1);
+        renderMiniAgenda();
+    });
+    document.getElementById('mini-agenda-next').addEventListener('click', function () {
+        state.agendaDate = addDays(state.agendaDate, 1);
+        renderMiniAgenda();
+    });
+    document.getElementById('mini-agenda-today-btn').addEventListener('click', function () {
+        state.agendaDate = today;
+        renderMiniAgenda();
+    });
+
+    // ================= Niveau 2 — Ma journée : to-do list =================
+
+    var todoSeq = 5;
+    var TODOS = [
+        { id: 1, titre: 'Relancer le devis Martin', priorite: 'haute', echeance: null, terminee: false },
+        { id: 2, titre: 'Préparer la facture n°001', priorite: 'moyenne', echeance: null, terminee: false },
+        { id: 3, titre: 'Appeler le fournisseur Dupont', priorite: 'basse', echeance: null, terminee: false },
+        { id: 4, titre: 'Vérifier les stocks', priorite: 'basse', echeance: null, terminee: true },
+        { id: 5, titre: 'Envoyer la relance client Bernard', priorite: 'moyenne', echeance: null, terminee: true }
+    ];
+
+    var PRIORITE_BADGE = { haute: 'badge-danger', moyenne: 'badge-warning', basse: 'badge-neutral' };
+    var PRIORITE_LABEL = { haute: 'Priorité haute', moyenne: 'Priorité moyenne', basse: 'Priorité basse' };
+
+    function renderTodos() {
+        var listEl = document.getElementById('todo-list');
+        var emptyEl = document.getElementById('todo-empty');
+        listEl.innerHTML = '';
+
+        var filtered = TODOS.filter(function (t) {
+            return state.todoFilter === 'terminees' ? t.terminee : !t.terminee;
+        });
+
+        if (filtered.length === 0) {
+            emptyEl.style.display = '';
+            emptyEl.textContent = state.todoFilter === 'terminees' ? 'Aucune tâche terminée.' : 'Aucune tâche à faire.';
+        } else {
+            emptyEl.style.display = 'none';
+        }
+
+        filtered.forEach(function (todo) {
+            var li = document.createElement('li');
+            li.className = 'todo-item' + (todo.terminee ? ' todo-item-done' : '');
+
+            var checkbox = document.createElement('button');
+            checkbox.type = 'button';
+            checkbox.className = 'todo-checkbox' + (todo.terminee ? ' todo-checkbox-checked' : '');
+            checkbox.setAttribute('aria-label', todo.terminee ? 'Rouvrir la tâche' : 'Marquer comme terminée');
+            if (todo.terminee) {
+                checkbox.textContent = '✓';
+            }
+            checkbox.addEventListener('click', function () {
+                todo.terminee = !todo.terminee;
+                renderTodos();
+            });
+
+            var body = makeEl('div', 'todo-item-body');
+            body.appendChild(makeEl('p', 'todo-item-title', todo.titre));
+            var meta = makeEl('div', 'badge-group');
+            meta.appendChild(makeEl('span', 'badge ' + PRIORITE_BADGE[todo.priorite], PRIORITE_LABEL[todo.priorite]));
+            if (todo.echeance) {
+                meta.appendChild(makeEl('span', 'badge badge-neutral', 'Échéance : ' + todo.echeance));
+            }
+            body.appendChild(meta);
+
+            var actions = makeEl('div', 'todo-item-actions');
+            var editBtn = document.createElement('button');
+            editBtn.type = 'button';
+            editBtn.className = 'block-icon-btn';
+            editBtn.title = 'Modifier la tâche';
+            editBtn.setAttribute('aria-label', 'Modifier la tâche');
+            editBtn.innerHTML = ICON_EDIT;
+            editBtn.addEventListener('click', function () {
+                openTodoModal(todo);
+            });
+            var deleteBtn = document.createElement('button');
+            deleteBtn.type = 'button';
+            deleteBtn.className = 'block-icon-btn';
+            deleteBtn.title = 'Supprimer la tâche';
+            deleteBtn.setAttribute('aria-label', 'Supprimer la tâche');
+            deleteBtn.innerHTML = ICON_DELETE;
+            deleteBtn.addEventListener('click', function () {
+                TODOS = TODOS.filter(function (t) { return t.id !== todo.id; });
+                renderTodos();
+            });
+            actions.appendChild(editBtn);
+            actions.appendChild(deleteBtn);
+
+            li.appendChild(checkbox);
+            li.appendChild(body);
+            li.appendChild(actions);
+            listEl.appendChild(li);
+        });
+    }
+
+    function openTodoModal(existingTodo) {
+        var body = document.createElement('div');
+
+        body.appendChild(makeEl('label', 'modal-label', 'Titre'));
+        var titleInput = document.createElement('input');
+        titleInput.type = 'text';
+        titleInput.className = 'modal-input';
+        titleInput.value = existingTodo ? existingTodo.titre : '';
+        body.appendChild(titleInput);
+
+        var grid = makeEl('div', 'form-grid-2');
+        grid.style.marginTop = '10px';
+
+        var prioriteWrap = document.createElement('div');
+        prioriteWrap.appendChild(makeEl('label', 'modal-label', 'Priorité'));
+        var prioriteSelect = document.createElement('select');
+        prioriteSelect.className = 'modal-select';
+        [['haute', 'Haute'], ['moyenne', 'Moyenne'], ['basse', 'Basse']].forEach(function (pair) {
+            var option = document.createElement('option');
+            option.value = pair[0];
+            option.textContent = pair[1];
+            prioriteSelect.appendChild(option);
+        });
+        prioriteSelect.value = existingTodo ? existingTodo.priorite : 'moyenne';
+        prioriteWrap.appendChild(prioriteSelect);
+        grid.appendChild(prioriteWrap);
+
+        var echeanceWrap = document.createElement('div');
+        echeanceWrap.appendChild(makeEl('label', 'modal-label', 'Échéance (optionnelle)'));
+        var echeanceInput = document.createElement('input');
+        echeanceInput.type = 'date';
+        echeanceInput.className = 'modal-input';
+        echeanceInput.min = '2000-01-01';
+        echeanceInput.max = '2099-12-31';
+        if (existingTodo && existingTodo.echeance) {
+            var existingDate = agendaCalc.parseDateFr(existingTodo.echeance);
+            if (existingDate) {
+                echeanceInput.value = toISODate(existingDate);
+            }
+        }
+        echeanceWrap.appendChild(echeanceInput);
+        grid.appendChild(echeanceWrap);
+        body.appendChild(grid);
+
+        var errorEl = makeEl('p', 'modal-hint');
+        errorEl.style.color = 'var(--color-danger)';
+        errorEl.style.display = 'none';
+        body.appendChild(errorEl);
+
+        var cancelButton = document.createElement('button');
+        cancelButton.type = 'button';
+        cancelButton.className = 'btn-secondary';
+        cancelButton.setAttribute('data-modal-close', 'true');
+        cancelButton.textContent = 'Annuler';
+
+        var saveButton = document.createElement('button');
+        saveButton.type = 'button';
+        saveButton.className = 'btn-primary';
+        saveButton.textContent = existingTodo ? 'Enregistrer' : 'Ajouter';
+
+        saveButton.addEventListener('click', function () {
+            var titre = titleInput.value.trim();
+            if (!titre) {
+                errorEl.textContent = 'Merci de renseigner un titre.';
+                errorEl.style.display = '';
+                return;
+            }
+            var echeanceDate = fromISODate(echeanceInput.value);
+            var echeanceStr = echeanceDate ? formatDateFrLocal(echeanceDate) : null;
+
+            if (existingTodo) {
+                existingTodo.titre = titre;
+                existingTodo.priorite = prioriteSelect.value;
+                existingTodo.echeance = echeanceStr;
+            } else {
+                todoSeq += 1;
+                TODOS.push({ id: todoSeq, titre: titre, priorite: prioriteSelect.value, echeance: echeanceStr, terminee: false });
+            }
+
+            window.COCKPIT_MODAL.close();
+            renderTodos();
+        });
+
+        var footer = document.createDocumentFragment();
+        footer.appendChild(cancelButton);
+        footer.appendChild(saveButton);
+
+        window.COCKPIT_MODAL.open({
+            title: existingTodo ? 'Modifier la tâche' : 'Ajouter une tâche',
+            body: body,
+            footer: footer
+        });
+    }
+
+    document.getElementById('todo-add-btn').addEventListener('click', function () {
+        openTodoModal(null);
+    });
+
+    document.getElementById('todo-filter-tabs').addEventListener('click', function (evt) {
+        var btn = evt.target.closest('.page-tab');
+        if (!btn) {
+            return;
+        }
+        Array.prototype.forEach.call(document.querySelectorAll('#todo-filter-tabs .page-tab'), function (b) {
+            b.classList.remove('page-tab-active');
+        });
+        btn.classList.add('page-tab-active');
+        state.todoFilter = btn.getAttribute('data-filter');
+        renderTodos();
+    });
+
+    // ================= Niveau 2 — Ma journée : alertes =================
+
+    // Hypothèses assumées, documentées dans docs/changelog.md : un devis
+    // "envoyé" depuis 7 jours ou plus est considéré à relancer ; un
+    // rendez-vous non confirmé dans les 3 prochains jours est considéré
+    // imminent. Aucune de ces deux règles n'existait ailleurs dans le
+    // projet.
+
+    function computeDevisARelancer() {
+        var result = [];
+        Object.keys(DEVIS_DETAILS).forEach(function (numero) {
+            var devis = DEVIS_DETAILS[numero];
+            var version = devisCalc.getActiveVersion(devis);
+            if (!version || version.statut !== 'envoye') {
+                return;
+            }
+            var d = agendaCalc.parseDateFr(version.dateCreation);
+            if (!d) {
+                return;
+            }
+            var joursEcoules = Math.round((today - d) / 86400000);
+            if (joursEcoules >= 7) {
+                var clientNom = (CLIENT_DETAILS[version.clientSlug] || version.clientSnapshot || {}).nom || version.clientSlug;
+                result.push({ numero: numero, joursEcoules: joursEcoules, clientNom: clientNom });
+            }
+        });
+        return result.sort(function (a, b) { return b.joursEcoules - a.joursEcoules; });
+    }
+
+    function computeRdvNonConfirmesImminents() {
+        return Object.keys(RDV_DETAILS).map(function (id) {
+            return RDV_DETAILS[id];
+        }).filter(function (rdv) {
+            if (rdv.statut === 'realise' || rdv.statut === 'annule' || rdv.statut === 'sans_suite') {
+                return false;
+            }
+            if (rdv.communication.confirme) {
+                return false;
+            }
+            var d = agendaCalc.parseDateFr(rdv.date);
+            if (!d) {
+                return false;
+            }
+            var joursRestants = Math.round((d - today) / 86400000);
+            return joursRestants >= 0 && joursRestants <= 3;
+        });
+    }
+
+    var TRESORERIE_NIVEAU_TO_CLASS = { critical: 'alert-critical', warning: 'alert-warning', info: 'alert-info' };
+
+    function renderAlerts(snapshot, period, pourcentageObjectif) {
+        var listEl = document.getElementById('dashboard-alerts-list');
+        var emptyEl = document.getElementById('dashboard-alerts-empty');
+        listEl.innerHTML = '';
+
+        var alerts = [];
+
+        (snapshot.alertes || []).forEach(function (a) {
+            var gravite = a.niveau === 'critical' ? 3 : (a.niveau === 'warning' ? 2 : 1);
+            alerts.push({ gravite: gravite, titre: a.titre, sousTexte: a.sousTexte, lien: a.lien || 'tresorerie.html', classe: TRESORERIE_NIVEAU_TO_CLASS[a.niveau] || 'alert-info' });
+        });
+
+        computeRdvNonConfirmesImminents().forEach(function (rdv) {
+            alerts.push({ gravite: 2, titre: 'Rendez-vous non confirmé', sousTexte: rdv.titre + ' — ' + rdv.date, lien: 'fiche-rdv.html?rdv=' + rdv.id, classe: 'alert-warning' });
+        });
+
+        Object.keys(RDV_DETAILS).map(function (id) {
+            return RDV_DETAILS[id];
+        }).forEach(function (rdv) {
+            if (agendaCalc.estReportePlusieursFois(rdv)) {
+                alerts.push({ gravite: 2, titre: 'Rendez-vous reporté plusieurs fois', sousTexte: rdv.titre, lien: 'fiche-rdv.html?rdv=' + rdv.id, classe: 'alert-warning' });
+            }
+        });
+
+        computeDevisARelancer().forEach(function (d) {
+            alerts.push({ gravite: 1, titre: 'Devis à relancer', sousTexte: d.numero + ' — ' + d.clientNom + ' (' + d.joursEcoules + ' j sans réponse)', lien: 'devis-edition.html?devis=' + d.numero, classe: 'alert-info' });
+        });
+
+        if (pourcentageObjectif < 50 && period.lengthDays >= 7) {
+            alerts.push({ gravite: 1, titre: 'Objectif en retard', sousTexte: pourcentageObjectif + ' % atteint sur la période', lien: 'analyses.html', classe: 'alert-info' });
+        }
+
+        alerts.sort(function (a, b) { return b.gravite - a.gravite; });
+        alerts = alerts.slice(0, 4);
+
+        if (alerts.length === 0) {
+            emptyEl.style.display = '';
+            return;
+        }
+        emptyEl.style.display = 'none';
+
+        alerts.forEach(function (a) {
+            var li = document.createElement('li');
+            var link = document.createElement('a');
+            link.href = a.lien;
+            link.className = 'alert-item ' + a.classe;
+
+            var icon = makeEl('span', 'alert-icon');
+            icon.innerHTML = ICON_ALERT;
+            link.appendChild(icon);
+
+            var body = makeEl('div', 'alert-item-body');
+            body.appendChild(makeEl('p', 'alert-item-title', a.titre));
+            body.appendChild(makeEl('p', 'alert-item-subtext', a.sousTexte));
+            link.appendChild(body);
+
+            var chevron = makeEl('span', 'alert-chevron');
+            chevron.innerHTML = ICON_CHEVRON;
+            link.appendChild(chevron);
+
+            li.appendChild(link);
+            listEl.appendChild(li);
+        });
+    }
+
+    // ================= Niveau 3 — Performance financière =================
+
+    var CHART_SERIES_DEFS = {
+        ca_facture: { label: 'CA facturé', color: '#4f46e5' },
+        encaisse: { label: 'Encaissé', color: '#16a34a' },
+        solde_net: { label: 'Solde net (facturé − encaissé)', color: '#7c3aed' }
+    };
+
+    function computeMonthlySeries(nbMonths) {
+        var months = [];
+        for (var i = nbMonths - 1; i >= 0; i--) {
+            var d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+            months.push({ year: d.getFullYear(), month: d.getMonth(), label: MONTH_ABBR[d.getMonth()] });
+        }
+
+        var caByMonth = {};
+        var encaisseByMonth = {};
+        months.forEach(function (mth) {
+            var key = mth.year + '-' + mth.month;
+            caByMonth[key] = 0;
+            encaisseByMonth[key] = 0;
+        });
+
+        Object.keys(FACTURE_DETAILS).forEach(function (key) {
+            var f = FACTURE_DETAILS[key];
+            if (f.statutEmission === 'emise') {
+                var dEmission = agendaCalc.parseDateFr(f.dateEmission);
+                if (dEmission) {
+                    var k = dEmission.getFullYear() + '-' + dEmission.getMonth();
+                    if (caByMonth.hasOwnProperty(k)) {
+                        var totals = devisCalc.computeDevisTotals(f.lignes);
+                        caByMonth[k] = devisCalc.roundMoney(caByMonth[k] + totals.totalTTC);
+                    }
+                }
+            }
+            (f.paiements || []).forEach(function (p) {
+                var dP = agendaCalc.parseDateFr(p.date);
+                if (dP) {
+                    var kp = dP.getFullYear() + '-' + dP.getMonth();
+                    if (encaisseByMonth.hasOwnProperty(kp)) {
+                        encaisseByMonth[kp] = devisCalc.roundMoney(encaisseByMonth[kp] + (parseFloat(p.montant) || 0));
+                    }
+                }
+            });
+        });
+
+        return months.map(function (mth) {
+            var key = mth.year + '-' + mth.month;
+            var ca = caByMonth[key];
+            var enc = encaisseByMonth[key];
+            return { label: mth.label, ca_facture: ca, encaisse: enc, solde_net: devisCalc.roundMoney(ca - enc) };
+        });
+    }
+
+    function renderPerformanceChart() {
+        var containerEl = document.getElementById('dashboard-chart-container');
+        var summaryEl = document.getElementById('dashboard-chart-summary');
+        containerEl.innerHTML = '';
+
+        var monthly = computeMonthlySeries(state.chartPeriodMonths);
+        var activeIndicators = state.chartIndicators.length > 0 ? state.chartIndicators : ['ca_facture'];
+
+        var allValues = [0];
+        monthly.forEach(function (mth) {
+            activeIndicators.forEach(function (ind) { allValues.push(mth[ind]); });
+        });
+        var minValue = Math.min.apply(null, allValues);
+        var maxValue = Math.max.apply(null, allValues.concat([1]));
+        if (maxValue === minValue) {
+            maxValue = minValue + 1;
+        }
+
+        var width = 640, height = 220, leftMargin = 12, rightPad = 12, topMargin = 16, bottomMargin = 30;
+        var plotWidth = width - leftMargin - rightPad;
+
+        function xFor(index) {
+            return leftMargin + (monthly.length === 1 ? plotWidth / 2 : (index / (monthly.length - 1)) * plotWidth);
+        }
+        function yFor(value) {
+            var ratio = (value - minValue) / (maxValue - minValue);
+            return height - bottomMargin - ratio * (height - topMargin - bottomMargin);
+        }
+
+        var TICK_COUNT = 3;
+        var gridlines = '';
+        for (var i = 0; i <= TICK_COUNT; i++) {
+            var tickY = yFor(minValue + (maxValue - minValue) * (i / TICK_COUNT));
+            gridlines += '<line x1="' + leftMargin + '" y1="' + tickY + '" x2="' + (width - rightPad) + '" y2="' + tickY + '" stroke="#eef0f4" stroke-width="1"></line>';
+        }
+        var zeroLine = (minValue < 0 && maxValue > 0)
+            ? '<line x1="' + leftMargin + '" y1="' + yFor(0) + '" x2="' + (width - rightPad) + '" y2="' + yFor(0) + '" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="4 4"></line>'
+            : '';
+
+        var seriesSvg = '';
+        activeIndicators.forEach(function (ind) {
+            var def = CHART_SERIES_DEFS[ind];
+            if (!def) {
+                return;
+            }
+            var coords = monthly.map(function (mth, idx) { return xFor(idx) + ',' + yFor(mth[ind]); });
+            seriesSvg += '<polyline points="' + coords.join(' ') + '" fill="none" stroke="' + def.color + '" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>';
+            monthly.forEach(function (mth, idx) {
+                seriesSvg += '<circle class="dashboard-chart-point" data-point-index="' + idx + '" cx="' + xFor(idx) + '" cy="' + yFor(mth[ind]) + '" r="5" fill="' + def.color + '"></circle>';
+            });
+        });
+
+        var svgWrap = document.createElement('div');
+        svgWrap.innerHTML = '<svg class="chart-container" viewBox="0 0 ' + width + ' ' + height + '" preserveAspectRatio="xMidYMid meet">' + gridlines + zeroLine + seriesSvg + '</svg>';
+        var svgEl = svgWrap.firstChild;
+        containerEl.appendChild(svgEl);
+
+        var labels = makeEl('div', 'chart-labels');
+        monthly.forEach(function (mth) {
+            labels.appendChild(makeEl('span', null, mth.label));
+        });
+        containerEl.appendChild(labels);
+
+        var legend = makeEl('div', 'dashboard-chart-legend');
+        activeIndicators.forEach(function (ind) {
+            var def = CHART_SERIES_DEFS[ind];
+            if (!def) {
+                return;
+            }
+            var item = makeEl('span', 'dashboard-chart-legend-item');
+            var dot = makeEl('span', 'donut-legend-dot');
+            dot.style.backgroundColor = def.color;
+            item.appendChild(dot);
+            item.appendChild(document.createTextNode(def.label));
+            legend.appendChild(item);
+        });
+        containerEl.appendChild(legend);
+
+        var tooltipEl = makeEl('div', 'tresorerie-chart-tooltip');
+        tooltipEl.style.display = 'none';
+        containerEl.appendChild(tooltipEl);
+
+        function showTooltip(circleEl, monthIndex) {
+            var mth = monthly[monthIndex];
+            tooltipEl.innerHTML = '';
+            tooltipEl.appendChild(makeEl('p', 'tresorerie-chart-tooltip-date', mth.label));
+            activeIndicators.forEach(function (ind) {
+                var def = CHART_SERIES_DEFS[ind];
+                if (!def) {
+                    return;
+                }
+                var line = makeEl('p', 'tresorerie-chart-tooltip-mvt dashboard-chart-tooltip-serie');
+                var dot = makeEl('span', 'donut-legend-dot');
+                dot.style.backgroundColor = def.color;
+                line.appendChild(dot);
+                line.appendChild(document.createTextNode(def.label + ' : ' + devisCalc.formatMoney(mth[ind])));
+                tooltipEl.appendChild(line);
+            });
+
+            var containerRect = containerEl.getBoundingClientRect();
+            var circleRect = circleEl.getBoundingClientRect();
+            tooltipEl.style.left = (circleRect.left - containerRect.left + circleRect.width / 2) + 'px';
+            tooltipEl.style.top = (circleRect.top - containerRect.top) + 'px';
+            tooltipEl.style.display = '';
+        }
+        function hideTooltip() {
+            tooltipEl.style.display = 'none';
+        }
+
+        Array.prototype.forEach.call(svgEl.querySelectorAll('.dashboard-chart-point'), function (circleEl) {
+            var idx = parseInt(circleEl.getAttribute('data-point-index'), 10);
+            circleEl.addEventListener('mouseenter', function () { showTooltip(circleEl, idx); });
+            circleEl.addEventListener('mouseleave', hideTooltip);
+        });
+
+        var totalCa = monthly.reduce(function (s, mth) { return devisCalc.roundMoney(s + mth.ca_facture); }, 0);
+        var totalEnc = monthly.reduce(function (s, mth) { return devisCalc.roundMoney(s + mth.encaisse); }, 0);
+        var ecartTotal = devisCalc.roundMoney(totalCa - totalEnc);
+        summaryEl.innerHTML = '';
+        [['CA sur la période', totalCa], ['Encaissé sur la période', totalEnc], ['Écart facturé/encaissé', ecartTotal]].forEach(function (pair) {
+            var item = makeEl('div', 'dashboard-chart-summary-item');
+            item.appendChild(makeEl('span', null, pair[0]));
+            item.appendChild(makeEl('strong', null, devisCalc.formatMoney(pair[1])));
+            summaryEl.appendChild(item);
+        });
+    }
+
+    var chartIndicatorsToggle = document.getElementById('dashboard-chart-indicators-toggle');
+    var chartIndicatorsDropdown = document.getElementById('dashboard-chart-indicators-dropdown');
+    var chartIndicatorsMenu = document.getElementById('dashboard-chart-indicators-menu');
+
+    function closeIndicatorsMenu() {
+        chartIndicatorsDropdown.style.display = 'none';
+        chartIndicatorsToggle.setAttribute('aria-expanded', 'false');
+    }
+    chartIndicatorsToggle.addEventListener('click', function (evt) {
+        evt.stopPropagation();
+        var isOpen = chartIndicatorsDropdown.style.display !== 'none';
+        if (isOpen) {
+            closeIndicatorsMenu();
+        } else {
+            chartIndicatorsDropdown.style.display = '';
+            chartIndicatorsToggle.setAttribute('aria-expanded', 'true');
+        }
+    });
+    document.addEventListener('click', function (evt) {
+        if (!chartIndicatorsMenu.contains(evt.target)) {
+            closeIndicatorsMenu();
+        }
+    });
+    document.addEventListener('keydown', function (evt) {
+        if (evt.key === 'Escape') {
+            closeIndicatorsMenu();
+        }
+    });
+
+    Array.prototype.forEach.call(chartIndicatorsDropdown.querySelectorAll('input[type="checkbox"]'), function (cb) {
+        cb.checked = state.chartIndicators.indexOf(cb.value) !== -1;
+        cb.addEventListener('change', function () {
+            var checked = Array.prototype.filter.call(chartIndicatorsDropdown.querySelectorAll('input[type="checkbox"]'), function (c) { return c.checked; });
+            if (checked.length > 3) {
+                cb.checked = false;
+                return;
+            }
+            if (checked.length === 0) {
+                cb.checked = true;
+                return;
+            }
+            state.chartIndicators = checked.map(function (c) { return c.value; });
+            renderPerformanceChart();
+        });
+    });
+
+    var chartPeriodSelectEl = document.getElementById('dashboard-chart-period-select');
+    chartPeriodSelectEl.value = String(state.chartPeriodMonths);
+    chartPeriodSelectEl.addEventListener('change', function (evt) {
+        state.chartPeriodMonths = parseInt(evt.target.value, 10);
+        renderPerformanceChart();
+    });
+
+    // ================= Niveau 3 — Dynamique commerciale =================
+
+    function computeTunnel() {
+        var rdvTotal = Object.keys(RDV_DETAILS).length;
+
+        var devisAcceptesCount = 0, devisAcceptesMontant = 0, devisEnvoyesCount = 0, devisRefusesCount = 0, montantEnAttente = 0;
+        Object.keys(DEVIS_DETAILS).forEach(function (numero) {
+            var devis = DEVIS_DETAILS[numero];
+            var version = devisCalc.getActiveVersion(devis);
+            if (!version) {
+                return;
+            }
+            var totals = devisCalc.computeDevisTotals(version.lignes);
+            if (version.statut === 'accepte') {
+                devisAcceptesCount += 1;
+                devisAcceptesMontant = devisCalc.roundMoney(devisAcceptesMontant + totals.totalTTC);
+            } else if (version.statut === 'envoye') {
+                devisEnvoyesCount += 1;
+                montantEnAttente = devisCalc.roundMoney(montantEnAttente + totals.totalTTC);
+            } else if (version.statut === 'refuse') {
+                devisRefusesCount += 1;
+            }
+        });
+
+        var facturesEmisesCount = 0, facturesEmisesMontant = 0, facturesPayeesCount = 0, facturesPayeesMontant = 0, facturesImpayeesCount = 0;
+        Object.keys(FACTURE_DETAILS).forEach(function (key) {
+            var f = FACTURE_DETAILS[key];
+            if (f.statutEmission !== 'emise') {
+                return;
+            }
+            var totals = devisCalc.computeDevisTotals(f.lignes);
+            facturesEmisesCount += 1;
+            facturesEmisesMontant = devisCalc.roundMoney(facturesEmisesMontant + totals.totalTTC);
+            var statutAffiche = factureCalc.computeStatutAffiche({ statutEmission: f.statutEmission, totalTTC: totals.totalTTC, paiements: f.paiements, dateEcheance: f.dateEcheance });
+            if (statutAffiche === 'payee') {
+                facturesPayeesCount += 1;
+                facturesPayeesMontant = devisCalc.roundMoney(facturesPayeesMontant + totals.totalTTC);
+            } else {
+                facturesImpayeesCount += 1;
+            }
+        });
+
+        var steps = [
+            { label: 'Rendez-vous', volume: rdvTotal, montant: null },
+            { label: 'Devis acceptés', volume: devisAcceptesCount, montant: devisAcceptesMontant },
+            { label: 'Factures émises', volume: facturesEmisesCount, montant: facturesEmisesMontant },
+            { label: 'Factures payées', volume: facturesPayeesCount, montant: facturesPayeesMontant }
+        ];
+        for (var i = 1; i < steps.length; i++) {
+            steps[i].taux = steps[i - 1].volume > 0 ? Math.round((steps[i].volume / steps[i - 1].volume) * 100) : 0;
+        }
+
+        return {
+            steps: steps,
+            devisEnvoyesCount: devisEnvoyesCount,
+            devisRefusesCount: devisRefusesCount,
+            montantEnAttente: montantEnAttente,
+            facturesImpayeesCount: facturesImpayeesCount
+        };
+    }
+
+    function renderTunnel() {
+        var funnel = computeTunnel();
+        var funnelEl = document.getElementById('dashboard-funnel');
+        funnelEl.innerHTML = '';
+
+        funnel.steps.forEach(function (step, idx) {
+            if (idx > 0) {
+                var arrow = makeEl('div', 'analyses-funnel-arrow');
+                arrow.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>';
+                funnelEl.appendChild(arrow);
+            }
+            var stepEl = makeEl('div', 'analyses-funnel-step');
+            var left = document.createElement('div');
+            left.appendChild(makeEl('div', 'analyses-funnel-value', String(step.volume)));
+            left.appendChild(makeEl('div', 'analyses-funnel-label', step.label + (step.montant !== null ? ' — ' + devisCalc.formatMoney(step.montant) : '')));
+            stepEl.appendChild(left);
+            if (step.taux !== undefined) {
+                stepEl.appendChild(makeEl('div', 'analyses-funnel-percent', step.taux + ' %'));
+            }
+            funnelEl.appendChild(stepEl);
+        });
+
+        var extraEl = document.getElementById('dashboard-tunnel-extra');
+        extraEl.innerHTML = '';
+        [
+            ['Devis en attente', String(funnel.devisEnvoyesCount)],
+            ['Devis refusés', String(funnel.devisRefusesCount)],
+            ['Factures impayées', String(funnel.facturesImpayeesCount)],
+            ['Montant potentiel en attente', devisCalc.formatMoney(funnel.montantEnAttente)]
+        ].forEach(function (pair) {
+            var item = makeEl('div', 'info-item');
+            item.appendChild(makeEl('span', 'info-label', pair[0]));
+            item.appendChild(makeEl('span', 'info-value', pair[1]));
+            extraEl.appendChild(item);
+        });
+
+        renderInsights(funnel);
+    }
+
+    var TONE_CLASS = { info: 'insight-card-info', warning: 'insight-card-warning', neutral: 'insight-card-primary' };
+    var TONE_ICON = {
+        info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>',
+        warning: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>',
+        neutral: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="m19 9-5 5-4-4-3 3"></path></svg>'
+    };
+
+    // Constats automatiques calculés depuis les données réelles du tunnel —
+    // simples règles de lecture ("Lecture commerciale"), pas une
+    // intelligence artificielle.
+    function renderInsights(funnel) {
+        var insightsEl = document.getElementById('dashboard-insights');
+        insightsEl.innerHTML = '';
+
+        var insights = [];
+
+        if (funnel.devisEnvoyesCount > 0) {
+            insights.push({ tonalite: 'info', titre: funnel.devisEnvoyesCount + ' devis en attente de réponse', sousTexte: 'Montant potentiel : ' + devisCalc.formatMoney(funnel.montantEnAttente) });
+        }
+        if (funnel.facturesImpayeesCount > 0) {
+            insights.push({ tonalite: 'warning', titre: funnel.facturesImpayeesCount + ' facture(s) impayée(s)', sousTexte: 'À suivre dans la Facturation' });
+        }
+        var weakestStep = null;
+        for (var i = 1; i < funnel.steps.length; i++) {
+            if (weakestStep === null || funnel.steps[i].taux < weakestStep.taux) {
+                weakestStep = funnel.steps[i];
+            }
+        }
+        if (weakestStep) {
+            insights.push({ tonalite: 'neutral', titre: 'Étape la plus sélective : ' + weakestStep.label, sousTexte: weakestStep.taux + ' % de passage depuis l\'étape précédente' });
+        }
+
+        insights = insights.slice(0, 3);
+
+        if (insights.length === 0) {
+            insightsEl.appendChild(makeEl('p', 'empty-state-inline', 'Aucun constat particulier pour l\'instant.'));
+            return;
+        }
+
+        insights.forEach(function (insight) {
+            var card = makeEl('div', 'insight-card ' + (TONE_CLASS[insight.tonalite] || 'insight-card-info'));
+            var icon = makeEl('span', 'insight-card-icon');
+            icon.innerHTML = TONE_ICON[insight.tonalite] || TONE_ICON.info;
+            var body = makeEl('div', 'insight-card-body');
+            body.appendChild(makeEl('p', 'insight-card-title', insight.titre));
+            body.appendChild(makeEl('p', 'insight-card-subtext', insight.sousTexte));
+            card.appendChild(icon);
+            card.appendChild(body);
+            insightsEl.appendChild(card);
+        });
+    }
+
+    // ---------- Rendu initial ----------
+
+    renderSituation();
+    renderMiniAgenda();
+    renderTodos();
+    renderPerformanceChart();
+    renderTunnel();
 })();

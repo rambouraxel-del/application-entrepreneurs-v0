@@ -3242,6 +3242,310 @@ a.tresorerie-timeline-item:hover {
     font-size: 13px;
 }
 
+/* Tableau de bord — cockpit quotidien (V0.10.2) */
+
+.dashboard-cockpit-level {
+    margin-top: 32px;
+}
+
+.dashboard-cockpit-level:first-child {
+    margin-top: 0;
+}
+
+.dashboard-level-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.dashboard-level-header h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.dashboard-level-header h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.dashboard-period-select-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.dashboard-period-label {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+}
+
+/* Niveau 2 : Ma journée */
+
+.dashboard-journee-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 20px;
+    align-items: stretch;
+}
+
+.dashboard-mini-agenda-block,
+.dashboard-priorites-block {
+    display: flex;
+    flex-direction: column;
+    /* Empêche la piste de grille de s'agrandir au-delà de sa largeur
+       allouée pour accueillir le contenu non enveloppé (comportement par
+       défaut de CSS Grid) : sans ce filet, un bloc plus étroit que son
+       contenu naturel provoque un débordement horizontal en mobile. */
+    min-width: 0;
+}
+
+.mini-agenda-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.mini-agenda-date-label {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin-left: 4px;
+}
+
+.mini-agenda-scroll {
+    max-height: 420px;
+    overflow-y: auto;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+}
+
+.mini-agenda-grid {
+    position: relative;
+    margin-left: 52px;
+    border-left: 1px solid var(--color-border);
+}
+
+.mini-agenda-hour-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    border-top: 1px solid var(--color-border);
+    height: 0;
+}
+
+.mini-agenda-hour-line:not(.mini-agenda-hour-line-full) {
+    border-top-style: dashed;
+    opacity: 0.6;
+}
+
+.mini-agenda-hour-label {
+    position: absolute;
+    left: -52px;
+    top: -7px;
+    width: 44px;
+    text-align: right;
+    font-size: 11px;
+    color: var(--color-text-secondary);
+}
+
+.mini-agenda-now-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: var(--color-danger);
+    z-index: 3;
+}
+
+.mini-agenda-now-line::before {
+    content: "";
+    position: absolute;
+    left: -4px;
+    top: -3px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--color-danger);
+}
+
+.mini-agenda-event {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    background-color: var(--color-primary-soft);
+    border-left: 3px solid var(--color-primary);
+    border-radius: 6px;
+    padding: 4px 8px;
+    overflow: hidden;
+    text-decoration: none;
+    color: var(--color-text);
+    z-index: 2;
+}
+
+.mini-agenda-event:hover {
+    filter: brightness(0.97);
+}
+
+.mini-agenda-event-top {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.mini-agenda-event-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background-color: currentColor;
+}
+
+.mini-agenda-event-time {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--color-primary);
+    white-space: nowrap;
+}
+
+.mini-agenda-event-title {
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mini-agenda-event-meta {
+    font-size: 11px;
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mini-agenda-empty-links {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 12px;
+}
+
+.dashboard-priorites-todo {
+    flex: 3;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.dashboard-priorites-alertes {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--color-border);
+    min-height: 0;
+}
+
+.dashboard-todo-list {
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.todo-item-actions {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+/* Niveau 3 : Performance */
+
+.dashboard-performance-grid {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 20px;
+    align-items: stretch;
+}
+
+.dashboard-performance-grid > .dashboard-block {
+    min-width: 0;
+}
+
+.dashboard-chart-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.dashboard-chart-block .dashboard-block-header {
+    flex-wrap: wrap;
+    row-gap: 10px;
+}
+
+.dashboard-chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 8px;
+}
+
+.dashboard-chart-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+}
+
+.dashboard-chart-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--color-border);
+}
+
+.dashboard-chart-summary-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+}
+
+.dashboard-chart-summary-item strong {
+    font-size: 15px;
+    color: var(--color-text);
+}
+
+.dashboard-chart-tooltip-serie {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.dashboard-tunnel-extra {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--color-border);
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.dashboard-insights-header {
+    margin-top: 18px;
+}
+
 /* Responsive : tablette et mobile */
 
 @media (max-width: 1100px) {
@@ -3271,6 +3575,15 @@ a.tresorerie-timeline-item:hover {
 
     .topbar-search {
         min-width: 160px;
+    }
+
+    .dashboard-journee-grid,
+    .dashboard-performance-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-tunnel-extra {
+        grid-template-columns: 1fr;
     }
 }
 
@@ -3320,5 +3633,13 @@ a.tresorerie-timeline-item:hover {
        mise en page ou de forcer un défilement de toute la page. */
     .page-content {
         overflow-x: auto;
+    }
+
+    .mini-agenda-scroll {
+        max-height: 320px;
+    }
+
+    .dashboard-chart-summary {
+        gap: 12px;
     }
 }

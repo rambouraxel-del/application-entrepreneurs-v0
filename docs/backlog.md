@@ -3,13 +3,10 @@
 Ce document regroupe les idées et pistes identifiées au fil du projet, non traitées immédiatement. Il reste volontairement synthétique : l'objectif est de ne perdre aucune idée importante, pas de détailler chaque point comme un cahier des charges.
 
 ## Tableau de bord
-- Amélioration plus poussée du widget Agenda (identifiée lors de la validation V0.1.1).
-- Vrai système de personnalisation des KPI (bouton "Personnaliser les indicateurs" ajouté en Work in progress en V0.3).
-- Vrai graphique d'évolution du CA, basé sur des données réelles.
-- Priorité du jour réellement modifiable par l'utilisateur.
-- Vraie logique de tâches (création, modification, suppression) — "Ajouter une tâche" reste en Work in progress depuis la V0.1.1/V0.3.
-- Panneau "Voir toutes les alertes" agrégeant l'ensemble des alertes, si un tel besoin se confirme (pas de page cible aujourd'hui).
-- Si un module Fournisseurs voit le jour, revoir "Appeler le fournisseur Dupont" (non cliquable en V0.3, faute de destination).
+- Résolu en V0.10.2 : le tableau de bord est refondu en cockpit à trois niveaux (Situation générale, Ma journée, Performance) — widget Agenda remplacé par un mini-agenda quotidien dynamique (résout la demande d'amélioration du widget identifiée en V0.1.1) ; graphique d'évolution du CA remplacé par un graphique de performance réellement calculé (CA facturé/Encaissé/Solde net, 6 ou 12 mois) ; to-do list rendue réellement fonctionnelle en mémoire de page (ajout/modification/suppression/complétion) — "Ajouter une tâche" n'est plus en Work in progress.
+- Résolu en V0.10.2 (par suppression) : le bouton "Personnaliser les indicateurs" et l'ancienne "priorité du jour" statique ont été retirés avec l'ancienne structure du dashboard ; les 4 KPI sont désormais recalculés selon la période de pilotage choisie (pas de personnalisation du choix des indicateurs eux-mêmes, non demandée) et la priorisation se fait via le champ "Priorité" de chaque tâche de la to-do list.
+- **Panneau "Voir toutes les alertes"** : toujours pas de page dédiée agrégeant l'historique complet des alertes (le bloc Alertes du Dashboard reste plafonné à 4 alertes classées par gravité) — à réévaluer si le besoin se confirme.
+- Devenu sans objet en V0.10.2 : la tâche fictive "Appeler le fournisseur Dupont" (non cliquable faute de module Fournisseurs) ne fait plus partie des données par défaut de la to-do list, qui est désormais un tableau modifiable plutôt qu'une liste figée.
 
 ## Navigation
 - Harmonisation du sélecteur de date sur toutes les pages (actuellement présent uniquement sur le tableau de bord, décision assumée en V0.1.1).
@@ -58,6 +55,7 @@ Ce document regroupe les idées et pistes identifiées au fil du projet, non tra
 ## Trésorerie
 - Page placeholder ajoutée à la navigation en V0.2 ; module fonctionnel réel construit en V0.8 (solde estimé, à encaisser/à décaisser, prochains mouvements, charges prévues, factures à encaisser, projection, alertes), affiné en V0.8.1/V0.8.2 (lisibilité du graphique, liens factures, montants non coupés).
 - Synchronisation bancaire, rapprochement bancaire, comptabilité complète (hors périmètre tant qu'une vraie base de données n'existe pas — choix assumé, voir `docs/decisions.md`).
+- **`TRESORERIE_OPERATIONS` manque de profondeur historique** (6 opérations fictives, quasi toutes datées de juin/juillet 2026) : empêche de proposer "Montant décaissé" comme série historique fiable dans le graphique de performance du tableau de bord (V0.10.2, voir `docs/decisions.md`). À enrichir avec des opérations réparties sur plusieurs mois passés si ce besoin se confirme.
 
 ## Produits / Services
 - Page placeholder ajoutée à la navigation en V0.2 ; catalogue consultable (recherche, filtres, accès fiche) construit en V0.5.1 ; fiche produit/service complète construite en V0.5.2 ; interactions préparatoires (modales) ajoutées en V0.5.3, corrigées et enrichies en V0.5.3.1 (bloc Coûts & marge, historique enrichi, badge Type cliquable, modifications bloc par bloc) ; pagination ajoutée en V0.5.4.
