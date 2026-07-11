@@ -4,80 +4,43 @@
     'use strict';
 
     var defaults = {
-        schemaVersion: 1,
+        schemaVersion: 2,
         profile: {
-            firstName: 'Julien',
-            lastName: 'Martin',
-            jobTitle: 'Dirigeant',
-            email: 'julien.martin@example.com',
-            phone: '01 84 12 34 56',
-            avatar: 'JM',
-            language: 'fr',
-            dateFormat: 'DD/MM/YYYY',
-            timezone: 'Europe/Paris'
+            firstName: 'Julien', lastName: 'Martin', jobTitle: 'Dirigeant',
+            email: 'julien.martin@example.com', phone: '01 84 12 34 56', avatar: 'JM',
+            language: 'fr', dateFormat: 'DD/MM/YYYY', timezone: 'Europe/Paris'
         },
         company: {
-            tradeName: 'Cockpit Entrepreneur',
-            legalName: 'Cockpit Entrepreneur SARL',
-            activity: 'Services aux entreprises',
-            legalForm: 'SARL',
-            logoUrl: '',
-            initials: 'CE',
-            address: '10 rue de l\'Innovation, 75011 Paris',
-            phone: '01 84 12 34 56',
-            email: 'contact@cockpit-entrepreneur.example.com',
-            website: 'www.cockpit-entrepreneur.example.com',
-            siren: '123 456 789',
-            siret: '123 456 789 00012',
-            vatNumber: 'FR12 123456789',
-            vatRegime: 'reel-normal',
-            vatExempt: false,
-            shareCapital: '10 000 €',
-            registration: 'RCS Paris 123 456 789',
-            iban: 'FR76 1234 5678 9012 3456 7890 123',
-            bic: 'ABCDEFGHXXX',
-            bankName: 'Banque Exemple',
-            accountHolder: 'Cockpit Entrepreneur SARL',
+            tradeName: 'Cockpit Entrepreneur', legalName: 'Cockpit Entrepreneur SARL',
+            activity: 'Services aux entreprises', legalForm: 'SARL', logoUrl: '', initials: 'CE',
+            address: '10 rue de l\'Innovation, 75011 Paris', phone: '01 84 12 34 56',
+            email: 'contact@cockpit-entrepreneur.example.com', website: 'www.cockpit-entrepreneur.example.com',
+            siren: '123 456 789', siret: '123 456 789 00012', vatNumber: 'FR12 123456789',
+            vatRegime: 'reel-normal', vatExempt: false, shareCapital: '10 000 €',
+            registration: 'RCS Paris 123 456 789', iban: 'FR76 1234 5678 9012 3456 7890 123',
+            bic: 'ABCDEFGHXXX', bankName: 'Banque Exemple', accountHolder: 'Cockpit Entrepreneur SARL',
             legalNotice: 'En cas de retard de paiement, une pénalité de 3 fois le taux d\'intérêt légal sera appliquée, ainsi qu\'une indemnité forfaitaire de 40 € pour frais de recouvrement. Aucun escompte pour paiement anticipé.',
-            footerText: 'Merci pour votre confiance.',
-            showContactDetails: true,
-            showBankDetails: true,
-            defaultDocumentText: '',
-            signatureText: 'Bon pour accord, date et signature'
+            footerText: 'Merci pour votre confiance.', showContactDetails: true, showBankDetails: true,
+            defaultDocumentText: '', signatureText: 'Bon pour accord, date et signature'
         },
         appearance: {
-            density: 'comfortable',
-            defaultPageSize: 5,
-            currency: 'EUR',
-            currencyDecimals: true,
-            dateFormat: 'DD/MM/YYYY',
-            weekStartsOn: 'monday',
-            accent: 'blue'
+            density: 'comfortable', defaultPageSize: 5, currency: 'EUR', currencyDecimals: true,
+            dateFormat: 'DD/MM/YYYY', weekStartsOn: 'monday', accent: 'blue'
         },
         dashboard: {
-            defaultPeriod: 'month',
-            customPeriodStart: '',
-            customPeriodEnd: '',
-            revenueGoal: 12000,
-            collectionGoal: 10000,
-            cashGoal: 5000,
-            cashHorizon: 'end-month',
-            chartMonths: 6,
-            chartIndicator: 'ca_facture',
-            showCompletedTasks: true,
-            maxAlerts: 4
+            defaultPeriod: 'month', customPeriodStart: '', customPeriodEnd: '',
+            revenueGoal: 12000, collectionGoal: 10000, cashGoal: 5000,
+            cashHorizon: 'end-month', chartMonths: 6, chartIndicator: 'ca_facture',
+            showCompletedTasks: true, maxAlerts: 4
         },
         alerts: {
-            overdueInvoice: { enabled: true },
-            quoteNoReply: { enabled: true, days: 7 },
+            overdueInvoice: { enabled: true }, quoteNoReply: { enabled: true, days: 7 },
             unconfirmedAppointment: { enabled: true, days: 2 },
             repeatedPostponement: { enabled: true, count: 2 },
             upcomingHeavyCharge: { enabled: true, amount: 2000, days: 7 },
             lowCash: { enabled: true, amount: 1000 },
             lateGoal: { enabled: true, completionPercent: 70 },
-            externalEmail: false,
-            externalPush: false,
-            externalSms: false
+            externalEmail: false, externalPush: false, externalSms: false
         },
         clients: {
             statuses: [
@@ -88,25 +51,15 @@
                 { id: 'fidele', label: 'Fidèle', color: 'info', active: true, order: 5 },
                 { id: 'litige', label: 'Litige', color: 'danger', active: true, order: 6 }
             ],
-            initialStatus: 'prospect',
-            pageSize: 5,
-            followUpDays: 7,
-            visibleFields: ['name', 'company', 'status', 'phone', 'email', 'lastContact'],
-            customFields: []
+            initialStatus: 'prospect', pageSize: 5, followUpDays: 7,
+            visibleFields: ['name', 'company', 'status', 'phone', 'email', 'lastContact'], customFields: []
         },
         agenda: {
-            defaultView: 'week',
-            weekStartsOn: 'monday',
+            defaultView: 'week', weekStartsOn: 'monday',
             workingDays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
-            startTime: '08:00',
-            endTime: '19:00',
-            use24Hour: true,
-            slotMinutes: 30,
-            defaultDurationMinutes: 60,
-            initialStatus: 'planned',
-            confirmationDays: 2,
-            followUpDays: 1,
-            showWeekends: true,
+            startTime: '08:00', endTime: '19:00', use24Hour: true, slotMinutes: 30,
+            defaultDurationMinutes: 60, initialStatus: 'planned', confirmationDays: 2,
+            followUpDays: 1, showWeekends: true,
             statuses: [
                 { id: 'planned', legacyId: 'prevu', label: 'Planifié', color: 'info', active: true, order: 1 },
                 { id: 'confirmed', legacyId: 'confirme', label: 'Confirmé', color: 'success', active: true, order: 2 },
@@ -126,37 +79,22 @@
                 { id: 'brouillon', label: 'Brouillon', color: 'neutral', active: true, order: 2 },
                 { id: 'archive', label: 'Archivé', color: 'neutral', active: true, order: 3 }
             ],
-            defaultVat: 20,
-            defaultUnit: 'unite',
+            defaultVat: 20, defaultUnit: 'unite',
             paymentTerms: ['Comptant', '15 jours', '30 jours', '45 jours fin de mois'],
-            initialStatus: 'brouillon',
-            quoteAllowedStatuses: ['actif'],
-            pageSize: 5,
-            families: []
+            initialStatus: 'brouillon', quoteAllowedStatuses: ['actif'], pageSize: 5, families: []
         },
         billing: {
-            quotePrefix: 'DEV',
-            invoicePrefix: 'FAC',
-            startingCounter: 1,
-            includeYear: true,
-            quoteValidityDays: 30,
-            defaultPaymentDays: 30,
-            defaultDepositPercent: 30,
-            indicativeMaxDiscountPercent: 20,
-            defaultVat: 20,
+            quotePrefix: 'DEV', invoicePrefix: 'FAC', startingCounter: 1, includeYear: true,
+            quoteValidityDays: 30, defaultPaymentDays: 30, defaultDepositPercent: 30,
+            indicativeMaxDiscountPercent: 20, defaultVat: 20,
             acceptedPaymentMethods: ['Virement bancaire', 'Carte bancaire', 'Chèque'],
-            latePenaltyText: '3 fois le taux d\'intérêt légal',
-            collectionFee: 40,
-            legalNotice: 'Aucun escompte pour paiement anticipé.',
-            showIssuerDetails: true,
-            showBankDetails: true,
-            quoteSignature: 'Bon pour accord, date et signature',
+            latePenaltyText: '3 fois le taux d\'intérêt légal', collectionFee: 40,
+            legalNotice: 'Aucun escompte pour paiement anticipé.', showIssuerDetails: true,
+            showBankDetails: true, quoteSignature: 'Bon pour accord, date et signature',
             footerText: 'Merci pour votre confiance.'
         },
         treasury: {
-            defaultHorizon: 'end-month',
-            lowCashThreshold: 1000,
-            heavyChargeThreshold: 2000,
+            defaultHorizon: 'end-month', lowCashThreshold: 1000, heavyChargeThreshold: 2000,
             projectionMode: '30d',
             categories: [
                 { id: 'loyer', label: 'Loyer', color: 'neutral', active: true, order: 1 },
@@ -168,30 +106,18 @@
                 { id: 'autre', label: 'Autre', color: 'neutral', active: true, order: 7 }
             ],
             recurrences: ['aucune', 'hebdomadaire', 'mensuelle', 'trimestrielle', 'annuelle'],
-            includeIssuedInvoices: true,
-            showRealized: true,
-            showForecast: true
+            includeIssuedInvoices: true, showRealized: true, showForecast: true
         },
         analytics: {
-            defaultTab: 'overview',
-            defaultPeriod: 'month',
+            defaultTab: 'overview', defaultPeriod: 'month',
             visibleIndicators: ['revenue', 'collected', 'cash', 'conversion', 'topClients'],
-            comparePreviousPeriod: true,
-            rankingClientCount: 5,
-            automaticFindingThreshold: 10,
-            showCharts: true,
-            showFunnels: true
+            comparePreviousPeriod: true, rankingClientCount: 5, automaticFindingThreshold: 10,
+            showCharts: true, showFunnels: true
         },
         demo: {
-            enabled: false,
-            firstName: 'Julien',
-            lastName: 'Martin',
-            jobTitle: 'Dirigeant',
-            company: 'Cockpit Entrepreneur SARL',
-            activity: 'Services aux entreprises',
-            city: 'Paris',
-            email: 'contact@cockpit-entrepreneur.example.com',
-            phone: '01 84 12 34 56'
+            enabled: false, firstName: 'Julien', lastName: 'Martin', jobTitle: 'Dirigeant',
+            company: 'Cockpit Entrepreneur SARL', activity: 'Services aux entreprises', city: 'Paris',
+            email: 'contact@cockpit-entrepreneur.example.com', phone: '01 84 12 34 56'
         }
     };
 

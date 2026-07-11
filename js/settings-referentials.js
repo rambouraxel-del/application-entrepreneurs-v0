@@ -1,164 +1,73 @@
-// Référentiels et alertes configurables — V0.11.3.
+// Référentiels configurables V0.11 : une source, valeurs historiques préservées.
 (function () {
     'use strict';
     var store = window.COCKPIT_SETTINGS;
     if (!store) return;
-    var renderingAlerts = false;
 
-    function clone(value) { return JSON.parse(JSON.stringify(value)); }
-    function badgeClass(color) {
-        return 'badge-' + (['neutral','info','warning','success','danger'].indexOf(color) !== -1 ? color : 'neutral');
+    function badgeClass(color) { return 'badge-' + (['neutral','info','warning','success','danger'].indexOf(color) !== -1 ? color : 'neutral'); }
+    function active(list) { return (list || []).filter(function (item) { return item.active !== false; }).sort(function (a,b) { return (a.order||0)-(b.order||0); }); }
+    function valueOf(item) { return item.legacyId || item.id; }
+    function intercept(name, builder) {
+        var value = window[name];
+        function enhance(list) {
+            if (!Array.isArray(list)) return list;
+            var configured = builder(), existing = {};
+            list.forEach(function (item) { existing[item.value] = item; });
+            list.splice(0, list.length);
+            configured.forEach(function (item) { list.push(item); });
+            Object.keys(existing).forEach(function (key) {
+                if (!list.some(function (item) { return item.value === key; })) list.push(existing[key]);
+            });
+            return list;
+        }
+        try {
+            Object.defineProperty(window, name, { configurable:true, enumerable:true, get:function(){return value;}, set:function(next){value=enhance(next);} });
+            if (value) value=enhance(value);
+        } catch (error) { if (value) window[name]=enhance(value); }
     }
-    function activeSorted(list) {
-        return (list || []).filter(function (item) { return item.active !== false; }).sort(function (a,b) { return (a.order || 0) - (b.order || 0); });
+    function configuredAndUsed(list,used){return (list||[]).filter(function(item){return item.active!==false||used.indexOf(item.id)!==-1||(item.legacyId&&used.indexOf(item.legacyId)!==-1);}).sort(function(a,b){return (a.order||0)-(b.order||0);});}
+    function clientStatuses() { var used=Object.keys(window.COCKPIT_CLIENT_DETAILS||{}).map(function(k){return window.COCKPIT_CLIENT_DETAILS[k].statut;});return configuredAndUsed(store.getSection('clients').statuses,used).map(function(item){return {value:item.id,label:item.label+(item.active===false?' (désactivé)':''),badgeClass:badgeClass(item.color)};}); }
+    function productTypes() { var used=Object.keys(window.COCKPIT_PRODUCT_DETAILS||{}).map(function(k){return window.COCKPIT_PRODUCT_DETAILS[k].type;});return configuredAndUsed(store.getSection('products').types,used).map(function(item){return {value:item.id,label:item.label+(item.active===false?' (désactivé)':''),badgeClass:badgeClass(item.color)};}); }
+    function productStatuses() { var used=Object.keys(window.COCKPIT_PRODUCT_DETAILS||{}).map(function(k){return window.COCKPIT_PRODUCT_DETAILS[k].statut;});return configuredAndUsed(store.getSection('products').statuses,used).map(function(item){return {value:item.id,label:item.label+(item.active===false?' (désactivé)':''),badgeClass:badgeClass(item.color)};}); }
+    function rdvStatuses() { var used=Object.keys(window.COCKPIT_RDV_DETAILS||{}).map(function(k){return window.COCKPIT_RDV_DETAILS[k].statut;});return configuredAndUsed(store.getSection('agenda').statuses,used).map(function(item){return {value:valueOf(item),label:item.label+(item.active===false?' (désactivé)':''),badgeClass:badgeClass(item.color)};}); }
+    function paymentTerms() {
+        var terms=store.getSection('products').paymentTerms;
+        return terms.map(function(label){return {value:String(label).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''),label:label};});
     }
+
+    intercept('COCKPIT_CLIENT_STATUSES', clientStatuses);
+    intercept('COCKPIT_PRODUCT_TYPES', productTypes);
+    intercept('COCKPIT_PRODUCT_STATUSES', productStatuses);
+    intercept('COCKPIT_RDV_STATUSES', rdvStatuses);
+    intercept('COCKPIT_PRODUCT_PAYMENT_MODALITIES', paymentTerms);
+
     function usedValues(selector, attribute) {
-        var result = [];
-        document.querySelectorAll(selector).forEach(function (node) {
-            var value = node.getAttribute(attribute);
-            if (value && result.indexOf(value) === -1) result.push(value);
-        });
-        return result;
+        var result=[];document.querySelectorAll(selector).forEach(function(node){var value=node.getAttribute(attribute);if(value&&result.indexOf(value)===-1)result.push(value);});return result;
     }
-    function rebuildSelect(select, list, emptyLabel, used) {
-        if (!select) return;
-        var previous = select.value;
-        var byId = {};
-        (list || []).forEach(function (item) { byId[item.id] = item; if (item.legacyId) byId[item.legacyId] = item; });
-        var values = activeSorted(list).map(function (item) { return item.legacyId || item.id; });
-        (used || []).forEach(function (value) { if (values.indexOf(value) === -1) values.push(value); });
-        select.innerHTML = '';
-        if (emptyLabel) { var empty = document.createElement('option'); empty.value = ''; empty.textContent = emptyLabel; select.appendChild(empty); }
-        values.forEach(function (value) {
-            var item = byId[value], option = document.createElement('option');
-            option.value = value;
-            option.textContent = item ? item.label + (item.active === false ? ' (désactivé)' : '') : value + ' (valeur existante)';
-            select.appendChild(option);
-        });
-        if (Array.prototype.some.call(select.options, function (option) { return option.value === previous; })) select.value = previous;
+    function rebuildSelect(select, configured, emptyLabel, used) {
+        if(!select)return;var previous=select.value,byValue={};configured.forEach(function(item){byValue[valueOf(item)]=item;byValue[item.id]=item;});var values=active(configured).map(valueOf);(used||[]).forEach(function(value){if(values.indexOf(value)===-1)values.push(value);});select.innerHTML='';if(emptyLabel){var e=document.createElement('option');e.value='';e.textContent=emptyLabel;select.appendChild(e);}values.forEach(function(value){var item=byValue[value],o=document.createElement('option');o.value=value;o.textContent=item?item.label+(item.active===false?' (désactivé)':''):value+' (valeur existante)';select.appendChild(o);});if(Array.prototype.some.call(select.options,function(o){return o.value===previous;}))select.value=previous;
     }
     function updateBadges(rows, attribute, cellIndex, list) {
-        var byId = {};
-        (list || []).forEach(function (item) { byId[item.id] = item; if (item.legacyId) byId[item.legacyId] = item; });
-        Array.prototype.forEach.call(rows || [], function (row) {
-            var value = row.getAttribute(attribute), item = byId[value];
-            if (!item || !row.cells || !row.cells[cellIndex]) return;
-            var badge = row.cells[cellIndex].querySelector('.badge');
-            if (badge) { badge.textContent = item.label; badge.className = 'badge ' + badgeClass(item.color); }
-        });
+        var map={};list.forEach(function(item){map[item.id]=item;if(item.legacyId)map[item.legacyId]=item;});Array.prototype.forEach.call(rows||[],function(row){var item=map[row.getAttribute(attribute)],badge=row.cells&&row.cells[cellIndex]&&row.cells[cellIndex].querySelector('.badge');if(item&&badge){badge.textContent=item.label;badge.className='badge '+badgeClass(item.color);}});
     }
     function applyClients() {
-        var c = store.getSection('clients');
-        window.COCKPIT_CLIENT_DEFAULTS = clone(c);
-        if (window.COCKPIT_CLIENT_STATUSES) {
-            window.COCKPIT_CLIENT_STATUSES.splice(0, window.COCKPIT_CLIENT_STATUSES.length);
-            activeSorted(c.statuses).forEach(function (item) { window.COCKPIT_CLIENT_STATUSES.push({ value:item.id, label:item.label, badgeClass:badgeClass(item.color) }); });
-        }
-        var rows = document.querySelectorAll('#clients-table tbody tr');
-        rebuildSelect(document.getElementById('clients-status-filter'), c.statuses, 'Tous les statuts', usedValues('#clients-table tbody tr','data-status'));
-        updateBadges(rows, 'data-status', 2, c.statuses);
+        var c=store.getSection('clients'),rows=document.querySelectorAll('#clients-table tbody tr');
+        rebuildSelect(document.getElementById('clients-status-filter'),c.statuses,'Tous les statuts',usedValues('#clients-table tbody tr','data-status'));
+        updateBadges(rows,'data-status',5,c.statuses);
     }
     function applyProducts() {
-        var p = store.getSection('products');
-        window.COCKPIT_PRODUCT_DEFAULTS = clone(p);
-        if (window.COCKPIT_PRODUCT_TYPES) {
-            window.COCKPIT_PRODUCT_TYPES.splice(0, window.COCKPIT_PRODUCT_TYPES.length);
-            activeSorted(p.types).forEach(function (item) { window.COCKPIT_PRODUCT_TYPES.push({ value:item.id, label:item.label, badgeClass:badgeClass(item.color) }); });
-        }
-        if (window.COCKPIT_PRODUCT_STATUSES) {
-            window.COCKPIT_PRODUCT_STATUSES.splice(0, window.COCKPIT_PRODUCT_STATUSES.length);
-            activeSorted(p.statuses).forEach(function (item) { window.COCKPIT_PRODUCT_STATUSES.push({ value:item.id, label:item.label, badgeClass:badgeClass(item.color) }); });
-        }
-        var rows = document.querySelectorAll('#products-table tbody tr');
-        rebuildSelect(document.getElementById('products-type-filter'), p.types, 'Tous les types', usedValues('#products-table tbody tr','data-type'));
-        rebuildSelect(document.getElementById('products-status-filter'), p.statuses, 'Tous les statuts', usedValues('#products-table tbody tr','data-status'));
-        updateBadges(rows, 'data-type', 1, p.types);
-        updateBadges(rows, 'data-status', 4, p.statuses);
+        var p=store.getSection('products'),rows=document.querySelectorAll('#products-table tbody tr');
+        rebuildSelect(document.getElementById('products-type-filter'),p.types,'Tous les types',usedValues('#products-table tbody tr','data-type'));
+        rebuildSelect(document.getElementById('products-status-filter'),p.statuses,'Tous les statuts',usedValues('#products-table tbody tr','data-status'));
+        updateBadges(rows,'data-type',1,p.types);updateBadges(rows,'data-status',4,p.statuses);
     }
-    function applyAgendaStatuses() {
-        var a = store.getSection('agenda');
-        window.COCKPIT_APPOINTMENT_DEFAULTS = clone(a);
-        if (window.COCKPIT_RDV_STATUSES) {
-            window.COCKPIT_RDV_STATUSES.splice(0, window.COCKPIT_RDV_STATUSES.length);
-            activeSorted(a.statuses).forEach(function (item) { window.COCKPIT_RDV_STATUSES.push({ value:item.legacyId || item.id, label:item.label, badgeClass:badgeClass(item.color) }); });
-        }
+    function applyGlobals() {
+        if(window.COCKPIT_CLIENT_STATUSES){var arr=window.COCKPIT_CLIENT_STATUSES;arr.splice(0,arr.length);clientStatuses().forEach(function(x){arr.push(x);});}
+        if(window.COCKPIT_PRODUCT_TYPES){var types=window.COCKPIT_PRODUCT_TYPES;types.splice(0,types.length);productTypes().forEach(function(x){types.push(x);});}
+        if(window.COCKPIT_PRODUCT_STATUSES){var stats=window.COCKPIT_PRODUCT_STATUSES;stats.splice(0,stats.length);productStatuses().forEach(function(x){stats.push(x);});}
+        if(window.COCKPIT_RDV_STATUSES){var rdv=window.COCKPIT_RDV_STATUSES;rdv.splice(0,rdv.length);rdvStatuses().forEach(function(x){rdv.push(x);});}
     }
-    function parseFr(value) {
-        if (!value) return null;
-        var p = String(value).split('/');
-        if (p.length !== 3) return null;
-        var date = new Date(Number(p[2]), Number(p[1]) - 1, Number(p[0]));
-        date.setHours(0,0,0,0);
-        return isNaN(date.getTime()) ? null : date;
-    }
-    function daysBetween(a,b) { return Math.floor((b.getTime() - a.getTime()) / 86400000); }
-    function today() { var d=new Date();d.setHours(0,0,0,0);return d; }
-    function buildAlerts() {
-        var config = store.getSection('alerts'), dashboard = store.getSection('dashboard'), alerts = [], now = today();
-        window.COCKPIT_ALERT_CONFIG = clone(config);
-
-        if (config.overdueInvoice.enabled && window.COCKPIT_FACTURE_DETAILS && window.COCKPIT_FACTURE_CALC && window.COCKPIT_DEVIS_CALC) {
-            Object.keys(window.COCKPIT_FACTURE_DETAILS).forEach(function (key) {
-                var invoice = window.COCKPIT_FACTURE_DETAILS[key];
-                if (invoice.statutEmission !== 'emise') return;
-                var totals = window.COCKPIT_DEVIS_CALC.computeDevisTotals(invoice.lignes || []);
-                var status = window.COCKPIT_FACTURE_CALC.computeStatutAffiche({ statutEmission:invoice.statutEmission, paiements:invoice.paiements || [], totalTTC:totals.totalTTC, dateEcheance:invoice.dateEcheance });
-                if (status === 'en-retard') alerts.push({ type:'invoice', level:'danger', text:'Facture ' + (invoice.numero || key) + ' en retard.', href:'facture-edition.html?facture=' + encodeURIComponent(key) });
-            });
-        }
-        if (config.quoteNoReply.enabled && window.COCKPIT_DEVIS_DETAILS) {
-            Object.keys(window.COCKPIT_DEVIS_DETAILS).forEach(function (key) {
-                var quote = window.COCKPIT_DEVIS_DETAILS[key];
-                var version = window.COCKPIT_DEVIS_CALC && window.COCKPIT_DEVIS_CALC.getActiveVersion ? window.COCKPIT_DEVIS_CALC.getActiveVersion(quote) : quote.versions && quote.versions[quote.versions.length-1];
-                if (!version || version.statut !== 'envoye') return;
-                var sent = parseFr(version.dateModification || version.dateCreation);
-                if (sent && daysBetween(sent,now) >= Number(config.quoteNoReply.days || 7)) alerts.push({ type:'quote', level:'warning', text:'Devis ' + key + ' sans réponse depuis ' + daysBetween(sent,now) + ' jours.', href:'devis-edition.html?devis=' + encodeURIComponent(key) });
-            });
-        }
-        if (window.COCKPIT_RDV_DETAILS) {
-            Object.keys(window.COCKPIT_RDV_DETAILS).forEach(function (key) {
-                var rdv = window.COCKPIT_RDV_DETAILS[key], date = parseFr(rdv.date), until = date ? daysBetween(now,date) : null;
-                if (config.unconfirmedAppointment.enabled && !(rdv.communication && rdv.communication.confirme) && ['prevu','planned'].indexOf(rdv.statut) !== -1 && until !== null && until <= Number(config.unconfirmedAppointment.days || 2) && until >= 0) alerts.push({ type:'appointment', level:'warning', text:'Rendez-vous « ' + rdv.titre + ' » à confirmer.', href:'fiche-rdv.html?rdv=' + encodeURIComponent(key) });
-                var reports = (rdv.historique || []).filter(function (entry) { return entry.type === 'report'; }).length;
-                if (config.repeatedPostponement.enabled && reports >= Number(config.repeatedPostponement.count || 2)) alerts.push({ type:'postponement', level:'warning', text:'Rendez-vous « ' + rdv.titre + ' » reporté ' + reports + ' fois.', href:'fiche-rdv.html?rdv=' + encodeURIComponent(key) });
-            });
-        }
-        var cashText = document.getElementById('tresorerie-kpi-previsionnel') || document.getElementById('tresorerie-kpi-solde');
-        if (config.lowCash.enabled && cashText) {
-            var cash = Number(cashText.textContent.replace(/[^0-9,-]/g,'').replace(',','.'));
-            if (Number.isFinite(cash) && cash < Number(config.lowCash.amount || 0)) alerts.push({ type:'cash', level:'danger', text:'Trésorerie prévisionnelle sous le seuil de ' + config.lowCash.amount + ' €.', href:'tresorerie.html' });
-        }
-        if (config.lateGoal.enabled && window.COCKPIT_FACTURATION_STATS && window.COCKPIT_FACTURATION_STATS.computeStats) {
-            var stats = window.COCKPIT_FACTURATION_STATS.computeStats(), goal = Number(dashboard.revenueGoal || 0), completion = goal ? Math.round((Number(stats.caFacture || 0) / goal) * 100) : 100;
-            if (completion < Number(config.lateGoal.completionPercent || 70)) alerts.push({ type:'goal', level:'warning', text:'Objectif de CA réalisé à ' + completion + ' %.', href:'dashboard.html' });
-        }
-        return alerts;
-    }
-    function generatedItem(alert) {
-        var li = document.createElement('li');
-        li.className = 'settings-generated-alert';
-        li.setAttribute('data-settings-alert-type', alert.type);
-        li.style.cssText = 'padding:10px 12px;margin-bottom:8px;border:1px solid #e1e5ec;border-left:4px solid ' + (alert.level === 'danger' ? '#c7443e' : '#d79120') + ';border-radius:8px;background:#fff;list-style:none;';
-        var link = document.createElement('a'); link.href = alert.href || '#'; link.textContent = alert.text; link.style.cssText='color:inherit;text-decoration:none;font-weight:600;'; li.appendChild(link);
-        return li;
-    }
-    function renderAlerts() {
-        if (renderingAlerts) return;
-        renderingAlerts = true;
-        try {
-            var alerts = buildAlerts(), max = Number(store.getSection('dashboard').maxAlerts || 4);
-            ['dashboard-alerts-list','tresorerie-alertes-list','analyses-alertes-principales'].forEach(function (id) {
-                var list = document.getElementById(id); if (!list) return;
-                list.querySelectorAll('.settings-generated-alert').forEach(function (node) { node.remove(); });
-                alerts.slice(0,max).reverse().forEach(function (alert) { list.insertBefore(generatedItem(alert), list.firstChild); });
-                Array.prototype.forEach.call(list.children, function (item,index) { item.style.display = index < max ? '' : 'none'; });
-                var empty = document.getElementById(id === 'dashboard-alerts-list' ? 'dashboard-alerts-empty' : id === 'tresorerie-alertes-list' ? 'tresorerie-alertes-empty' : 'analyses-alertes-empty');
-                if (empty) empty.style.display = list.children.length ? 'none' : '';
-            });
-        } finally { renderingAlerts = false; }
-    }
-    function apply() { applyClients(); applyProducts(); applyAgendaStatuses(); renderAlerts(); }
-    document.addEventListener('DOMContentLoaded', apply);
-    window.addEventListener('load', apply);
-    store.subscribe(apply);
+    function apply(){applyGlobals();applyClients();applyProducts();}
+    document.addEventListener('DOMContentLoaded',apply);window.addEventListener('load',apply);store.subscribe(apply);
+    window.COCKPIT_SETTINGS_REFERENTIALS={apply:apply,clientStatuses:clientStatuses,productTypes:productTypes,productStatuses:productStatuses,rdvStatuses:rdvStatuses};
 })();

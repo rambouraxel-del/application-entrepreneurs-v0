@@ -1,194 +1,38 @@
-// Consommateurs des paramètres V0.11 : adaptateurs de compatibilité et
-// application progressive aux pages existantes, sans réécrire les snapshots.
+// Raccordements ciblés V0.11 : réglages réellement consommés par les modules V0.
 (function () {
     'use strict';
-    var store = window.COCKPIT_SETTINGS;
-    if (!store) return;
-    var applying = false;
-
-    function badgeClass(color) {
-        return 'badge-' + (['neutral','info','warning','success','danger'].indexOf(color) !== -1 ? color : 'neutral');
-    }
-    function dispatch(node, type) {
-        if (!node) return;
-        try { node.dispatchEvent(new Event(type || 'change', { bubbles: true })); } catch (ignore) {}
-    }
-    function setSelect(id, value) {
-        var node = document.getElementById(id);
-        if (!node || value === undefined || value === null) return;
-        var exists = Array.prototype.some.call(node.options || [], function (option) { return String(option.value) === String(value); });
-        if (!exists) return;
-        if (String(node.value) !== String(value)) { node.value = value; dispatch(node); }
-    }
-    function currentName() {
-        var p = store.getSection('profile'), d = store.getSection('demo');
-        return d.enabled ? (d.firstName + ' ' + d.lastName).trim() : (p.firstName + ' ' + p.lastName).trim();
-    }
-    function applyAppearance() {
-        var a = store.getSection('appearance'), root = document.documentElement;
-        root.setAttribute('data-cockpit-density', a.density || 'comfortable');
-        root.setAttribute('data-cockpit-accent', a.accent || 'blue');
-        root.setAttribute('data-cockpit-currency-decimals', a.currencyDecimals ? 'on' : 'off');
-    }
-    function applyProfile() {
-        var p = store.getSection('profile'), d = store.getSection('demo');
-        var first = d.enabled ? d.firstName : p.firstName;
-        var greeting = document.getElementById('dashboard-greeting-title');
-        if (greeting) greeting.textContent = 'Bonjour, ' + (first || 'vous') + ' !';
-        var detail = document.getElementById('settings-compte-detail');
-        if (detail) detail.textContent = currentName() + ' · ' + (p.jobTitle || 'Utilisateur');
-        document.querySelectorAll('[data-cockpit-current-user]').forEach(function (node) { node.textContent = currentName() || 'Vous'; });
-    }
-    function applyCompany() {
-        var c = store.getSection('company'), b = store.getSection('billing');
-        var legacy = window.COCKPIT_COMPANY_SETTINGS;
-        if (legacy) {
-            legacy.nom = c.legalName || c.tradeName; legacy.adresse = c.address; legacy.telephone = c.phone;
-            legacy.email = c.email; legacy.siteInternet = c.website; legacy.siren = c.siren; legacy.siret = c.siret;
-            legacy.tva = c.vatNumber; legacy.iban = c.iban; legacy.bic = c.bic;
-            legacy.mentionsLegales = [c.legalNotice, b.latePenaltyText, b.collectionFee ? ('Indemnité forfaitaire : ' + b.collectionFee + ' €.') : '', b.legalNotice].filter(Boolean).join(' ');
-        }
-        if (window.COCKPIT_DEVIS_CALC) {
-            window.COCKPIT_DEVIS_CALC.snapshotCompany = function () {
-                var company = store.getSection('company'), billing = store.getSection('billing');
-                return {
-                    nom: company.legalName || company.tradeName, adresse: company.address, telephone: company.phone,
-                    email: company.email, siret: company.siret, tva: company.vatNumber,
-                    iban: billing.showBankDetails ? company.iban : '', bic: billing.showBankDetails ? company.bic : '',
-                    siteInternet: company.website, footerText: billing.footerText || company.footerText,
-                    signatureText: billing.quoteSignature || company.signatureText
-                };
-            };
-        }
-    }
-    function formatNextNumber(prefix, includeYear, year, counter) {
-        var parts = [String(prefix || '').replace(/[^A-Za-z0-9_-]/g, '').toUpperCase() || 'DOC'];
-        if (includeYear) parts.push(String(year));
-        parts.push(String(counter).padStart(5, '0'));
-        return parts.join('-');
-    }
-    function nextCounter(source, minimum) {
-        var max = Math.max(0, Number(minimum || 1) - 1);
-        Object.keys(source || {}).forEach(function (key) {
-            var match = String(key).match(/(\d{3,})$/);
-            if (match) max = Math.max(max, Number(match[1]));
-        });
-        return max + 1;
-    }
-    function applyBilling() {
-        var billing = store.getSection('billing'), appearance = store.getSection('appearance');
-        var calc = window.COCKPIT_DEVIS_CALC;
-        if (calc) {
-            calc.computeNextDevisNumero = function (year) {
-                return formatNextNumber(billing.quotePrefix, billing.includeYear, year, nextCounter(window.COCKPIT_DEVIS_DETAILS, billing.startingCounter));
-            };
-            calc.formatMoney = function (value) {
-                var decimals = appearance.currencyDecimals ? 2 : 0;
-                return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', minimumFractionDigits: decimals, maximumFractionDigits: decimals }).format(Number(value) || 0);
-            };
-        }
-        if (window.COCKPIT_FACTURE_CALC) {
-            window.COCKPIT_FACTURE_CALC.computeNextFactureNumero = function (year) {
-                return formatNextNumber(billing.invoicePrefix, billing.includeYear, year, nextCounter(window.COCKPIT_FACTURE_DETAILS, billing.startingCounter));
-            };
-        }
-        window.COCKPIT_BILLING_DEFAULTS = {
-            quoteValidityDays: billing.quoteValidityDays, paymentDays: billing.defaultPaymentDays,
-            depositPercent: billing.defaultDepositPercent, maxDiscountPercent: billing.indicativeMaxDiscountPercent,
-            defaultVat: billing.defaultVat, paymentMethods: billing.acceptedPaymentMethods.slice(),
-            legalNotice: billing.legalNotice, footerText: billing.footerText
-        };
-    }
-    function replaceOptions(select, items, emptyLabel) {
-        if (!select) return;
-        var current = select.value;
-        select.innerHTML = '';
-        if (emptyLabel) { var empty = document.createElement('option'); empty.value = ''; empty.textContent = emptyLabel; select.appendChild(empty); }
-        items.filter(function (item) { return item.active !== false; }).sort(function (a,b) { return (a.order || 0) - (b.order || 0); }).forEach(function (item) {
-            var option = document.createElement('option'); option.value = item.legacyId || item.id; option.textContent = item.label; select.appendChild(option);
-        });
-        if (Array.prototype.some.call(select.options, function (option) { return option.value === current; })) select.value = current;
-    }
-    function applyDashboard() {
-        var d = store.getSection('dashboard');
-        var periodMap = { month:'mois', '30d':'30j', quarter:'trimestre', custom:'custom' };
-        setSelect('dashboard-period-select', periodMap[d.defaultPeriod] || d.defaultPeriod);
-        var start = document.getElementById('dashboard-period-custom-start'), end = document.getElementById('dashboard-period-custom-end');
-        if (start && d.customPeriodStart) start.value = d.customPeriodStart;
-        if (end && d.customPeriodEnd) end.value = d.customPeriodEnd;
-        setSelect('dashboard-chart-period-select', String(d.chartMonths));
-        document.querySelectorAll('#dashboard-chart-indicators-dropdown input[type="checkbox"]').forEach(function (box) {
-            box.checked = box.value === d.chartIndicator;
-            dispatch(box);
-        });
-        var completedTab = document.querySelector('#todo-filter-tabs [data-filter="terminees"]');
-        if (completedTab) completedTab.style.display = d.showCompletedTasks ? '' : 'none';
-        limitAlertList(document.getElementById('dashboard-alerts-list'), d.maxAlerts);
-    }
-    function limitAlertList(list, max) {
-        if (!list) return;
-        Array.prototype.forEach.call(list.children, function (item, index) { item.style.display = index < Math.max(1, Number(max) || 4) ? '' : 'none'; });
-    }
-    function applyAgenda() {
-        var a = store.getSection('agenda');
-        var viewMap = { day:'jour', week:'semaine', month:'mois', list:'liste' };
-        var viewButton = document.querySelector('#agenda-view-tabs [data-view="' + (viewMap[a.defaultView] || a.defaultView) + '"]');
-        if (viewButton && !viewButton.classList.contains('page-tab-active')) viewButton.click();
-        setSelect('agenda-page-size', String(store.getSection('appearance').defaultPageSize || 5));
-        replaceOptions(document.getElementById('rdv-form-statut'), a.statuses, null);
-        window.COCKPIT_AGENDA_SETTINGS = {
-            startTime:a.startTime,endTime:a.endTime,slotMinutes:a.slotMinutes,defaultDurationMinutes:a.defaultDurationMinutes,
-            workingDays:a.workingDays.slice(),showWeekends:a.showWeekends,initialStatus:a.initialStatus,
-            statuses:clone(a.statuses),outsideWorkingHoursAlwaysVisible:true
-        };
-    }
-    function clone(value) { return JSON.parse(JSON.stringify(value)); }
-    function applyTreasury() {
-        var t = store.getSection('treasury');
-        var map = { '30d':'30', '60d':'60', '90d':'90', 'end-month':'30', 'end-next-month':'60' };
-        setSelect('tresorerie-period-select', map[t.projectionMode] || map[t.defaultHorizon] || '30');
-        window.COCKPIT_TREASURY_SETTINGS = clone(t);
-        var chargesBody = document.getElementById('tresorerie-charges-body');
-        if (chargesBody) Array.prototype.forEach.call(chargesBody.children, function (row) {
-            var text = row.textContent.toLowerCase();
-            if (!t.showRealized && /réalis/.test(text)) row.style.display = 'none';
-            if (!t.showForecast && /prévu|venir/.test(text)) row.style.display = 'none';
-        });
-    }
-    function applyAnalytics() {
-        var a = store.getSection('analytics');
-        var tabMap = { overview:'vue-ensemble', commercial:'commercial', clients:'clients', activity:'activite', treasury:'tresorerie' };
-        var button = document.querySelector('#analyses-tabs [data-tab="' + (tabMap[a.defaultTab] || a.defaultTab) + '"]');
-        if (button && !button.classList.contains('page-tab-active')) button.click();
-        var periodMap = { month:'mois', quarter:'trimestre', year:'annee', '30d':'mois', custom:'tout' };
-        setSelect('analyses-period-select', periodMap[a.defaultPeriod] || a.defaultPeriod);
-        var chartIds = ['analyses-vue-devis-donut','tresorerie-chart-container','dashboard-chart-container'];
-        chartIds.forEach(function (id) { var node=document.getElementById(id); if(node && node.closest('.dashboard-block')) node.closest('.dashboard-block').style.display = a.showCharts ? '' : 'none'; });
-        document.querySelectorAll('.analyses-funnel').forEach(function (node) { node.style.display = a.showFunnels ? '' : 'none'; });
-        var topBody = document.getElementById('analyses-vue-top-clients-body');
-        if (topBody) Array.prototype.forEach.call(topBody.children, function (row,index) { row.style.display=index<Number(a.rankingClientCount||5)?'':'none'; });
-    }
-    function applyPageSizes() {
-        var appearance = store.getSection('appearance'), clients = store.getSection('clients'), products = store.getSection('products');
-        setSelect('clients-page-size', String(clients.pageSize || appearance.defaultPageSize));
-        setSelect('products-page-size', String(products.pageSize || appearance.defaultPageSize));
-        ['devis-page-size','factures-page-size','agenda-page-size'].forEach(function(id){setSelect(id,String(appearance.defaultPageSize));});
-    }
-    function applyAll() {
-        if (applying) return;
-        applying = true;
-        try {
-            applyAppearance(); applyProfile(); applyCompany(); applyBilling(); applyDashboard(); applyAgenda(); applyTreasury(); applyAnalytics(); applyPageSizes();
-        } finally { applying = false; }
-    }
-    applyAppearance();
-    document.addEventListener('DOMContentLoaded', function () {
-        applyAll();
-        ['dashboard-alerts-list','tresorerie-alertes-list','analyses-vue-top-clients-body','tresorerie-charges-body'].forEach(function (id) {
-            var node=document.getElementById(id); if(node && window.MutationObserver) new MutationObserver(applyAll).observe(node,{childList:true,subtree:true});
-        });
-    });
-    window.addEventListener('load', applyAll);
-    store.subscribe(applyAll);
-    window.COCKPIT_SETTINGS_RUNTIME = { apply:applyAll, badgeClass:badgeClass, get:function(section){return store.getSection(section);}, currentUserName:currentName };
+    var store=window.COCKPIT_SETTINGS;if(!store)return;
+    var pending=false;
+    function clone(v){return JSON.parse(JSON.stringify(v));}
+    function active(list){return (list||[]).filter(function(x){return x.active!==false;}).sort(function(a,b){return(a.order||0)-(b.order||0);});}
+    function statusValue(x){return x&&(x.legacyId||x.id);}
+    function emit(node,type){if(node)try{node.dispatchEvent(new Event(type||'change',{bubbles:true}));}catch(ignore){}}
+    function num(text){var n=Number(String(text||'').replace(/\s/g,'').replace(/[^0-9,.-]/g,'').replace(',','.'));return Number.isFinite(n)?n:0;}
+    function setSelect(id,value,trigger){var n=document.getElementById(id);if(!n)return false;var ok=Array.prototype.some.call(n.options||[],function(o){return String(o.value)===String(value);});if(!ok)return false;if(String(n.value)!==String(value)){n.value=value;if(trigger)emit(n);}return true;}
+    function intercept(name,enhancer){var value=window[name];function apply(v){if(!v)return v;try{return enhancer(v)||v;}catch(e){console.error('[Cockpit Settings] '+name,e);return v;}}try{Object.defineProperty(window,name,{configurable:true,enumerable:true,get:function(){return value;},set:function(v){value=apply(v);}});if(value)value=apply(value);}catch(e){if(value)window[name]=apply(value);}}
+    function nextNumber(prefix,withYear,year,source,start){var max=Math.max(0,Number(start||1)-1);Object.keys(source||{}).forEach(function(k){var m=String(k).match(/(\d{3,})$/);if(m)max=Math.max(max,Number(m[1]));});var p=[String(prefix||'DOC').replace(/[^A-Za-z0-9_-]/g,'').toUpperCase()||'DOC'];if(withYear)p.push(String(year));p.push(String(max+1).padStart(5,'0'));return p.join('-');}
+    function companySnapshot(){var c=store.getSection('company'),b=store.getSection('billing'),contact=c.showContactDetails!==false,bank=b.showBankDetails!==false&&c.showBankDetails!==false;return{nom:c.legalName||c.tradeName,nomCommercial:c.tradeName,activite:c.activity,formeJuridique:c.legalForm,adresse:c.address,telephone:contact?c.phone:'',email:contact?c.email:'',siteInternet:contact?c.website:'',siren:c.siren,siret:c.siret,tva:c.vatNumber,capital:c.shareCapital,immatriculation:c.registration,iban:bank?c.iban:'',bic:bank?c.bic:'',banque:bank?c.bankName:'',titulaire:bank?c.accountHolder:'',mentionsLegales:[c.legalNotice,b.latePenaltyText?'Pénalités de retard : '+b.latePenaltyText+'.':'',b.collectionFee?'Indemnité forfaitaire : '+b.collectionFee+' €.':'',b.legalNotice].filter(Boolean).join(' '),texteDocument:c.defaultDocumentText,footerText:b.footerText||c.footerText,signatureText:b.quoteSignature||c.signatureText,logoUrl:c.logoUrl,initials:c.initials,showIssuerDetails:b.showIssuerDetails!==false,showBankDetails:bank};}
+    function enhanceDevis(calc){if(calc.__settingsV011)return calc;calc.__settingsV011=true;calc.snapshotCompany=companySnapshot;calc.computeNextDevisNumero=function(year){var b=store.getSection('billing');return nextNumber(b.quotePrefix,b.includeYear,year,window.COCKPIT_DEVIS_DETAILS,b.startingCounter);};calc.formatMoney=function(value){var a=store.getSection('appearance'),d=a.currencyDecimals?2:0;return new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',minimumFractionDigits:d,maximumFractionDigits:d}).format(Number(value)||0);};return calc;}
+    function enhanceFacture(calc){if(calc.__settingsV011)return calc;calc.__settingsV011=true;calc.computeNextFactureNumero=function(year){var b=store.getSection('billing');return nextNumber(b.invoicePrefix,b.includeYear,year,window.COCKPIT_FACTURE_DETAILS,b.startingCounter);};return calc;}
+    function treasuryAlerts(s){var a=store.getSection('alerts'),t=store.getSection('treasury'),out=[],seen={};function push(k,v){if(!seen[k]){seen[k]=1;out.push(v);}}var late=(s.facturesAEncaisser||[]).filter(function(f){return f.statut==='en-retard';});if(a.overdueInvoice.enabled&&late.length)push('late',{niveau:'critical',titre:late.length+' facture(s) en retard',sousTexte:'À traiter dans Facturation',lien:'facturation.html'});var today=new Date();today.setHours(0,0,0,0);var heavy=(s.chargesPrevues||[]).filter(function(op){var d=window.COCKPIT_FACTURE_CALC&&window.COCKPIT_FACTURE_CALC.parseDate?window.COCKPIT_FACTURE_CALC.parseDate(op.date):null,days=d?Math.round((d-today)/86400000):999;return Number(op.montant)>=Number(a.upcomingHeavyCharge.amount||t.heavyChargeThreshold)&&days>=0&&days<=Number(a.upcomingHeavyCharge.days||7);})[0];if(a.upcomingHeavyCharge.enabled&&heavy)push('heavy',{niveau:'warning',titre:'Charge importante à venir',sousTexte:heavy.libelle,lien:'tresorerie.html'});if(a.lowCash.enabled&&Number(s.soldePrevisionnel)<Number(a.lowCash.amount||t.lowCashThreshold))push('cash',{niveau:'warning',titre:'Risque de tension de trésorerie',sousTexte:'Seuil configuré : '+Number(a.lowCash.amount||t.lowCashThreshold)+' €',lien:'tresorerie.html'});return out;}
+    function enhanceTreasury(calc){if(calc.__settingsV011)return calc;calc.__settingsV011=true;var original=calc.computeSnapshot,label=calc.labelForCategorie;if(typeof label==='function')calc.labelForCategorie=function(v){var x=(store.getSection('treasury').categories||[]).filter(function(i){return i.id===v||i.legacyId===v;})[0];return x?x.label:label(v);};if(typeof original==='function')calc.computeSnapshot=function(days){var t=store.getSection('treasury'),s=original.call(calc,days);if(!s)return s;if(!t.includeIssuedInvoices){s.facturesAEncaisser=[];s.aEncaisser=0;s.mouvements=(s.mouvements||[]).filter(function(m){return!(m.lien&&m.lien.type==='facture');});}if(!t.showRealized)s.mouvements=(s.mouvements||[]).filter(function(m){return m.statut!=='realise';});if(!t.showForecast){s.mouvements=(s.mouvements||[]).filter(function(m){return m.statut==='realise';});s.chargesPrevues=(s.chargesPrevues||[]).filter(function(m){return m.statut==='realise';});}s.alertes=treasuryAlerts(s);return s;};return calc;}
+    function enhancePagination(api){if(api.__settingsV011)return api;api.__settingsV011=true;var original=api.init;api.init=function(c){var a=store.getSection('appearance'),size=c.pageSizeSelect&&c.pageSizeSelect.id==='clients-page-size'?store.getSection('clients').pageSize:c.pageSizeSelect&&c.pageSizeSelect.id==='products-page-size'?store.getSection('products').pageSize:a.defaultPageSize;if(c.pageSizeSelect)c.pageSizeSelect.value=String(size||5);return original.call(api,c);};return api;}
+    intercept('COCKPIT_DEVIS_CALC',enhanceDevis);intercept('COCKPIT_FACTURE_CALC',enhanceFacture);intercept('COCKPIT_TRESORERIE_CALC',enhanceTreasury);intercept('COCKPIT_LIST_PAGINATION',enhancePagination);
+    function applyAppearance(){var a=store.getSection('appearance'),r=document.documentElement;r.setAttribute('data-cockpit-density',a.density);r.setAttribute('data-cockpit-accent',a.accent);r.setAttribute('data-cockpit-currency-decimals',a.currencyDecimals?'on':'off');}
+    function applyBrand(){var c=store.getSection('company'),p=store.getSection('profile'),d=store.getSection('demo'),first=d.enabled?d.firstName:p.firstName;var title=document.getElementById('dashboard-greeting-title');if(title)title.textContent='Bonjour, '+(first||'vous')+' !';document.querySelectorAll('.sidebar-brand-name').forEach(function(n){n.textContent=c.tradeName||c.legalName;});document.querySelectorAll('.sidebar-logo').forEach(function(n){if(c.logoUrl&&/^https?:\/\//i.test(c.logoUrl)){n.innerHTML='<img class="cockpit-company-logo" alt="" src="'+c.logoUrl.replace(/["<>]/g,'')+'">';}else n.textContent=c.initials||'CE';});}
+    function applyPaymentGlobals(){var b=store.getSection('billing'),p=store.getSection('products');if(Array.isArray(window.COCKPIT_PAYMENT_METHODS)){window.COCKPIT_PAYMENT_METHODS.splice(0);b.acceptedPaymentMethods.forEach(function(x){window.COCKPIT_PAYMENT_METHODS.push(x);});}if(Array.isArray(window.COCKPIT_PRODUCT_PAYMENT_MODALITIES)){window.COCKPIT_PRODUCT_PAYMENT_MODALITIES.splice(0);p.paymentTerms.forEach(function(label){window.COCKPIT_PRODUCT_PAYMENT_MODALITIES.push({value:String(label).toLowerCase().replace(/[^a-z0-9]+/g,'-'),label:label});});}}
+    function applyPageSizes(){var a=store.getSection('appearance');setSelect('clients-page-size',String(store.getSection('clients').pageSize||a.defaultPageSize),false);setSelect('products-page-size',String(store.getSection('products').pageSize||a.defaultPageSize),false);['agenda-page-size','devis-page-size','factures-page-size'].forEach(function(id){setSelect(id,String(a.defaultPageSize),false);});}
+    function applyDashboard(){var d=store.getSection('dashboard'),period=({month:'mois','30d':'30j',quarter:'trimestre',custom:'custom'})[d.defaultPeriod]||d.defaultPeriod;setSelect('dashboard-period-select',period,false);setSelect('dashboard-chart-period-select',String(d.chartMonths),false);var start=document.getElementById('dashboard-period-custom-start'),end=document.getElementById('dashboard-period-custom-end');if(start&&d.customPeriodStart)start.value=d.customPeriodStart;if(end&&d.customPeriodEnd)end.value=d.customPeriodEnd;document.querySelectorAll('#dashboard-chart-indicators-dropdown input').forEach(function(box){box.checked=box.value===d.chartIndicator;});var done=document.querySelector('#todo-filter-tabs [data-filter="terminees"]');if(done)done.style.display=d.showCompletedTasks?'':'none';var cards=document.querySelectorAll('#dashboard-kpis-situation .kpi-card');if(cards.length>=4){function line(card,text){var host=card.querySelector('.kpi-variation');if(!host)return;var n=host.querySelector('.settings-goal-line');if(!n){n=document.createElement('span');n.className='settings-goal-line';host.appendChild(n);}n.textContent=text;}line(cards[1],'Objectif d’encaissement : '+(d.collectionGoal||0)+' €');line(cards[2],'Objectif de trésorerie : '+(d.cashGoal||0)+' €');line(cards[3],'Objectif de CA : '+(d.revenueGoal||0)+' €');}}
+    function applyClients(){var c=store.getSection('clients'),table=document.getElementById('clients-table');if(!table)return;var map={name:0,company:1,phone:2,email:3,lastContact:4,status:5};Object.keys(map).forEach(function(k){var show=c.visibleFields.indexOf(k)!==-1,i=map[k];if(table.tHead&&table.tHead.rows[0].cells[i])table.tHead.rows[0].cells[i].style.display=show?'':'none';Array.prototype.forEach.call(table.tBodies[0].rows,function(row){if(row.cells[i])row.cells[i].style.display=show?'':'none';});});var now=new Date();now.setHours(0,0,0,0);Array.prototype.forEach.call(table.tBodies[0].rows,function(row){var cell=row.cells[4],m=cell&&cell.textContent.match(/(\d{2})\/(\d{2})\/(\d{4})/),date=m?new Date(+m[3],+m[2]-1,+m[1]):null,due=date&&Math.floor((now-date)/86400000)>=Number(c.followUpDays);row.classList.toggle('settings-followup-due',!!due);});}
+    function minutes(v){var p=String(v||'').split(':');return p.length===2?Number(p[0])*60+Number(p[1]):null;}
+    function rebuildTime(select,start,end,step){if(!select)return;var old=select.value;select.innerHTML='';for(var m=start;m<=end;m+=step){var o=document.createElement('option');o.value=String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');o.textContent=o.value;select.appendChild(o);}if(Array.prototype.some.call(select.options,function(o){return o.value===old;}))select.value=old;}
+    function applyAgenda(){var a=store.getSection('agenda'),view=({day:'jour',week:'semaine',month:'mois',list:'liste'})[a.defaultView]||a.defaultView,button=document.querySelector('#agenda-view-tabs [data-view="'+view+'"]');if(button&&!button.classList.contains('page-tab-active'))button.click();var start=minutes(a.startTime)||480,end=minutes(a.endTime)||1140,step=Number(a.slotMinutes)||30,s=document.getElementById('rdv-form-heure-debut'),e=document.getElementById('rdv-form-heure-fin');if(s&&e){rebuildTime(s,start,end,step);rebuildTime(e,start,end+Number(a.defaultDurationMinutes||60),step);if(!new URLSearchParams(location.search).get('rdv')){s.value=a.startTime;e.value=String(Math.floor((start+Number(a.defaultDurationMinutes||60))/60)).padStart(2,'0')+':'+String((start+Number(a.defaultDurationMinutes||60))%60).padStart(2,'0');}}document.querySelectorAll('.calendar-day-col,.calendar-head-cell').forEach(function(n,index){var key=['monday','tuesday','wednesday','thursday','friday','saturday','sunday'][index%7],weekend=key==='saturday'||key==='sunday';n.style.display=!a.showWeekends&&weekend?'none':'';n.classList.toggle('calendar-nonworking-day',a.workingDays.indexOf(key)===-1);});if(document.documentElement.style&&document.documentElement.style.setProperty)document.documentElement.style.setProperty('--cockpit-slot-minutes',String(step));window.COCKPIT_NEW_RDV_DEFAULT_STATUS=statusValue((a.statuses||[]).filter(function(x){return x.id===a.initialStatus||x.legacyId===a.initialStatus;})[0])||a.initialStatus;}
+    function isNewDocument(){var q=new URLSearchParams(location.search);return /devis-edition\.html$/.test(location.pathname)?!q.get('devis'):/facture-edition\.html$/.test(location.pathname)?!q.get('facture'):false;}
+    function applyProductsBilling(){var p=store.getSection('products'),b=store.getSection('billing');var vat=document.getElementById('add-product-vat');if(vat&&!vat.dataset.settings){vat.value=p.defaultVat;vat.dataset.settings='1';}setSelect('add-product-status',p.initialStatus,false);var rows=document.querySelectorAll('#devis-lines-body tr,#facture-lines-body tr');rows.forEach(function(row){var vatInput=row.cells[4]&&row.cells[4].querySelector('input'),discount=row.cells[5]&&row.cells[5].querySelector('input');if(vatInput&&isNewDocument()&&!vatInput.dataset.settings){if(!vatInput.value||Number(vatInput.value)===20)vatInput.value=b.defaultVat;emit(vatInput,'input');vatInput.dataset.settings='1';}if(discount){discount.max=String(b.indicativeMaxDiscountPercent);if(Number(discount.value)>Number(b.indicativeMaxDiscountPercent)){discount.value=b.indicativeMaxDiscountPercent;emit(discount,'input');}}});if(!isNewDocument())return;var terms=document.getElementById('devis-payment-terms')||document.getElementById('facture-payment-terms');if(terms&&!terms.dataset.settings){var inputs=terms.querySelectorAll('input'),note=terms.querySelector('textarea');if(inputs[0]){inputs[0].value=b.defaultPaymentDays?'Paiement à '+b.defaultPaymentDays+' jours':'Paiement comptant';emit(inputs[0],'input');}if(inputs[1]){inputs[1].value=b.defaultDepositPercent?'Acompte de '+b.defaultDepositPercent+' % à la commande':'';emit(inputs[1],'input');}if(note){note.value=[document.getElementById('devis-payment-terms')?'Validité du devis : '+b.quoteValidityDays+' jours.':'',b.legalNotice].filter(Boolean).join(' ');emit(note,'input');}terms.dataset.settings='1';}var company=document.getElementById('devis-company-content')||document.getElementById('facture-company-content');if(company){company.style.display=b.showIssuerDetails?'':'none';var s=companySnapshot();if(b.showBankDetails&&s.iban&&!company.querySelector('.settings-bank-details')){var bank=document.createElement('p');bank.className='settings-bank-details';bank.textContent='IBAN '+s.iban+(s.bic?' · BIC '+s.bic:'');company.appendChild(bank);}}}
+    function applyTreasury(){var t=store.getSection('treasury');setSelect('tresorerie-period-select',({'end-month':'30','end-next-month':'60','30d':'30','60d':'60','90d':'90'})[t.defaultHorizon]||'30',false);var body=document.getElementById('tresorerie-charges-body');if(body)Array.prototype.forEach.call(body.rows||[],function(row){var real=/réalis/i.test(row.textContent);row.style.display=(!t.showRealized&&real)||(!t.showForecast&&!real)?'none':'';var amount=row.cells[3]?num(row.cells[3].textContent):0;row.classList.toggle('settings-heavy-charge',amount>=Number(t.heavyChargeThreshold));});window.COCKPIT_TREASURY_SETTINGS=clone(t);}
+    function applyAnalytics(){var a=store.getSection('analytics'),tab=({overview:'vue-ensemble',commercial:'commercial',clients:'clients',activity:'activite',treasury:'tresorerie'})[a.defaultTab]||a.defaultTab,button=document.querySelector('#analyses-tabs [data-tab="'+tab+'"]');if(button&&!button.classList.contains('page-tab-active'))button.click();setSelect('analyses-period-select',({month:'mois',quarter:'trimestre',year:'annee','30d':'mois',custom:'tout'})[a.defaultPeriod]||a.defaultPeriod,false);document.querySelectorAll('#analyses-vue-kpis .kpi-card').forEach(function(card,index){card.style.display=a.visibleIndicators.indexOf(['revenue','collected','cash','conversion'][index])!==-1?'':'none';});document.querySelectorAll('.analyses-funnel').forEach(function(n){n.style.display=a.showFunnels?'':'none';});document.querySelectorAll('.analyses-panel [id*="donut"],.analyses-panel [id*="chart"]').forEach(function(n){var block=n.closest&&n.closest('.dashboard-block');if(block)block.style.display=a.showCharts?'':'none';});['#analyses-vue-top-clients-body','#analyses-top-devis-body'].forEach(function(sel){document.querySelectorAll(sel+' tr').forEach(function(row,i){row.style.display=i<Number(a.rankingClientCount||5)?'':'none';});});}
+    function applyAll(){applyPaymentGlobals();applyAppearance();applyBrand();applyPageSizes();applyDashboard();applyClients();applyAgenda();applyProductsBilling();applyTreasury();applyAnalytics();}
+    function schedule(){if(pending)return;pending=true;setTimeout(function(){pending=false;applyAll();},0);}
+    applyAppearance();document.addEventListener('DOMContentLoaded',function(){applyAll();document.addEventListener('click',schedule);document.addEventListener('change',schedule);document.addEventListener('input',schedule);});window.addEventListener('load',applyAll);store.subscribe(applyAll);
+    window.COCKPIT_SETTINGS_RUNTIME={apply:applyAll,badgeClass:function(c){return'badge-'+c;},companySnapshot:companySnapshot,effectiveTreasuryAlerts:treasuryAlerts,formatNextNumber:nextNumber};
 })();

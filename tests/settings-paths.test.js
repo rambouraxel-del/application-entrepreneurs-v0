@@ -1,0 +1,18 @@
+'use strict';
+const assert=require('assert'),fs=require('fs'),path=require('path');
+const ROOT=path.resolve(__dirname,'..');
+const bootstrap=fs.readFileSync(path.join(ROOT,'js/demo-config.js'),'utf8');
+const match=bootstrap.match(/var files=\[([^\]]+)\]/);
+assert(match,'bootstrap file list');
+const files=Array.from(match[1].matchAll(/'([^']+)'/g)).map(m=>m[1]);
+for(const file of files) assert(fs.existsSync(path.join(ROOT,'js',file)),file+' missing');
+assert(fs.existsSync(path.join(ROOT,'css/preferences.css')),'preferences.css missing');
+const css=fs.readFileSync(path.join(ROOT,'css/preferences.css'),'utf8');
+for(const token of ['data-cockpit-density','data-cockpit-accent','--color-primary']) assert(css.includes(token),token+' missing');
+const referentials=fs.readFileSync(path.join(ROOT,'js/settings-referentials.js'),'utf8');
+assert(!referentials.includes('settings-generated-alert'),'referentials must not inject alerts');
+const alerts=fs.readFileSync(path.join(ROOT,'js/settings-alerts.js'),'utf8');
+assert(alerts.includes("list.innerHTML=''"),'single alert list replacement');
+const consumer=fs.readFileSync(path.join(ROOT,'js/settings-consumers.js'),'utf8');
+for(const hook of ['COCKPIT_DEVIS_CALC','COCKPIT_FACTURE_CALC','COCKPIT_TRESORERIE_CALC','COCKPIT_LIST_PAGINATION','applyAgenda','applyClients','applyAnalytics']) assert(consumer.includes(hook),hook+' propagation missing');
+console.log('settings-paths.test.js: OK');
