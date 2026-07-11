@@ -2,6 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Fiche rendez-vous — Cockpit Entrepreneur</title>
     <link rel="stylesheet" href="../css/styles.css">
 </head>
@@ -51,6 +52,14 @@
                     <p class="page-subtitle">Préparez et suivez ce rendez-vous commercial.</p>
                 </div>
                 <div class="topbar-actions">
+                    <div class="topbar-search">
+                        <span class="topbar-search-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg></span>
+                        <input type="text" placeholder="Rechercher...">
+                    </div>
+                    <button type="button" class="topbar-icon-btn btn-wip" aria-label="Notifications">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                        <span class="topbar-badge">3</span>
+                    </button>
                     <a href="settings.html" class="topbar-icon-btn" aria-label="Paramètres">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.32 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                     </a>
@@ -58,11 +67,18 @@
             </header>
 
             <main class="page-content">
-                <div class="page-toolbar" style="justify-content: space-between;">
+                <div class="fiche-top-row">
+                    <nav class="breadcrumb" aria-label="Fil d'Ariane">
+                        <a href="agenda.html">Agenda</a>
+                        <span>›</span>
+                        <span class="breadcrumb-current">Fiche rendez-vous</span>
+                    </nav>
                     <a href="agenda.html" class="fiche-back-link">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg>
                         Retour à l'agenda
                     </a>
+                </div>
+                <div class="page-toolbar">
                     <div class="document-page-actions-right">
                         <a href="#" class="btn-secondary" id="rdv-pdf-btn" target="_blank" style="display: none;">Exporter la fiche de préparation en PDF</a>
                         <button type="button" class="btn-danger" id="rdv-delete-btn" style="display: none;">Supprimer le rendez-vous</button>

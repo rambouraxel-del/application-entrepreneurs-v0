@@ -32,7 +32,7 @@ Ce document regroupe les idées et pistes identifiées au fil du projet, non tra
 
 ## Agenda
 - Résolu en V0.7 : liaison dynamique fiche client ↔ Agenda (bloc "Rendez-vous liés" réel, `agenda.html?client=slug`), ciblage d'un rendez-vous précis (`fiche-rdv.html?rdv=<id>`) et gestion réelle des rendez-vous (création, modification, suppression, en mémoire de page).
-- Vue semaine ou calendrier visuel interactif : volontairement non développée en V0.7 (priorité donnée à une vue liste fiable plutôt qu'à un calendrier jugé fragile pour cette version) ; à réévaluer si le besoin se confirme.
+- Résolu en V0.7.1 : vues calendrier Jour/Semaine/Mois réellement interactives (navigation temporelle par date picker, sélecteurs semaine/mois+année, panneau résumé en vue Jour), en complément de la vue Liste existante depuis la V0.7.
 - Bouton "Dupliquer ce rendez-vous" : proposé en analyse V0.7 mais explicitement non développé (décision du chef de projet), pourrait être utile pour les rendez-vous récurrents avec un même client.
 - **`RDV_DETAILS` (V0.7) reste une source statique en mémoire**, limitée à 6 rendez-vous fictifs : mêmes limites que `CLIENT_DETAILS`/`DEVIS_DETAILS`/`FACTURE_DETAILS`, à remplacer par une vraie source de données le jour où le projet en aura une.
 - **Limite assumée de la persistance en mémoire de page** : un rendez-vous (et son devis brouillon auto-créé) créé en direct pendant une session n'existe que dans la page courante ; ouvrir son devis lié dans un nouvel onglet ou après un rechargement affiche l'état "Document introuvable" déjà géré proprement — comportement identique à celui de toute création réelle ailleurs dans l'application, pas une limite propre à l'Agenda.
@@ -100,13 +100,16 @@ Ce document regroupe les idées et pistes identifiées au fil du projet, non tra
 - Travail futur sur l'identité visuelle et le logo (au-delà de l'affinage réalisé en V0.1.1).
 - Amélioration responsive plus poussée (tablette/mobile), au-delà des ajustements déjà en place.
 - Ajustements de design après retours utilisateurs réels.
+- Résolu en V0.10.1 : incohérences de structure/composants identifiées lors de l'audit transversal (résumés du tableau de bord hors gabarit, fiche rendez-vous sans fil d'Ariane ni recherche/notification en topbar, ordre des boutons d'action différent entre l'éditeur de devis et l'éditeur de facture, ordre des icônes KPI de la Trésorerie, classe CSS orpheline sur Analyses).
+- **Refonte structurelle complète du tableau de bord** : explicitement reportée à une future V0.10.2 (la V0.10.1 s'est limitée à des ajustements de cohérence mineurs, sans nouvelle organisation ni nouveau bloc).
+- Liste "Devis" de `facturation.html` toujours codée en HTML statique (lignes en dur), contrairement à l'onglet "Factures" qui s'appuie sur un `tbody` rempli en JavaScript avec état vide dédié — même limite que la factorisation devis/facture déjà notée plus haut (section Facturation), volontairement non traitée en V0.10.1 (changement de pipeline de rendu, pas un ajustement purement visuel).
 
 ## Technique
 - Vraie base de données et sauvegarde des informations.
 - Authentification réelle (comptes, sessions, sécurité).
-- Recherche et filtres fonctionnels, transverses à l'application.
+- Recherche globale unique, transverse à plusieurs modules à la fois (distincte des recherches/filtres par page déjà réels depuis la V0.4.1 sur Clients, Produits/Services, Agenda, Devis et Factures).
 - Réflexion sur la sécurité et les droits d'accès utilisateurs.
-- Dépôt GitHub distant à créer (voir `docs/versioning.md`).
+- Résolu (régularisation Git de juillet 2026) : dépôt GitHub distant créé et poussé (`https://github.com/rambouraxel-del/application-entrepreneurs-v0.git`), voir `docs/versioning.md`.
 
 ## Idées long terme
 - Application mobile / adaptation mobile complète.

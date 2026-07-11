@@ -31,7 +31,8 @@ Cette roadmap présente les phases prévues après la V0 initiale (livrée à l'
 | V0.9 | Analyses et performance (renommage du module Finance) : cockpit d'analyse transversal recoupant Facturation/Clients/Agenda/Trésorerie | Validée |
 | V0.9.1 | Refonte visuelle du module Analyses (donuts, tunnel de conversion, cartes de synthèse), sans changement fonctionnel | Validée |
 | V0.9.2 | Configuration personnalisable de démonstration (`js/demo-config.js`) : identité fictive centralisée, connectée aux éléments les plus visibles pendant une démo | Validée |
-| V0.10 | Cohérence globale des parcours / Dashboard | À venir |
+| V0.10.1 | Cohérence globale UI/UX : harmonisation de composants communs, corrections responsive minimales, nettoyage documentaire, sans nouveau module ni changement métier | En attente de validation visuelle |
+| V0.10.2 | Refonte structurelle du tableau de bord | À venir |
 | V1 | Version fonctionnelle stable | À venir |
 
 ## Principes
@@ -79,3 +80,7 @@ L'ordre fixé par la précision précédente (V0.7 Trésorerie, V0.8 Agenda) a �
 **V0.8** construit le module Trésorerie (`pages/tresorerie.html`), jusque-là un simple placeholder depuis la V0.2 : 4 cartes KPI (solde estimé, à encaisser, à décaisser, solde prévisionnel), calculées depuis les factures/paiements réels de la Facturation et des opérations de trésorerie manuelles (charges prévues, encaissements/décaissements divers) ; bloc "Prochains mouvements" (timeline), tableaux "Charges prévues" et "Factures à encaisser", graphique de projection du solde et bloc d'alertes. Volontairement simple : pas de comptabilité complète, pas de rapprochement bancaire.
 
 **V0.9** renomme le module Finance (placeholder depuis la V0.2) en **Analyses** et en fait un cockpit d'analyse transversal (`pages/analyses.html`) plutôt qu'un module de comptabilité : cinq onglets (Vue d'ensemble, Commercial, Clients, Activité, Trésorerie) qui recoupent les données déjà construites dans les modules Facturation, Clients, Agenda et Trésorerie, sans dupliquer leurs calculs. La V0.9.1 (voir `docs/changelog.md`) affine ensuite le rendu visuel de ce module (donuts, tunnel de conversion, cartes de synthèse), sans changement fonctionnel.
+
+## Précision importante — V0.10 scindée en V0.10.1 et V0.10.2
+
+La phase V0.10 "Cohérence globale des parcours/Dashboard" annoncée dans les précisions précédentes est scindée en deux : **V0.10.1** traite la cohérence transversale UI/UX de l'ensemble des pages déjà construites (structure, composants communs, responsive minimal, documentation) sans toucher au tableau de bord au-delà de petites incohérences visuelles évidentes ; **V0.10.2** (à venir) traitera spécifiquement la refonte structurelle du tableau de bord, explicitement hors périmètre de la V0.10.1 pour ne pas mélanger un ajustement transversal léger avec une refonte de module plus lourde. Voir `docs/changelog.md` pour le détail des constats et corrections de la V0.10.1.

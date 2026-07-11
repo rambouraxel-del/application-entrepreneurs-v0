@@ -2,6 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Facture — Cockpit Entrepreneur</title>
     <link rel="stylesheet" href="../css/styles.css">
 </head>
@@ -180,9 +181,9 @@
                         <p class="modal-hint" id="facture-payments-hint" style="display: none;"></p>
                     </div>
 
-                    <div class="page-toolbar" id="facture-actions-bar" style="justify-content: flex-start;">
-                        <a href="#" class="btn-secondary" id="facture-preview-btn" target="_blank" style="display: none;">Aperçu / Imprimer</a>
+                    <div class="page-toolbar page-toolbar-start" id="facture-actions-bar">
                         <button type="button" class="btn-primary" id="facture-emit-btn">Émettre la facture</button>
+                        <a href="#" class="btn-secondary" id="facture-preview-btn" target="_blank" style="display: none;">Aperçu / Imprimer</a>
                         <button type="button" class="btn-secondary btn-wip" id="facture-save-btn">Enregistrer le brouillon</button>
                         <button type="button" class="btn-danger btn-wip" id="facture-delete-btn">Supprimer le brouillon</button>
                     </div>

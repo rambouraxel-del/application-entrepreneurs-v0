@@ -283,6 +283,8 @@ svg {
 .topbar-actions {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
     gap: 14px;
 }
 
@@ -421,6 +423,10 @@ svg {
     gap: 12px;
 }
 
+.page-toolbar-start {
+    justify-content: flex-start;
+}
+
 /* Cartes et blocs du tableau de bord */
 
 .dashboard-kpis,
@@ -486,6 +492,9 @@ svg {
     font-weight: 700;
     color: var(--color-text);
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
 .kpi-variation {
@@ -634,6 +643,17 @@ svg {
 
 .dashboard-row .dashboard-block {
     margin-top: 0;
+}
+
+/* Résumé de statistiques pleine largeur (V0.10.1) : variante de
+   .devis-summary-row sans le plafonnement à 320px / alignement à droite,
+   pour les blocs "Aperçu ..." du tableau de bord qui occupent toute la
+   largeur de leur .dashboard-block. */
+
+.dashboard-stats-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 /* Agenda du jour (V0.1.1) */
@@ -3292,5 +3312,13 @@ a.tresorerie-timeline-item:hover {
 
     .topbar-search {
         display: none;
+    }
+
+    /* Filet de sécurité (V0.10.1) : les tableaux de données (.data-table)
+       et autres blocs larges non redessinés pour le mobile défilent
+       horizontalement dans leur zone de contenu plutôt que de casser la
+       mise en page ou de forcer un défilement de toute la page. */
+    .page-content {
+        overflow-x: auto;
     }
 }

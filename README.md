@@ -1,6 +1,6 @@
 # Application Entrepreneurs — V0
 
-> **Note de version — V0.1 à V0.9.2 (dernière version sur `main`)** : l'interface a fait l'objet d'une refonte graphique globale (V0.1), de corrections ciblées sur le tableau de bord (V0.1.1), d'une structuration technique Git/GitHub (V0.1.2), d'une réorganisation de la navigation principale (V0.2), d'une connexion du tableau de bord à ces modules (V0.3), d'un module Clients/CRM complet avec fiche détaillée et interactions préparatoires (V0.4.1 à V0.4.3.1), d'un module Produits/Services complet avec catalogue, fiche détaillée et interactions préparatoires (V0.5.1 à V0.5.3.1), de l'ajout d'une pagination simple et réutilisable sur les listes Clients et Produits/Services (V0.5.4), du module Facturation : une page Paramètres entreprise et un module Devis complet (V0.6.1, validée, taguée `v0.6.1`), un module Factures & Paiements (V0.6.2, validée, taguée `v0.6.2`), des documents imprimables/PDF pour les devis et les factures via l'impression navigateur (V0.6.3, validée, taguée `v0.6.3`), l'intégration commerciale de ce module dans le reste de l'application — fiche client, tableau de bord, statistiques commerciales, navigation croisée (V0.6.4, validée, taguée `v0.6.4`), un module Agenda commercial complet — rendez-vous, préparation commerciale, communication client, devis brouillon lié, historique, export PDF (V0.7, validée, taguée `v0.7`), des vues calendrier Jour/Semaine/Mois et un formulaire de rendez-vous enrichi (proposition commerciale, recherche client, navigation temporelle fiable) (V0.7.1, validée, taguée `v0.7.1`), un module Trésorerie complet — solde estimé, à encaisser/à décaisser, prochains mouvements, charges prévues, factures à encaisser, projection et alertes de trésorerie (V0.8, validée, taguée `v0.8`), et enfin le renommage du module Finance en **Analyses** — un cockpit d'analyse transversal (Vue d'ensemble, Commercial, Clients, Activité, Trésorerie) qui recoupe les données déjà existantes sans les dupliquer, avec une refonte visuelle en V0.9.1 (V0.9 et V0.9.1, validées, taguées `v0.9` et `v0.9.1`), et enfin une configuration de démonstration centralisée dans `js/demo-config.js` pour adapter rapidement l'identité fictive affichée à un prospect (V0.9.2, validée, taguée `v0.9.2`). Le tout démontré sur des données fictives, sans aucune persistance réelle (quelques actions comme l'émission d'une facture, l'ajout d'un paiement ou la création d'un rendez-vous sont réelles en mémoire de page, mais rien ne survit à un rechargement). Voir `docs/changelog.md` pour le détail de chaque étape et `docs/versioning.md` pour la méthode de suivi Git recommandée.
+> **Note de version — V0.1 à V0.9.2 (dernière version sur `main`) ; V0.10.1 en cours de validation sur la branche `v0.10.1-coherence-ui-ux`** : l'interface a fait l'objet d'une refonte graphique globale (V0.1), de corrections ciblées sur le tableau de bord (V0.1.1), d'une structuration technique Git/GitHub (V0.1.2), d'une réorganisation de la navigation principale (V0.2), d'une connexion du tableau de bord à ces modules (V0.3), d'un module Clients/CRM complet avec fiche détaillée et interactions préparatoires (V0.4.1 à V0.4.3.1), d'un module Produits/Services complet avec catalogue, fiche détaillée et interactions préparatoires (V0.5.1 à V0.5.3.1), de l'ajout d'une pagination simple et réutilisable sur les listes Clients et Produits/Services (V0.5.4), du module Facturation : une page Paramètres entreprise et un module Devis complet (V0.6.1, validée, taguée `v0.6.1`), un module Factures & Paiements (V0.6.2, validée, taguée `v0.6.2`), des documents imprimables/PDF pour les devis et les factures via l'impression navigateur (V0.6.3, validée, taguée `v0.6.3`), l'intégration commerciale de ce module dans le reste de l'application — fiche client, tableau de bord, statistiques commerciales, navigation croisée (V0.6.4, validée, taguée `v0.6.4`), un module Agenda commercial complet — rendez-vous, préparation commerciale, communication client, devis brouillon lié, historique, export PDF (V0.7, validée, taguée `v0.7`), des vues calendrier Jour/Semaine/Mois et un formulaire de rendez-vous enrichi (proposition commerciale, recherche client, navigation temporelle fiable) (V0.7.1, validée, taguée `v0.7.1`), un module Trésorerie complet — solde estimé, à encaisser/à décaisser, prochains mouvements, charges prévues, factures à encaisser, projection et alertes de trésorerie (V0.8, validée, taguée `v0.8`), le renommage du module Finance en **Analyses** — un cockpit d'analyse transversal (Vue d'ensemble, Commercial, Clients, Activité, Trésorerie) qui recoupe les données déjà existantes sans les dupliquer, avec une refonte visuelle en V0.9.1 (V0.9 et V0.9.1, validées, taguées `v0.9` et `v0.9.1`), une configuration de démonstration centralisée dans `js/demo-config.js` pour adapter rapidement l'identité fictive affichée à un prospect (V0.9.2, validée, taguée `v0.9.2`), et enfin une passe transversale de cohérence visuelle et ergonomique — harmonisation de composants communs (résumés du tableau de bord, ordre des actions des éditeurs devis/facture, fil d'Ariane de la fiche rendez-vous, icônes KPI de la Trésorerie) sans ajout de module ni changement de règle métier (V0.10.1, en attente de validation visuelle). Le tout démontré sur des données fictives, sans aucune persistance réelle (quelques actions comme l'émission d'une facture, l'ajout d'un paiement ou la création d'un rendez-vous sont réelles en mémoire de page, mais rien ne survit à un rechargement). Voir `docs/changelog.md` pour le détail de chaque étape et `docs/versioning.md` pour la méthode de suivi Git recommandée.
 
 ## Objectif du projet
 Cette application web vise à accompagner les entrepreneurs, indépendants et dirigeants de TPE dans le pilotage quotidien de leur activité, en centralisant les informations essentielles (clients, factures, agenda, trésorerie, indicateurs) au sein d'une interface simple et professionnelle — un véritable cockpit de pilotage.
@@ -61,45 +61,53 @@ Aucune installation n'est nécessaire : le prototype fonctionne directement dans
 
 ## Limites de la V0
 
-La V0 ne contient pas :
-- de vraie authentification, création de compte ou récupération de mot de passe ;
-- de vraie base de données ni de vraie sauvegarde ;
-- de création, modification ou suppression réelle de client, rendez-vous, devis ou facture ;
-- de modification réelle des paramètres ;
-- de recherche ni de filtres fonctionnels ;
-- d'exports ;
-- de calculs dynamiques ;
-- de notifications réelles ;
-- de personnalisation réelle des indicateurs ;
-- de version mobile complète (le responsive n'était pas prioritaire pour cette version) ;
-- d'intelligence artificielle intégrée au produit.
+Après plusieurs itérations (V0.1 à V0.10.1), la V0 dépasse largement le simple prototype cliquable sur de nombreux écrans : beaucoup d'interactions sont réellement fonctionnelles, mais **rien n'est jamais persistant**. Voici l'état réel, catégorie par catégorie.
+
+**Interactions réellement fonctionnelles (en mémoire de page, jusqu'au rechargement)** :
+- recherche et filtres fonctionnels sur Clients, Produits/Services, Agenda, Devis et Factures, avec pagination réelle sur les listes Clients, Produits/Services et Agenda ;
+- création, modification, duplication, versionnement d'un devis, conversion en facture ;
+- émission réelle d'une facture (numérotation, verrouillage) et ajout de paiements avec recalcul immédiat des montants ;
+- création et suivi d'un rendez-vous (statut, priorité, opportunité, préparation commerciale, communication client, devis brouillon lié) ;
+- ajout d'une opération de trésorerie avec recalcul immédiat des soldes et alertes ;
+- changement de statut et ajout de notes sur les fiches client et produit/service, via de vraies modales ;
+- export PDF des documents (devis, facture, fiche de préparation RDV) via l'impression navigateur.
+
+**Fonctionnalités qui restent en Work in progress** (pop-up dédié au clic) :
+- création de compte client, gestion des utilisateurs ;
+- personnalisation réelle des indicateurs du tableau de bord, notifications réelles ;
+- modification des paramètres généraux (seule la page "Informations de l'entreprise" est réelle, depuis la V0.6.1) ;
+- exports de données hors documents imprimables ;
+- annulation d'une facture déjà émise (renvoyée à un futur module Avoirs) ;
+- menu "Enregistrer" (brouillon/version définitive) d'un devis — seule l'action "Créer une nouvelle version" est réelle.
+
+**Absence de persistance durable** : aucune donnée modifiée (client, devis, facture, rendez-vous, opération de trésorerie, note, paramètre) ne survit à un rechargement de la page. Les données affichées par défaut sont fictives et se réinitialisent à chaque chargement.
+
+**Absence de backend et de base de données** : la V0 est un prototype 100 % front-end (HTML/CSS/JavaScript vanilla), sans serveur, sans API et sans base de données réelle. `pages/database.html` est une page de démonstration statique, non reliée à la navigation ni aux données affichées ailleurs.
+
+**Absence d'authentification réelle** : la page de connexion est fictive (aucune vérification d'identifiants, aucune session, aucun contrôle d'accès).
+
+**Absence actuelle d'intelligence artificielle intégrée** : aucune fonctionnalité d'IA (suggestion, génération, scoring, assistant) n'est intégrée au produit à ce stade.
 
 ## Suggestions d'amélioration (non appliquées)
 
 Ces pistes sont identifiées pour information uniquement. Elles n'ont pas été développées et nécessitent une validation avant toute mise en œuvre :
 - ajustements de design après retours utilisateurs ;
-- amélioration ou enrichissement du tableau de bord ;
-- refonte ou ajustement de certaines pages secondaires ;
-- activation future des recherches et filtres ;
-- création de fiches clients détaillées ;
-- création réelle de rendez-vous, devis et factures ;
-- ajout d'une vraie base de données et d'une sauvegarde ;
-- gestion des utilisateurs ;
-- amélioration responsive/mobile ;
-- réflexion sur la sécurité et les droits d'accès ;
+- refonte structurelle complète du tableau de bord (prévue pour une future V0.10.2) ;
+- ajout d'une vraie base de données et d'une sauvegarde durable ;
+- gestion des utilisateurs et des droits d'accès ;
+- amélioration responsive/mobile complète, au-delà du minimum couvert par la V0.10.1 ;
+- réflexion sur la sécurité ;
 - préparation du cahier des charges V1 ;
-- architecture à composants ou templates pour réduire la duplication HTML actuelle (barre d'onglets notamment), si le projet évolue vers un outillage plus avancé qu'une V0 statique.
+- architecture à composants ou templates pour réduire la duplication HTML actuelle (structure des éditeurs devis/facture notamment), si le projet évolue vers un outillage plus avancé qu'une V0 statique.
 
 ## Points à prévoir pour la V1 (base de réflexion, non définitif)
 
-- vraie gestion des clients, de l'agenda et de la facturation ;
-- centralisation réelle des données (bases de données) ;
-- sauvegarde des informations ;
-- recherche et filtres fonctionnels ;
-- paramétrage réel des objectifs ;
+- persistance réelle (backend + base de données) des actions déjà fonctionnelles en mémoire (clients, agenda, facturation, trésorerie) ;
+- sauvegarde durable des informations ;
+- paramétrage réel des objectifs et des paramètres généraux ;
 - personnalisation réelle des indicateurs du tableau de bord ;
-- amélioration responsive ;
-- réflexion sur la sécurité et les accès utilisateurs ;
+- amélioration responsive complète (mobile) ;
+- réflexion sur la sécurité et les accès utilisateurs (authentification réelle) ;
 - réflexion sur la structure technique future (architecture modulaire réelle, comme décrite dans la charte technique).
 
 ## Pour aller plus loin
