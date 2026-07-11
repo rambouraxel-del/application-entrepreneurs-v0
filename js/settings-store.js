@@ -136,6 +136,61 @@
         });
         return config;
     }
+    function migrateAgendaStatusCompatibility(config) {
+        if (!isPlainObject(config) || !isPlainObject(config.agenda) || !Array.isArray(config.agenda.statuses)) return config;
+        var agenda = config.agenda;
+        var statuses = agenda.statuses;
+        var oldNoFollowUpWasCancelled = false;
+
+        statuses.forEach(function (item) {
+            if (!isPlainObject(item)) return;
+            var id = String(item.id || '');
+            var legacyId = String(item.legacyId || '');
+            var label = String(item.label || '');
+            var isNoFollowUp = id === 'no-follow-up' || id === 'sans-suite' || id === 'sans_suite' ||
+                legacyId === 'sans-suite' || legacyId === 'sans_suite' ||
+                (id === 'cancelled' && /sans\s*suite/i.test(label));
+
+            if (isNoFollowUp) {
+                if (id === 'cancelled') oldNoFollowUpWasCancelled = true;
+                item.id = 'no-follow-up';
+                item.legacyId = 'sans_suite';
+                if (!item.label) item.label = 'Sans suite';
+            } else if (id === 'annule' || legacyId === 'annule') {
+                item.id = 'cancelled';
+                item.legacyId = 'annule';
+                if (!item.label) item.label = 'Annulé';
+            }
+        });
+
+        var seen = {};
+        statuses = statuses.filter(function (item) {
+            if (!isPlainObject(item)) return true;
+            var token = item.legacyId === 'annule' || item.id === 'annule' || item.id === 'cancelled' ? 'annule' :
+                item.legacyId === 'sans_suite' || item.legacyId === 'sans-suite' || item.id === 'sans_suite' || item.id === 'sans-suite' || item.id === 'no-follow-up' ? 'sans_suite' : '';
+            if (!token) return true;
+            if (seen[token]) return false;
+            seen[token] = true;
+            return true;
+        });
+
+        function defaultStatus(legacyId) {
+            return clone(defaults.agenda.statuses.filter(function (item) { return item.legacyId === legacyId; })[0]);
+        }
+        if (!seen.annule) {
+            var noFollowUpIndex = statuses.findIndex(function (item) { return isPlainObject(item) && item.legacyId === 'sans_suite'; });
+            var cancelled = defaultStatus('annule');
+            if (noFollowUpIndex >= 0) statuses.splice(noFollowUpIndex, 0, cancelled);
+            else statuses.push(cancelled);
+        }
+        if (!seen.sans_suite) statuses.push(defaultStatus('sans_suite'));
+
+        agenda.statuses = statuses;
+        if (agenda.initialStatus === 'sans-suite' || agenda.initialStatus === 'sans_suite') agenda.initialStatus = 'no-follow-up';
+        else if (agenda.initialStatus === 'annule') agenda.initialStatus = 'cancelled';
+        else if (agenda.initialStatus === 'cancelled' && oldNoFollowUpWasCancelled) agenda.initialStatus = 'no-follow-up';
+        return config;
+    }
     function migrate(raw) {
         if (!isPlainObject(raw)) return clone(defaults);
         var version = Number(raw.schemaVersion || 0);
@@ -143,7 +198,7 @@
         var migrated = clone(raw);
         if (version < 1) migrated.schemaVersion = 1;
         if (version < 2) migrated.schemaVersion = 2;
-        return migrated;
+        return migrateAgendaStatusCompatibility(migrated);
     }
     function load() {
         try {
@@ -156,7 +211,7 @@
         }
     }
     function persist(next, source) {
-        current = normalizeCollections(sanitizeObject(next, defaults, false, '', []), false, []);
+        current = normalizeCollections(sanitizeObject(migrateAgendaStatusCompatibility(clone(next)), defaults, false, '', []), false, []);
         current.schemaVersion = defaults.schemaVersion;
         localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
         listeners.slice().forEach(function (listener) { try { listener(clone(current), source || 'update'); } catch (error) { console.error(error); } });
@@ -209,7 +264,7 @@
         if (!isPlainObject(raw)) return { valid: false, errors: ['Le fichier doit contenir un objet JSON de configuration.'], normalized: null, summary: null };
         if (own(raw, 'schemaVersion') && !Number.isFinite(Number(raw.schemaVersion))) errors.push('schemaVersion doit être numérique.');
         if (Number(raw.schemaVersion || 0) > Number(defaults.schemaVersion)) errors.push('Version de schéma plus récente que celle prise en charge.');
-        var normalized = sanitizeObject(raw, defaults, true, '', errors);
+        var normalized = sanitizeObject(migrate(raw), defaults, true, '', errors);
         normalized.schemaVersion = defaults.schemaVersion;
         normalizeCollections(normalized, true, errors);
         return { valid: errors.length === 0, errors: errors, normalized: normalized, summary: errors.length ? null : summarizeImport(data, normalized) };
