@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Paramètres — Cockpit Entrepreneur</title>
+    <title>Centre de paramètres — Cockpit Entrepreneur</title>
     <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/settings.css">
 </head>
 <body>
     <div class="app-shell">
@@ -45,74 +46,85 @@
             </nav>
         </aside>
 
-        <div class="main">
-            <header class="topbar">
+        <div class="main settings-page-main">
+            <header class="topbar settings-topbar">
                 <div class="topbar-greeting">
-                    <h1>Paramètres</h1>
-                    <p class="page-subtitle">Configurez votre espace de travail.</p>
+                    <h1>Centre de paramètres</h1>
+                    <p class="page-subtitle">Centralisez les réglages de votre espace et de vos modules.</p>
                 </div>
-                <div class="topbar-actions">
-                    <div class="topbar-search">
-                        <span class="topbar-search-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg></span>
-                        <input type="text" placeholder="Rechercher...">
-                    </div>
-                    <button type="button" class="topbar-icon-btn btn-wip" aria-label="Notifications">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-                        <span class="topbar-badge">3</span>
-                    </button>
-                    <a href="settings.html" class="topbar-icon-btn topbar-icon-btn-active" aria-label="Paramètres">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.32 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                    </a>
+                <div class="topbar-actions settings-topbar-actions">
+                    <label class="settings-search-wrap" for="settings-search">
+                        <span aria-hidden="true">⌕</span>
+                        <input id="settings-search" type="search" placeholder="TVA, horaires, objectif, statut client…" autocomplete="off">
+                    </label>
+                    <a href="dashboard.html" class="settings-back-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg><span>Retour à l’application</span></a>
                 </div>
             </header>
 
-            <main class="page-content">
-                <section class="settings-grid">
-                    <div class="dashboard-block settings-card">
-                        <h2>Informations de l'entreprise</h2>
-                        <p>Nom, logo, coordonnées de votre entreprise.</p>
-                        <a href="parametres-entreprise.html" class="btn-secondary">Modifier</a>
-                    </div>
-                    <div class="dashboard-block settings-card">
-                        <h2>Préférences d'affichage</h2>
-                        <p>Thème, densité d'information, mise en page.</p>
-                        <button type="button" class="btn-secondary btn-wip">Modifier</button>
-                    </div>
-                    <div class="dashboard-block settings-card">
-                        <h2>Notifications</h2>
-                        <p>Choix des alertes et rappels reçus.</p>
-                        <button type="button" class="btn-secondary btn-wip">Modifier</button>
-                    </div>
-                    <div class="dashboard-block settings-card">
-                        <h2>Compte utilisateur</h2>
-                        <p>Identifiants et informations personnelles.</p>
-                        <p class="settings-card-detail" id="settings-compte-detail"></p>
-                        <button type="button" class="btn-secondary btn-wip">Modifier</button>
-                    </div>
-                    <div class="dashboard-block settings-card">
-                        <h2>Objectifs mensuels</h2>
-                        <p>Objectifs de chiffre d'affaires et de trésorerie.</p>
-                        <p class="settings-card-detail" id="settings-objectif-detail"></p>
-                        <button type="button" class="btn-secondary btn-wip">Modifier</button>
-                    </div>
-                    <div class="dashboard-block settings-card">
-                        <h2>Sécurité</h2>
-                        <p>Mot de passe et paramètres de connexion.</p>
-                        <button type="button" class="btn-secondary btn-wip">Modifier</button>
-                    </div>
-                    <div class="dashboard-block settings-card">
-                        <h2>Pilotage et activité</h2>
-                        <p>Période de pilotage, horizon de trésorerie, plage horaire de l'agenda et graphique par défaut du tableau de bord.</p>
-                        <p class="settings-card-detail" id="settings-pilotage-detail"></p>
-                        <button type="button" class="btn-secondary btn-wip">Modifier</button>
-                    </div>
-                </section>
+            <main class="page-content settings-page-content">
+                <div class="settings-local-banner" role="note">
+                    <strong>Configuration enregistrée dans ce navigateur uniquement.</strong>
+                    <span>Les réglages sont conservés localement sur cet appareil.</span>
+                </div>
+
+                <div id="settings-search-results" class="settings-search-results" hidden></div>
+
+                <div class="settings-layout">
+                    <nav class="settings-secondary-nav" aria-label="Sections des paramètres" id="settings-nav">
+                        <a href="#home" data-section-link="home" class="settings-nav-home">Vue d’accueil</a>
+                        <p class="settings-nav-group">Mon espace</p>
+                        <a href="#profile" data-section-link="profile">Profil utilisateur</a>
+                        <a href="#company" data-section-link="company">Entreprise</a>
+                        <a href="#appearance" data-section-link="appearance">Apparence</a>
+                        <p class="settings-nav-group">Pilotage</p>
+                        <a href="#dashboard" data-section-link="dashboard">Tableau de bord et objectifs</a>
+                        <a href="#alerts" data-section-link="alerts">Alertes et notifications</a>
+                        <p class="settings-nav-group">Modules</p>
+                        <a href="#clients" data-section-link="clients">Clients</a>
+                        <a href="#agenda" data-section-link="agenda">Agenda</a>
+                        <a href="#products" data-section-link="products">Produits / Services</a>
+                        <a href="#billing" data-section-link="billing">Facturation et documents</a>
+                        <a href="#treasury" data-section-link="treasury">Trésorerie</a>
+                        <a href="#analytics" data-section-link="analytics">Analyses</a>
+                        <p class="settings-nav-group">Système</p>
+                        <a href="#data" data-section-link="data">Maintenance de l’application</a>
+                        <a href="#security" data-section-link="security">Compte et sécurité</a>
+                    </nav>
+
+                    <section class="settings-workspace" aria-live="polite">
+                        <div class="settings-section-header">
+                            <div>
+                                <div class="settings-title-line">
+                                    <h2 id="settings-section-title">Vue d’accueil</h2>
+                                    <span id="settings-dirty-badge" class="settings-dirty-badge" hidden>Modifications non enregistrées</span>
+                                </div>
+                                <p id="settings-section-description" class="settings-section-description"></p>
+                            </div>
+                            <div class="settings-section-actions" id="settings-section-actions">
+                                <button type="button" id="settings-reset-section" class="btn-secondary">Réinitialiser la section</button>
+                                <button type="button" id="settings-save" class="btn-primary" disabled>Enregistrer</button>
+                            </div>
+                        </div>
+                        <div id="settings-validation-summary" class="settings-validation-summary" hidden></div>
+                        <div id="settings-section-content"></div>
+                    </section>
+                </div>
             </main>
         </div>
     </div>
 
+    <div id="settings-modal-overlay" class="settings-modal-overlay" hidden>
+        <div class="settings-modal-card" role="dialog" aria-modal="true" aria-labelledby="settings-modal-title">
+            <div class="settings-modal-header"><h2 id="settings-modal-title"></h2><button type="button" id="settings-modal-close" aria-label="Fermer">×</button></div>
+            <div id="settings-modal-body" class="settings-modal-body"></div>
+            <div id="settings-modal-footer" class="settings-modal-footer"></div>
+        </div>
+    </div>
+    <div id="settings-toast" class="settings-toast" role="status" hidden></div>
+
     <script src="../js/demo-config.js"></script>
     <script src="../js/pilotage-config.js"></script>
     <script src="../js/app.js"></script>
+    <script src="../js/settings-ui.js"></script>
 </body>
 </html>

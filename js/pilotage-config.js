@@ -1,36 +1,27 @@
-// Configuration de pilotage (V0.10.2)
-// Centralise les valeurs par défaut utilisées par le tableau de bord
-// (période de pilotage, horizon de trésorerie, plage horaire de l'agenda,
-// période/indicateur par défaut du graphique de performance).
-//
-// Distincte de js/demo-config.js : demo-config.js porte l'identité fictive
-// d'une démonstration (personne, entreprise...), pilotage-config.js porte
-// des préférences d'affichage génériques, indépendantes du prospect
-// démontré. Chargée avant js/app.js sur les pages qui en dépendent
-// (dashboard.html, settings.html).
-//
-// Comme le reste de la V0, cet objet est rechargé à son état par défaut à
-// chaque changement de page : modifier une valeur ici change le
-// comportement par défaut du prototype, mais aucune interaction utilisateur
-// (ex. la carte "Pilotage et activité" de settings.html) ne peut la
-// modifier durablement, faute de backend ou de persistance. Voir
-// docs/decisions.md pour le choix explicite de ne pas introduire de
-// localStorage.
-
+// Adaptateur de compatibilité V0.10.2 -> V0.11.
 (function () {
-    window.COCKPIT_PILOTAGE_CONFIG = {
-        periodePilotage: 'mois', // 'mois' | '30j' | 'trimestre' | 'custom'
-        periodeCustomDebut: null,
-        periodeCustomFin: null,
+    'use strict';
 
-        horizonTresorerie: 'fin-mois', // 'fin-mois' | 'fin-mois-suivant' | '30j' | '60j' | '90j'
+    function build() {
+        var dashboard = window.COCKPIT_SETTINGS ? window.COCKPIT_SETTINGS.getSection('dashboard') : {};
+        var agenda = window.COCKPIT_SETTINGS ? window.COCKPIT_SETTINGS.getSection('agenda') : {};
+        var mapPeriod = { month: 'mois', '30d': '30j', quarter: 'trimestre', custom: 'custom' };
+        var mapHorizon = { 'end-month': 'fin-mois', 'end-next-month': 'fin-mois-suivant', '30d': '30j', '60d': '60j', '90d': '90j' };
 
-        agendaHeureDebut: '08:00',
-        agendaHeureFin: '19:00',
-        agendaPasHoraire: 30, // 15 | 30 | 60 (minutes)
-        agenda24h: false,
+        window.COCKPIT_PILOTAGE_CONFIG = {
+            periodePilotage: mapPeriod[dashboard.defaultPeriod] || dashboard.defaultPeriod || 'mois',
+            periodeCustomDebut: dashboard.customPeriodStart || null,
+            periodeCustomFin: dashboard.customPeriodEnd || null,
+            horizonTresorerie: mapHorizon[dashboard.cashHorizon] || dashboard.cashHorizon || 'fin-mois',
+            agendaHeureDebut: agenda.startTime || '08:00',
+            agendaHeureFin: agenda.endTime || '19:00',
+            agendaPasHoraire: Number(agenda.slotMinutes) || 30,
+            agenda24h: !!agenda.use24Hour,
+            graphiquePeriodeMois: Number(dashboard.chartMonths) === 12 ? 12 : 6,
+            graphiqueIndicateurDefaut: dashboard.chartIndicator || 'ca_facture'
+        };
+    }
 
-        graphiquePeriodeMois: 6, // 6 | 12
-        graphiqueIndicateurDefaut: 'ca_facture' // 'ca_facture' | 'encaisse' | 'solde_net'
-    };
+    build();
+    if (window.COCKPIT_SETTINGS) window.COCKPIT_SETTINGS.subscribe(build);
 })();

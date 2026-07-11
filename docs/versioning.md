@@ -1,35 +1,34 @@
 # Règles de versioning
 
-Ce document explique simplement comment le projet suit ses versions avec Git. L'objectif est de rester lisible et pratique, pas de mettre en place une organisation complexe.
+## Nommage
 
-## Nommage des versions
+- **V0.x** : phase majeure du prototype.
+- **V0.x.x** : sous-version planifiée ou correction ciblée.
+- **V1** : première version stable avec données persistantes, backend et authentification.
 
-- **V0** : le prototype visuel cliquable initial (étapes 0 à 10, voir `docs/changelog.md`).
-- **V0.x** (ex. V0.1, V0.2...) : une phase majeure du projet, qui correspond en général à une entrée de la roadmap (`docs/roadmap-v0bis.md`) — une refonte graphique, l'ajout d'un module, etc.
-- **V0.x.x** (ex. V0.1.1, V0.1.2...) : une correction ou un ajustement ciblé à l'intérieur d'une phase majeure, qui ne change pas son périmètre global (correction visuelle, structuration technique, petit correctif). Ce même format est aussi utilisé quand une phase majeure est **découpée dès le départ en plusieurs sous-versions** (ex. V0.4.1, V0.4.2, V0.4.3 pour la V0.4 Clients/CRM) : chaque sous-version correspond alors à un sous-périmètre planifié à l'avance, pas à une correction a posteriori.
-- **V1** : la première version fonctionnelle stable, une fois que les modules principaux reposent sur de vraies fonctionnalités (données réelles, sauvegarde, authentification).
+## Commits
 
-## Quand créer un commit
+Un commit doit correspondre à une intention claire et testable. Les commits de correction de la V0.11 sont réalisés sur `v0.11-settings-center`, jamais directement sur `main`.
 
-- Un commit est créé à chaque étape ou correction validée par le chef de projet — pas à chaque petite modification intermédiaire.
-- Le message de commit reprend le numéro de version et une courte description, par exemple :
-  - `v0.1.1 - refonte graphique stabilisée`
-  - `v0.1.2 - structuration technique et documentation projet`
+## Tags
 
-## Quand créer un tag
-
-- Un tag est créé pour marquer une version validée qui représente une étape de référence claire (par exemple la fin d'une phase majeure comme V0.1, ou une correction importante comme V0.1.1).
-- Le tag porte le même nom que la version, par exemple `v0.1.1`.
-- Toutes les corrections mineures n'ont pas nécessairement besoin d'un tag — un commit clair suffit dans ce cas. Le tag est réservé aux moments où l'on veut pouvoir revenir précisément à cet état plus tard.
+Un tag marque uniquement une version validée. Aucun tag `v0.11` ne doit être créé tant que la recette humaine finale n'est pas approuvée.
 
 ## Branches
 
-- `main` contient uniquement les versions validées par le chef de projet — pas de travail en cours instable.
-- Si une phase nécessite plusieurs étapes intermédiaires ou des essais, elle peut être développée sur une branche dédiée (par exemple `v0.2-navigation`), puis fusionnée dans `main` une fois validée.
-- Pour l'instant, tant que chaque phase est validée avant de passer à la suivante (comme c'est le cas depuis le début du projet), tout peut continuer à se faire directement sur `main` : les branches ne sont utiles qu'à partir du moment où plusieurs pistes sont explorées en parallèle.
+- `main` contient la dernière version validée, actuellement V0.10.2.
+- `v0.11-settings-center` contient la V0.11 en revue humaine.
+- Une branche en avance sur `main`, non fusionnée, reste une version en chantier même si ses commits sont propres.
 
-## Distinguer une version validée d'une version en chantier
+## Validation de la V0.11
 
-- Une version **validée** = un commit sur `main`, avec un message de version clair, éventuellement un tag.
-- Une version **en chantier** = soit des modifications non encore committées, soit des commits sur une branche dédiée non encore fusionnée dans `main`.
-- Le fichier `docs/changelog.md` fait référence pour savoir ce qui a été réalisé et validé à chaque étape ; `docs/roadmap-v0bis.md` indique ce qui est prévu ensuite.
+Ordre obligatoire :
+
+1. développement et tests sur la branche dédiée ;
+2. recette humaine finale ;
+3. corrections éventuelles ;
+4. validation explicite du chef de projet ;
+5. merge dans `main` ;
+6. création éventuelle du tag `v0.11`.
+
+La persistance locale de configuration ne transforme pas la V0 en V1 : les données métier restent non persistantes.

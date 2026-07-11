@@ -1,60 +1,52 @@
 # Sommaire du projet
 
-> Ce fichier montre l'arborescence **initiale** de la V0 (livrée à l'étape 10). Le projet a depuis évolué jusqu'à la V0.9.1 (Clients/CRM, Produits/Services, Facturation, Agenda commercial, Trésorerie, Analyses...) — voir `README.md` pour la liste à jour des modules et `docs/changelog.md` pour le détail de chaque étape/version.
-
-Arborescence initiale de la V0 (livrée à l'étape 10) :
-
 ```text
-Application-Entrepreneurs-V0/
-├── index.html            Point d'entrée : redirige vers pages/login.html
-├── README.md             Présentation générale, périmètre, limites et instructions de test
-├── PROJECT_INDEX.md      Ce fichier : sommaire de l'organisation du projet
-│
-├── css/                  Styles visuels de l'application
-│   ├── styles.css        Toute la charte graphique de la V0 (couleurs, cartes, boutons, tableaux, pop-up...)
-│   └── README.md
-│
-├── js/                   Interactions de l'application
-│   ├── app.js            Redirection "Se connecter" + logique centralisée du pop-up "Work in progress"
-│   └── README.md
-│
-├── pages/                Pages principales de la V0
-│   ├── login.html        Page de connexion fictive
-│   ├── dashboard.html    Tableau de bord enrichi (KPI, priorité, agenda, to-do, alertes, notifications, favoris)
-│   ├── clients.html      Page Clients fictive (tableau de 4 clients)
-│   ├── agenda.html       Page Agenda fictive (rendez-vous de la journée)
-│   ├── facturation.html  Page Facturation fictive (tableau de devis/factures)
-│   ├── database.html     Page Base de données fictive (6 cartes de bases centrales)
-│   ├── settings.html     Page Paramètres fictive (6 sections)
-│   └── README.md
-│
-├── components/           Éléments réutilisables de l'interface (réservé, non utilisé dans cette V0 statique)
-│   ├── buttons/
-│   ├── cards/
-│   ├── tables/
-│   ├── forms/
-│   ├── modals/
-│   └── README.md
-│
-├── assets/               Ressources graphiques (vide à ce stade, aucune image/icône intégrée)
-│   ├── icons/
-│   ├── images/
-│   └── README.md
-│
-└── docs/                 Documentation interne du projet
-    ├── changelog.md      Détail de chaque étape réalisée (étapes 0 à 10)
-    ├── decisions.md      Décisions techniques et de conception prises pendant le développement
-    └── README.md
+application-entrepreneurs-v0/
+├── index.html
+├── README.md
+├── PROJECT_INDEX.md
+├── css/
+│   ├── styles.css              Charte globale historique
+│   ├── preferences.css         Densité et accent V0.11, chargés sur toutes les pages
+│   ├── settings.css            Mise en page du Centre de paramètres
+│   └── print.css               Impression des documents
+├── js/
+│   ├── app.js                  Données fictives et moteurs métier V0
+│   ├── demo-config.js          Chargeur commun avant app.js
+│   ├── demo-config-adapter.js  Compatibilité du profil de démonstration
+│   ├── pilotage-config.js      Compatibilité des préférences Dashboard
+│   ├── settings-defaults.js    Schéma v2 et valeurs par défaut
+│   ├── settings-store.js       Persistance locale, migration, import/export
+│   ├── settings-catalog.js     Métadonnées, capacités et recherche
+│   ├── settings-consumers.js   Raccordements aux modules
+│   ├── settings-referentials.js Référentiels configurables
+│   ├── settings-alerts.js      Source unique d'alertes Dashboard
+│   └── settings-ui.js          Interface du Centre de paramètres
+├── pages/
+│   ├── settings.html           Centre de paramètres V0.11
+│   ├── dashboard.html
+│   ├── clients.html / fiche-client.html
+│   ├── agenda.html / fiche-rdv.html / rdv-document.html
+│   ├── produits-services.html / fiche-produit-service.html
+│   ├── facturation.html / devis-* / facture-*
+│   ├── tresorerie.html
+│   └── analyses.html
+├── tests/
+│   ├── settings-v0.11.test.js
+│   ├── settings-runtime.test.js
+│   └── settings-paths.test.js
+└── docs/
+    ├── changelog.md
+    ├── decisions.md
+    ├── roadmap-v0bis.md
+    ├── backlog.md
+    ├── versioning.md
+    └── settings-v0.11.md
 ```
 
-## Comment naviguer dans ce projet
+## Sources de vérité
 
-Chaque dossier contient son propre `README.md` expliquant son rôle précis, ce qui doit y être rangé et les règles à respecter pour les futures modifications.
-
-- Pour comprendre ce qu'est la V0, ses limites et comment la tester : voir `README.md` à la racine.
-- Pour l'historique détaillé du développement, étape par étape : voir `docs/changelog.md`.
-- Pour comprendre les choix techniques et de conception effectués en cours de route : voir `docs/decisions.md`.
-
-## Note sur les dossiers `components/` et `assets/`
-
-Ces deux dossiers existent dans l'arborescence depuis l'étape 1, mais restent vides à l'issue de la V0 : pour cette version statique en HTML/CSS/JS natif, les éléments d'interface (boutons, cartes, tableaux, pop-up) ont été codés directement dans `css/styles.css` et `js/app.js`, avec une duplication volontaire et documentée de certains éléments (barre d'onglets) plutôt qu'un système de composants séparés. Ce choix est expliqué dans `docs/decisions.md` et listé comme piste d'évolution possible pour une version future.
+- Le store V0.11 contient uniquement la configuration locale.
+- `app.js` conserve les données métier fictives et non persistantes.
+- Les paramètres marqués V1 dans le catalogue ne sont pas simulés.
+- `main` reste la branche validée ; la V0.11 demeure sur `v0.11-settings-center` jusqu'à approbation.
