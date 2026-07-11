@@ -73,6 +73,11 @@
 @keyframes settings-highlight { 0%, 55% { box-shadow: 0 0 0 3px rgba(255, 184, 0, .38); background: #fff8df; } 100% { box-shadow: none; } }
 .settings-validation-summary { margin-top: 16px; padding: 11px 13px; border: 1px solid #f2c7c2; border-radius: 9px; background: #fff3f1; color: #9f251d; font-size: 12px; }
 .settings-modal-overlay { position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center; padding: 24px; background: rgba(15, 23, 38, .52); }
+.settings-modal-overlay[hidden],
+.settings-search-results[hidden],
+.settings-toast[hidden],
+.settings-validation-summary[hidden],
+.settings-dirty-badge[hidden] { display: none !important; }
 .settings-modal-card { width: min(560px, 100%); max-height: calc(100vh - 48px); overflow: auto; border-radius: 14px; background: #fff; box-shadow: 0 24px 70px rgba(8, 18, 36, .26); }
 .settings-modal-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 20px; border-bottom: 1px solid #e7eaf0; }
 .settings-modal-header h2 { margin: 0; font-size: 18px; }

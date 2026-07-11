@@ -9,6 +9,9 @@ for(const file of files) assert(fs.existsSync(path.join(ROOT,'js',file)),file+' 
 assert(fs.existsSync(path.join(ROOT,'css/preferences.css')),'preferences.css missing');
 const css=fs.readFileSync(path.join(ROOT,'css/preferences.css'),'utf8');
 for(const token of ['data-cockpit-density','data-cockpit-accent','--color-primary']) assert(css.includes(token),token+' missing');
+const settingsCss=fs.readFileSync(path.join(ROOT,'css/settings.css'),'utf8');
+assert(settingsCss.includes('.settings-modal-overlay[hidden]'),'hidden modal rule missing');
+assert(/\.settings-modal-overlay\[hidden\][\s\S]*?display:\s*none\s*!important/.test(settingsCss),'hidden modal must not be forced visible');
 const referentials=fs.readFileSync(path.join(ROOT,'js/settings-referentials.js'),'utf8');
 assert(!referentials.includes('settings-generated-alert'),'referentials must not inject alerts');
 const alerts=fs.readFileSync(path.join(ROOT,'js/settings-alerts.js'),'utf8');
