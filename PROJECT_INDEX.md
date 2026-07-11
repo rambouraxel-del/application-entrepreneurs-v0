@@ -36,7 +36,8 @@ application-entrepreneurs-v0/
 │   ├── settings-v0.11.test.js
 │   ├── settings-v0.11.1.test.js
 │   ├── settings-runtime.test.js
-│   └── settings-paths.test.js
+│   ├── settings-paths.test.js
+│   └── settings-agenda-statuses.test.js
 ├── package.json                 Script "test" (npm test), sans dépendance externe
 └── docs/
     ├── changelog.md
