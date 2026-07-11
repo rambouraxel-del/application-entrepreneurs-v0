@@ -12,7 +12,7 @@
 
     if (document.readyState === 'loading') {
         files.forEach(function (file) {
-            document.write('<script src="' + base + file + '"><\\/script>');
+            document.write('<script src="' + base + file + '"><\/script>');
         });
         return;
     }
