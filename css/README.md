@@ -1,15 +1,8 @@
 # Dossier css
 
-## Rôle
-Ce dossier contient les fichiers liés à l'apparence visuelle de l'application : couleurs, typographies, espacements, mise en page générale.
+- `styles.css` : charte et composants globaux historiques.
+- `preferences.css` : préférences globales V0.11, notamment densité et couleur d'accent ; cette feuille est chargée sur toutes les pages par `demo-config.js`.
+- `settings.css` : structure spécifique du Centre de paramètres.
+- `print.css` : rendu imprimable des documents.
 
-## Ce qui doit être rangé ici
-- Les feuilles de style (`.css`) de l'application.
-- Les futures variables de charte graphique (couleurs, polices, espacements) une fois centralisées.
-
-## Ce qui ne doit pas être rangé ici
-- Du code d'interaction ou de logique (réservé au dossier `js/`).
-- Du contenu de page (réservé au dossier `pages/`).
-
-## Règles pour les futures modifications
-La charte graphique doit rester centralisée dans ce dossier afin de permettre une évolution du design sans toucher à la logique fonctionnelle de l'application.
+Les préférences ne doivent pas redéfinir profondément la charte : elles modifient les variables existantes et quelques espacements compatibles.
