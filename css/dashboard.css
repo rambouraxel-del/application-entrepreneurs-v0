@@ -1,0 +1,27 @@
+/* Correctif V0.12.1 — le mini-agenda occupe toute la hauteur disponible. */
+.dashboard-mini-agenda-block .mini-agenda-scroll {
+    flex: 1;
+    min-height: 420px;
+    max-height: none;
+    background-image: repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent 27px,
+        var(--color-border) 28px
+    );
+}
+
+.dashboard-mini-agenda-block .mini-agenda-grid {
+    min-height: 100%;
+}
+
+.dashboard-mini-agenda-block #mini-agenda-empty {
+    flex: 1;
+    min-height: 420px;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    border: 1px dashed var(--color-border);
+    border-radius: 10px;
+    text-align: center;
+}
