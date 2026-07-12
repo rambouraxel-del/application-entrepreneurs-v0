@@ -26,3 +26,8 @@
     border-radius: 10px;
     text-align: center;
 }
+
+/* L'objectif de trésorerie n'apporte pas d'information opérationnelle au KPI. */
+#dashboard-kpis-situation .settings-goal-line {
+    display: none;
+}
