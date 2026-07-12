@@ -10492,6 +10492,7 @@ document.addEventListener('DOMContentLoaded', function () {
         period: null,
         chartPeriodMonths: pilotageConfig.graphiquePeriodeMois || 6,
         chartIndicators: [pilotageConfig.graphiqueIndicateurDefaut || 'ca_facture'],
+        activityPeriodMonths: pilotageConfig.graphiquePeriodeMois || 6,
         activityIndicators: ['nouveaux_clients', 'rdv_effectues', 'devis_crees', 'devis_acceptes', 'factures_emises'],
         agendaDate: today,
         todoListId: 'urgent'
@@ -10567,15 +10568,22 @@ document.addEventListener('DOMContentLoaded', function () {
         return total;
     }
 
+    // Un rendez-vous compte comme "effectué" s'il n'a pas été annulé et que
+    // sa date est déjà passée : le statut manuel "realise" n'est pas
+    // toujours mis à jour après coup (jeu de données V0), s'y fier
+    // uniquement ferait sous-compter les rendez-vous réellement passés.
+    // "reporte" n'a pas besoin d'exclusion explicite : sa date reflète déjà
+    // la nouvelle échéance, future tant qu'il n'a pas eu lieu.
+    function isRdvEffectue(rdv, dateObj) {
+        return !!dateObj && dateObj <= today && rdv.statut !== 'annule';
+    }
+
     function computeRdvEffectuesPeriode(period) {
         var count = 0;
         Object.keys(RDV_DETAILS).forEach(function (id) {
             var rdv = RDV_DETAILS[id];
-            if (rdv.statut !== 'realise') {
-                return;
-            }
             var d = agendaCalc.parseDateFr(rdv.date);
-            if (inPeriod(d, period)) {
+            if (isRdvEffectue(rdv, d) && inPeriod(d, period)) {
                 count += 1;
             }
         });
@@ -11263,7 +11271,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         Object.keys(RDV_DETAILS).forEach(function (id) {
             var rdv = RDV_DETAILS[id];
-            if (rdv.statut === 'realise') {
+            if (isRdvEffectue(rdv, agendaCalc.parseDateFr(rdv.date))) {
                 bump(rdv.date, 'rdv_effectues');
             }
         });
@@ -11443,7 +11451,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        var monthly = computeActivityMonthlySeries(state.chartPeriodMonths);
+        var monthly = computeActivityMonthlySeries(state.activityPeriodMonths);
         var activeIndicators = state.activityIndicators.length > 0 ? state.activityIndicators : ['nouveaux_clients'];
 
         renderMonthlyLineChart(containerEl, monthly, activeIndicators, ACTIVITY_SERIES_DEFS, function (v) { return String(v); });
@@ -11537,6 +11545,12 @@ document.addEventListener('DOMContentLoaded', function () {
     chartPeriodSelectEl.addEventListener('change', function (evt) {
         state.chartPeriodMonths = parseInt(evt.target.value, 10);
         renderPerformanceChart();
+    });
+
+    var activityPeriodSelectEl = document.getElementById('dashboard-activity-period-select');
+    activityPeriodSelectEl.value = String(state.activityPeriodMonths);
+    activityPeriodSelectEl.addEventListener('change', function (evt) {
+        state.activityPeriodMonths = parseInt(evt.target.value, 10);
         renderActivityChart();
     });
 
@@ -11545,7 +11559,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function computeTunnel() {
         var rdvTotal = Object.keys(RDV_DETAILS).length;
 
-        var devisAcceptesCount = 0, devisAcceptesMontant = 0, devisEnvoyesCount = 0, devisRefusesCount = 0, montantEnAttente = 0;
+        var devisAcceptesCount = 0, devisAcceptesMontant = 0, devisEnvoyesCount = 0, devisRefusesCount = 0, devisRefusesMontant = 0, montantEnAttente = 0;
         Object.keys(DEVIS_DETAILS).forEach(function (numero) {
             var devis = DEVIS_DETAILS[numero];
             var version = devisCalc.getActiveVersion(devis);
@@ -11561,8 +11575,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 montantEnAttente = devisCalc.roundMoney(montantEnAttente + totals.totalTTC);
             } else if (version.statut === 'refuse') {
                 devisRefusesCount += 1;
+                devisRefusesMontant = devisCalc.roundMoney(devisRefusesMontant + totals.totalTTC);
             }
         });
+        // "Devis émis" = tout devis effectivement transmis au client (envoyé,
+        // accepté ou refusé), à l'exclusion des brouillons.
+        var devisEmisCount = devisEnvoyesCount + devisAcceptesCount + devisRefusesCount;
+        var devisEmisMontant = devisCalc.roundMoney(montantEnAttente + devisAcceptesMontant + devisRefusesMontant);
 
         var facturesEmisesCount = 0, facturesEmisesMontant = 0, facturesPayeesCount = 0, facturesPayeesMontant = 0, facturesImpayeesCount = 0;
         Object.keys(FACTURE_DETAILS).forEach(function (key) {
@@ -11582,19 +11601,22 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
-        // Chaque taux est rapporté à sa propre base (RDV ou factures émises),
-        // jamais à l'étape visuelle précédente : un devis accepté ne devient
-        // pas mécaniquement une facture, un rapprochement direct devis →
-        // facture serait donc artificiel (V0.12.1).
+        // Chaque taux est rapporté à sa propre base (RDV, devis émis ou
+        // factures émises), jamais à l'étape visuelle précédente sans
+        // distinction : un devis accepté ne devient pas mécaniquement une
+        // facture, un rapprochement direct devis → facture serait donc
+        // artificiel (V0.12.1).
         var steps = [
             { label: 'Rendez-vous', volume: rdvTotal, montant: null },
-            { label: 'Devis acceptés', volume: devisAcceptesCount, montant: devisAcceptesMontant, basisLabel: 'des RDV' },
+            { label: 'Devis émis', volume: devisEmisCount, montant: devisEmisMontant, basisLabel: 'des RDV' },
+            { label: 'Devis acceptés', volume: devisAcceptesCount, montant: devisAcceptesMontant, basisLabel: 'des devis émis' },
             { label: 'Factures émises', volume: facturesEmisesCount, montant: facturesEmisesMontant, basisLabel: 'des RDV' },
             { label: 'Factures payées', volume: facturesPayeesCount, montant: facturesPayeesMontant, basisLabel: 'des factures émises' }
         ];
         steps[1].taux = rdvTotal > 0 ? Math.round((steps[1].volume / rdvTotal) * 100) : 0;
-        steps[2].taux = rdvTotal > 0 ? Math.round((steps[2].volume / rdvTotal) * 100) : 0;
-        steps[3].taux = facturesEmisesCount > 0 ? Math.round((steps[3].volume / facturesEmisesCount) * 100) : 0;
+        steps[2].taux = devisEmisCount > 0 ? Math.round((steps[2].volume / devisEmisCount) * 100) : 0;
+        steps[3].taux = rdvTotal > 0 ? Math.round((steps[3].volume / rdvTotal) * 100) : 0;
+        steps[4].taux = facturesEmisesCount > 0 ? Math.round((steps[4].volume / facturesEmisesCount) * 100) : 0;
 
         return {
             steps: steps,

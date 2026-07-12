@@ -3491,6 +3491,14 @@ a.tresorerie-timeline-item:hover {
     min-width: 0;
 }
 
+/* Ancrage de l'infobulle au survol (V0.12.1) : sans position: relative ici,
+   .tresorerie-chart-tooltip (position: absolute) se positionne par rapport
+   à un ancêtre plus lointain et apparaît hors du graphique. */
+#dashboard-chart-container,
+#dashboard-activity-chart-container {
+    position: relative;
+}
+
 .dashboard-performance-left {
     display: flex;
     flex-direction: column;
