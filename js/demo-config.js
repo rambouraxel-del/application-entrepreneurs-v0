@@ -10,7 +10,7 @@
     if(!document.querySelector('link[data-cockpit-preferences]')){
         var link=document.createElement('link');link.rel='stylesheet';link.href=cssHref;link.setAttribute('data-cockpit-preferences','true');document.head.appendChild(link);
     }
-    var files=['settings-defaults.js','settings-store.js','settings-catalog.js','demo-config-adapter.js','settings-consumers.js','settings-referentials.js','settings-alerts.js'];
+    var files=['settings-defaults.js','settings-store.js','settings-catalog.js','demo-config-adapter.js','settings-consumers.js','settings-referentials.js','settings-alerts.js','dashboard-chart-tooltips.js'];
     if(document.readyState==='loading'){
         files.forEach(function(file){document.write('<script src="'+base+file+'"><\/script>');});
         return;
