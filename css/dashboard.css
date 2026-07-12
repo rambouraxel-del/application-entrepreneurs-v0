@@ -31,3 +31,22 @@
 #dashboard-kpis-situation .settings-goal-line {
     display: none;
 }
+
+/* Graphiques : zone de survol plus large et infobulle toujours au premier plan. */
+.dashboard-chart-point {
+    cursor: pointer;
+    pointer-events: all;
+    stroke: transparent;
+    stroke-width: 18px;
+}
+
+#dashboard-chart-container,
+#dashboard-activity-chart-container {
+    overflow: visible;
+}
+
+#dashboard-chart-container .tresorerie-chart-tooltip,
+#dashboard-activity-chart-container .tresorerie-chart-tooltip {
+    z-index: 50;
+    max-width: min(280px, calc(100vw - 32px));
+}
