@@ -10313,8 +10313,13 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
     }
 
+    var GREETING_DAY_NAMES = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+    var GREETING_MONTH_NAMES = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+    var greetingToday = new Date();
+    var greetingTodayLabel = GREETING_DAY_NAMES[greetingToday.getDay()] + ' ' + greetingToday.getDate() + ' ' + GREETING_MONTH_NAMES[greetingToday.getMonth()] + ' ' + greetingToday.getFullYear();
+
     titleEl.textContent = 'Bonjour, ' + demo.prenom + ' !';
-    subtitleEl.textContent = 'Voici un aperçu de l\'activité de ' + demo.entreprise + ' (' + demo.activite + ') aujourd\'hui.';
+    subtitleEl.textContent = 'Voici un aperçu de l\'activité de ' + demo.entreprise + ' (' + demo.activite + ') aujourd\'hui, le ' + greetingTodayLabel + '.';
 })();
 
 // Page Paramètres : connexion à la configuration de démonstration (V0.9.2).
@@ -10419,7 +10424,6 @@ document.addEventListener('DOMContentLoaded', function () {
     var FACTURE_DETAILS = window.COCKPIT_FACTURE_DETAILS || {};
     var RDV_DETAILS = window.COCKPIT_RDV_DETAILS || {};
     var CLIENT_DETAILS = window.COCKPIT_CLIENT_DETAILS || {};
-    var demoConfig = window.COCKPIT_DEMO_CONFIG || {};
     var pilotageConfig = window.COCKPIT_PILOTAGE_CONFIG || {};
 
     if (!devisCalc || !factureCalc || !agendaCalc || !tresorerieCalc || !facturationStats) {
@@ -10474,9 +10478,9 @@ document.addEventListener('DOMContentLoaded', function () {
     var DAY_NAMES = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
 
     var ICON_CA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>';
-    var ICON_ENCAISSE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="19 12 12 19 5 12"></polyline><line x1="12" y1="19" x2="12" y2="5"></line></svg>';
+    var ICON_RDV_DONE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path><path d="m9 16 2 2 4-4"></path></svg>';
     var ICON_TRESORERIE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4z"></path></svg>';
-    var ICON_OBJECTIF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>';
+    var ICON_CLIENTS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path><circle cx="10" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>';
     var ICON_ALERT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>';
     var ICON_CHEVRON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>';
     var ICON_EDIT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>';
@@ -10484,18 +10488,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var today = startOfDay(new Date());
 
-    var topbarDateEl = document.getElementById('topbar-today-date');
-    if (topbarDateEl) {
-        var todayDayName = DAY_NAMES[today.getDay()];
-        topbarDateEl.textContent = todayDayName.charAt(0).toUpperCase() + todayDayName.slice(1) + ' ' + today.getDate() + ' ' + MONTH_NAMES[today.getMonth()] + ' ' + today.getFullYear();
-    }
-
     var state = {
         period: null,
         chartPeriodMonths: pilotageConfig.graphiquePeriodeMois || 6,
         chartIndicators: [pilotageConfig.graphiqueIndicateurDefaut || 'ca_facture'],
+        activityIndicators: ['nouveaux_clients', 'rdv_effectues', 'devis_crees', 'devis_acceptes', 'factures_emises'],
         agendaDate: today,
-        todoFilter: 'a-faire'
+        todoListId: 'urgent'
     };
 
     // ================= Niveau 1 — Situation générale =================
@@ -10568,19 +10567,30 @@ document.addEventListener('DOMContentLoaded', function () {
         return total;
     }
 
-    function computeEncaissePeriode(period) {
-        var total = 0;
-        Object.keys(FACTURE_DETAILS).forEach(function (key) {
-            var f = FACTURE_DETAILS[key];
-            (f.paiements || []).forEach(function (p) {
-                var d = agendaCalc.parseDateFr(p.date);
-                if (!inPeriod(d, period)) {
-                    return;
-                }
-                total = devisCalc.roundMoney(total + (parseFloat(p.montant) || 0));
-            });
+    function computeRdvEffectuesPeriode(period) {
+        var count = 0;
+        Object.keys(RDV_DETAILS).forEach(function (id) {
+            var rdv = RDV_DETAILS[id];
+            if (rdv.statut !== 'realise') {
+                return;
+            }
+            var d = agendaCalc.parseDateFr(rdv.date);
+            if (inPeriod(d, period)) {
+                count += 1;
+            }
         });
-        return total;
+        return count;
+    }
+
+    function computeNouveauxClientsPeriode(period) {
+        var count = 0;
+        Object.keys(CLIENT_DETAILS).forEach(function (slug) {
+            var d = agendaCalc.parseDateFr(CLIENT_DETAILS[slug].clientDepuis);
+            if (inPeriod(d, period)) {
+                count += 1;
+            }
+        });
+        return count;
     }
 
     function computeHorizonDays(horizonPreset) {
@@ -10615,16 +10625,6 @@ document.addEventListener('DOMContentLoaded', function () {
         return '30 jours';
     }
 
-    // Objectif mensuel (DEMO_CONFIG) proratisé au nombre de jours de la
-    // période retenue lorsque celle-ci n'est pas un mois civil complet —
-    // approximation documentée (docs/changelog.md), la V0 n'ayant pas de
-    // notion d'objectif par période autre que mensuelle.
-    function computeObjectifPeriode(period) {
-        var objectifMensuel = parseFloat(demoConfig.objectifMensuel) || 0;
-        var joursMoyenParMois = 30.44;
-        return devisCalc.roundMoney(objectifMensuel * (period.lengthDays / joursMoyenParMois));
-    }
-
     function buildKpiCard(iconClass, iconSvg, title, value, subtext, statusClass, href) {
         var card = document.createElement('a');
         card.href = href;
@@ -10657,13 +10657,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
         var caPeriode = computeCAPeriode(period);
         var caPrecedent = computeCAPeriode(prevPeriod);
-        var encaissePeriode = computeEncaissePeriode(period);
+        var rdvEffectuesPeriode = computeRdvEffectuesPeriode(period);
+        var rdvEffectuesPrecedent = computeRdvEffectuesPeriode(prevPeriod);
+        var nouveauxClientsPeriode = computeNouveauxClientsPeriode(period);
+        var nouveauxClientsPrecedent = computeNouveauxClientsPeriode(prevPeriod);
+        var totalClients = Object.keys(CLIENT_DETAILS).length;
 
         var horizonDays = computeHorizonDays(pilotageConfig.horizonTresorerie);
         var snapshot = tresorerieCalc.computeSnapshot(horizonDays);
-
-        var objectifPeriode = computeObjectifPeriode(period);
-        var pourcentageObjectif = objectifPeriode > 0 ? Math.round((caPeriode / objectifPeriode) * 100) : 0;
 
         kpisEl.innerHTML = '';
 
@@ -10678,18 +10679,40 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         kpisEl.appendChild(buildKpiCard('kpi-icon-1', ICON_CA, formatPeriodLabel(period), devisCalc.formatMoney(caPeriode), caVariationTxt, caStatus, 'facturation.html'));
 
-        var ecart = devisCalc.roundMoney(caPeriode - encaissePeriode);
-        kpisEl.appendChild(buildKpiCard('kpi-icon-2', ICON_ENCAISSE, 'Encaissé sur la période', devisCalc.formatMoney(encaissePeriode), 'Écart avec le facturé : ' + devisCalc.formatMoney(ecart), 'status-neutral', 'facturation.html'));
+        var rdvVariationTxt, rdvStatus;
+        if (rdvEffectuesPrecedent > 0) {
+            var rdvDelta = Math.round(((rdvEffectuesPeriode - rdvEffectuesPrecedent) / rdvEffectuesPrecedent) * 100);
+            rdvVariationTxt = (rdvDelta >= 0 ? '↗ +' : '↘ ') + rdvDelta + ' % vs période précédente';
+            rdvStatus = rdvDelta >= 0 ? 'status-positive' : 'status-negative';
+        } else if (rdvEffectuesPeriode > 0) {
+            rdvVariationTxt = 'Aucun rendez-vous effectué sur la période précédente';
+            rdvStatus = 'status-positive';
+        } else {
+            rdvVariationTxt = 'Aucune donnée sur la période précédente';
+            rdvStatus = 'status-neutral';
+        }
+        kpisEl.appendChild(buildKpiCard('kpi-icon-2', ICON_RDV_DONE, 'Rendez-vous effectués', String(rdvEffectuesPeriode), rdvVariationTxt, rdvStatus, 'agenda.html'));
 
         var tresorerieSub = 'Prévision ' + horizonLabel(pilotageConfig.horizonTresorerie) + ' : ' + devisCalc.formatMoney(snapshot.soldePrevisionnel);
         var tresorerieStatus = snapshot.soldePrevisionnel < 0 ? 'status-negative' : 'status-neutral';
         kpisEl.appendChild(buildKpiCard('kpi-icon-3', ICON_TRESORERIE, 'Trésorerie disponible', devisCalc.formatMoney(snapshot.soldeEstime), tresorerieSub, tresorerieStatus, 'tresorerie.html'));
 
-        var objectifSub = pourcentageObjectif >= 100
-            ? 'Objectif atteint (' + devisCalc.formatMoney(caPeriode) + ' / ' + devisCalc.formatMoney(objectifPeriode) + ')'
-            : devisCalc.formatMoney(devisCalc.roundMoney(objectifPeriode - caPeriode)) + ' restant pour l\'objectif';
-        var objectifStatus = pourcentageObjectif >= 100 ? 'status-positive' : (pourcentageObjectif >= 60 ? 'status-neutral' : 'status-negative');
-        kpisEl.appendChild(buildKpiCard('kpi-icon-4', ICON_OBJECTIF, 'Objectif', pourcentageObjectif + ' %', objectifSub, objectifStatus, 'analyses.html'));
+        var clientsDelta = nouveauxClientsPeriode - nouveauxClientsPrecedent;
+        var clientsVariationTxt, clientsStatus;
+        if (clientsDelta > 0) {
+            clientsVariationTxt = '↗ +' + clientsDelta + ' nouveau(x) client(s) vs période précédente';
+            clientsStatus = 'status-positive';
+        } else if (clientsDelta < 0) {
+            clientsVariationTxt = '↘ ' + clientsDelta + ' nouveau(x) client(s) vs période précédente';
+            clientsStatus = 'status-negative';
+        } else if (nouveauxClientsPeriode > 0) {
+            clientsVariationTxt = 'Stable vs période précédente (+' + nouveauxClientsPeriode + ')';
+            clientsStatus = 'status-neutral';
+        } else {
+            clientsVariationTxt = 'Aucun nouveau client sur la période';
+            clientsStatus = 'status-neutral';
+        }
+        kpisEl.appendChild(buildKpiCard('kpi-icon-4', ICON_CLIENTS, 'Nombre de clients', String(totalClients), clientsVariationTxt, clientsStatus, 'clients.html'));
     }
 
     var periodSelectEl = document.getElementById('dashboard-period-select');
@@ -10868,34 +10891,128 @@ document.addEventListener('DOMContentLoaded', function () {
     // ================= Niveau 2 — Ma journée : to-do list =================
 
     var todoSeq = 5;
+    var TODO_LISTS = [
+        { id: 'urgent', label: 'Urgent' },
+        { id: 'autre', label: 'Autre' }
+    ];
     var TODOS = [
-        { id: 1, titre: 'Relancer le devis Martin', priorite: 'haute', echeance: null, terminee: false },
-        { id: 2, titre: 'Préparer la facture n°001', priorite: 'moyenne', echeance: null, terminee: false },
-        { id: 3, titre: 'Appeler le fournisseur Dupont', priorite: 'basse', echeance: null, terminee: false },
-        { id: 4, titre: 'Vérifier les stocks', priorite: 'basse', echeance: null, terminee: true },
-        { id: 5, titre: 'Envoyer la relance client Bernard', priorite: 'moyenne', echeance: null, terminee: true }
+        { id: 1, titre: 'Relancer le devis Martin', liste: 'urgent', echeance: null, terminee: false },
+        { id: 2, titre: 'Préparer la facture n°001', liste: 'autre', echeance: null, terminee: false },
+        { id: 3, titre: 'Appeler le fournisseur Dupont', liste: 'autre', echeance: null, terminee: false },
+        { id: 4, titre: 'Vérifier les stocks', liste: 'autre', echeance: null, terminee: true },
+        { id: 5, titre: 'Envoyer la relance client Bernard', liste: 'autre', echeance: null, terminee: true }
     ];
 
-    var PRIORITE_BADGE = { haute: 'badge-danger', moyenne: 'badge-warning', basse: 'badge-neutral' };
-    var PRIORITE_LABEL = { haute: 'Priorité haute', moyenne: 'Priorité moyenne', basse: 'Priorité basse' };
+    function createTodoListId(label) {
+        var base = String(label).trim().toLowerCase()
+            .normalize('NFD').replace(/[̀-ͯ]/g, '')
+            .replace(/[^a-z0-9]+/g, '-').replace(/(^-+|-+$)/g, '') || 'liste';
+        var candidate = base;
+        var suffix = 2;
+        while (TODO_LISTS.some(function (l) { return l.id === candidate; })) {
+            candidate = base + '-' + suffix;
+            suffix += 1;
+        }
+        return candidate;
+    }
+
+    function renderTodoListTabs() {
+        var tabsEl = document.getElementById('todo-list-tabs');
+        tabsEl.innerHTML = '';
+
+        TODO_LISTS.forEach(function (list) {
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'page-tab' + (state.todoListId === list.id ? ' page-tab-active' : '');
+            btn.textContent = list.label;
+            btn.addEventListener('click', function () {
+                state.todoListId = list.id;
+                renderTodoListTabs();
+                renderTodos();
+            });
+            tabsEl.appendChild(btn);
+        });
+
+        var addBtn = document.createElement('button');
+        addBtn.type = 'button';
+        addBtn.className = 'todo-list-add-btn';
+        addBtn.title = 'Créer une liste';
+        addBtn.setAttribute('aria-label', 'Créer une liste');
+        addBtn.textContent = '+';
+        addBtn.addEventListener('click', function () {
+            openNewListModal();
+        });
+        tabsEl.appendChild(addBtn);
+    }
+
+    function openNewListModal() {
+        var body = document.createElement('div');
+        body.appendChild(makeEl('label', 'modal-label', 'Nom de la liste'));
+        var nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.className = 'modal-input';
+        body.appendChild(nameInput);
+
+        var errorEl = makeEl('p', 'modal-hint');
+        errorEl.style.color = 'var(--color-danger)';
+        errorEl.style.display = 'none';
+        body.appendChild(errorEl);
+
+        var cancelButton = document.createElement('button');
+        cancelButton.type = 'button';
+        cancelButton.className = 'btn-secondary';
+        cancelButton.setAttribute('data-modal-close', 'true');
+        cancelButton.textContent = 'Annuler';
+
+        var saveButton = document.createElement('button');
+        saveButton.type = 'button';
+        saveButton.className = 'btn-primary';
+        saveButton.textContent = 'Créer';
+
+        saveButton.addEventListener('click', function () {
+            var label = nameInput.value.trim();
+            if (!label) {
+                errorEl.textContent = 'Merci de renseigner un nom de liste.';
+                errorEl.style.display = '';
+                return;
+            }
+            var id = createTodoListId(label);
+            TODO_LISTS.push({ id: id, label: label });
+            state.todoListId = id;
+            window.COCKPIT_MODAL.close();
+            renderTodoListTabs();
+            renderTodos();
+        });
+
+        var footer = document.createDocumentFragment();
+        footer.appendChild(cancelButton);
+        footer.appendChild(saveButton);
+
+        window.COCKPIT_MODAL.open({
+            title: 'Nouvelle liste',
+            body: body,
+            footer: footer
+        });
+    }
 
     function renderTodos() {
         var listEl = document.getElementById('todo-list');
         var emptyEl = document.getElementById('todo-empty');
         listEl.innerHTML = '';
 
-        var filtered = TODOS.filter(function (t) {
-            return state.todoFilter === 'terminees' ? t.terminee : !t.terminee;
-        });
+        var filtered = TODOS.filter(function (t) { return t.liste === state.todoListId; });
+        var pending = filtered.filter(function (t) { return !t.terminee; });
+        var done = filtered.filter(function (t) { return t.terminee; });
+        var ordered = pending.concat(done);
 
-        if (filtered.length === 0) {
+        if (ordered.length === 0) {
             emptyEl.style.display = '';
-            emptyEl.textContent = state.todoFilter === 'terminees' ? 'Aucune tâche terminée.' : 'Aucune tâche à faire.';
+            emptyEl.textContent = 'Aucune tâche dans cette liste.';
         } else {
             emptyEl.style.display = 'none';
         }
 
-        filtered.forEach(function (todo) {
+        ordered.forEach(function (todo) {
             var li = document.createElement('li');
             li.className = 'todo-item' + (todo.terminee ? ' todo-item-done' : '');
 
@@ -10913,12 +11030,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
             var body = makeEl('div', 'todo-item-body');
             body.appendChild(makeEl('p', 'todo-item-title', todo.titre));
-            var meta = makeEl('div', 'badge-group');
-            meta.appendChild(makeEl('span', 'badge ' + PRIORITE_BADGE[todo.priorite], PRIORITE_LABEL[todo.priorite]));
             if (todo.echeance) {
+                var meta = makeEl('div', 'badge-group');
                 meta.appendChild(makeEl('span', 'badge badge-neutral', 'Échéance : ' + todo.echeance));
+                body.appendChild(meta);
             }
-            body.appendChild(meta);
 
             var actions = makeEl('div', 'todo-item-actions');
             var editBtn = document.createElement('button');
@@ -10963,19 +11079,19 @@ document.addEventListener('DOMContentLoaded', function () {
         var grid = makeEl('div', 'form-grid-2');
         grid.style.marginTop = '10px';
 
-        var prioriteWrap = document.createElement('div');
-        prioriteWrap.appendChild(makeEl('label', 'modal-label', 'Priorité'));
-        var prioriteSelect = document.createElement('select');
-        prioriteSelect.className = 'modal-select';
-        [['haute', 'Haute'], ['moyenne', 'Moyenne'], ['basse', 'Basse']].forEach(function (pair) {
+        var listeWrap = document.createElement('div');
+        listeWrap.appendChild(makeEl('label', 'modal-label', 'Liste'));
+        var listeSelect = document.createElement('select');
+        listeSelect.className = 'modal-select';
+        TODO_LISTS.forEach(function (list) {
             var option = document.createElement('option');
-            option.value = pair[0];
-            option.textContent = pair[1];
-            prioriteSelect.appendChild(option);
+            option.value = list.id;
+            option.textContent = list.label;
+            listeSelect.appendChild(option);
         });
-        prioriteSelect.value = existingTodo ? existingTodo.priorite : 'moyenne';
-        prioriteWrap.appendChild(prioriteSelect);
-        grid.appendChild(prioriteWrap);
+        listeSelect.value = existingTodo ? existingTodo.liste : state.todoListId;
+        listeWrap.appendChild(listeSelect);
+        grid.appendChild(listeWrap);
 
         var echeanceWrap = document.createElement('div');
         echeanceWrap.appendChild(makeEl('label', 'modal-label', 'Échéance (optionnelle)'));
@@ -11022,14 +11138,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (existingTodo) {
                 existingTodo.titre = titre;
-                existingTodo.priorite = prioriteSelect.value;
+                existingTodo.liste = listeSelect.value;
                 existingTodo.echeance = echeanceStr;
             } else {
                 todoSeq += 1;
-                TODOS.push({ id: todoSeq, titre: titre, priorite: prioriteSelect.value, echeance: echeanceStr, terminee: false });
+                TODOS.push({ id: todoSeq, titre: titre, liste: listeSelect.value, echeance: echeanceStr, terminee: false });
             }
 
             window.COCKPIT_MODAL.close();
+            renderTodoListTabs();
             renderTodos();
         });
 
@@ -11046,19 +11163,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.getElementById('todo-add-btn').addEventListener('click', function () {
         openTodoModal(null);
-    });
-
-    document.getElementById('todo-filter-tabs').addEventListener('click', function (evt) {
-        var btn = evt.target.closest('.page-tab');
-        if (!btn) {
-            return;
-        }
-        Array.prototype.forEach.call(document.querySelectorAll('#todo-filter-tabs .page-tab'), function (b) {
-            b.classList.remove('page-tab-active');
-        });
-        btn.classList.add('page-tab-active');
-        state.todoFilter = btn.getAttribute('data-filter');
-        renderTodos();
     });
 
     // Alertes du Dashboard : source unique js/settings-alerts.js
@@ -11118,17 +11222,90 @@ document.addEventListener('DOMContentLoaded', function () {
             var key = mth.year + '-' + mth.month;
             var ca = caByMonth[key];
             var enc = encaisseByMonth[key];
-            return { label: mth.label, ca_facture: ca, encaisse: enc, solde_net: devisCalc.roundMoney(ca - enc) };
+            return { label: mth.label, year: mth.year, ca_facture: ca, encaisse: enc, solde_net: devisCalc.roundMoney(ca - enc) };
         });
     }
 
-    function renderPerformanceChart() {
-        var containerEl = document.getElementById('dashboard-chart-container');
-        var summaryEl = document.getElementById('dashboard-chart-summary');
-        containerEl.innerHTML = '';
+    var ACTIVITY_SERIES_DEFS = {
+        nouveaux_clients: { label: 'Nouveaux clients', color: '#f97316' },
+        rdv_effectues: { label: 'Rendez-vous effectués', color: '#0ea5e9' },
+        devis_crees: { label: 'Devis créés', color: '#a855f7' },
+        devis_acceptes: { label: 'Devis acceptés', color: '#16a34a' },
+        factures_emises: { label: 'Factures émises', color: '#4f46e5' }
+    };
 
-        var monthly = computeMonthlySeries(state.chartPeriodMonths);
-        var activeIndicators = state.chartIndicators.length > 0 ? state.chartIndicators : ['ca_facture'];
+    function computeActivityMonthlySeries(nbMonths) {
+        var months = [];
+        for (var i = nbMonths - 1; i >= 0; i--) {
+            var d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+            months.push({ year: d.getFullYear(), month: d.getMonth(), label: MONTH_ABBR[d.getMonth()] });
+        }
+
+        var byMonth = {};
+        months.forEach(function (mth) {
+            byMonth[mth.year + '-' + mth.month] = { nouveaux_clients: 0, rdv_effectues: 0, devis_crees: 0, devis_acceptes: 0, factures_emises: 0 };
+        });
+
+        function bump(dateStr, field) {
+            var d = agendaCalc.parseDateFr(dateStr);
+            if (!d) {
+                return;
+            }
+            var key = d.getFullYear() + '-' + d.getMonth();
+            if (byMonth.hasOwnProperty(key)) {
+                byMonth[key][field] += 1;
+            }
+        }
+
+        Object.keys(CLIENT_DETAILS).forEach(function (slug) {
+            bump(CLIENT_DETAILS[slug].clientDepuis, 'nouveaux_clients');
+        });
+
+        Object.keys(RDV_DETAILS).forEach(function (id) {
+            var rdv = RDV_DETAILS[id];
+            if (rdv.statut === 'realise') {
+                bump(rdv.date, 'rdv_effectues');
+            }
+        });
+
+        Object.keys(DEVIS_DETAILS).forEach(function (numero) {
+            var version = devisCalc.getActiveVersion(DEVIS_DETAILS[numero]);
+            if (!version) {
+                return;
+            }
+            bump(version.dateCreation, 'devis_crees');
+            if (version.statut === 'accepte') {
+                bump(version.dateModification, 'devis_acceptes');
+            }
+        });
+
+        Object.keys(FACTURE_DETAILS).forEach(function (key) {
+            var f = FACTURE_DETAILS[key];
+            if (f.statutEmission === 'emise') {
+                bump(f.dateEmission, 'factures_emises');
+            }
+        });
+
+        return months.map(function (mth) {
+            var vals = byMonth[mth.year + '-' + mth.month];
+            return {
+                label: mth.label,
+                year: mth.year,
+                nouveaux_clients: vals.nouveaux_clients,
+                rdv_effectues: vals.rdv_effectues,
+                devis_crees: vals.devis_crees,
+                devis_acceptes: vals.devis_acceptes,
+                factures_emises: vals.factures_emises
+            };
+        });
+    }
+
+    // Coeur de tracé partagé par les deux graphiques mensuels (Performance
+    // financière et Activité commerciale) : mêmes axes et le même point
+    // survolable (date, indicateur, valeur) ; seuls le jeu de séries et le
+    // format des valeurs (monétaire ou numérique) changent par appelant.
+    function renderMonthlyLineChart(containerEl, monthly, activeIndicators, seriesDefs, formatValue) {
+        containerEl.innerHTML = '';
 
         var allValues = [0];
         monthly.forEach(function (mth) {
@@ -11163,7 +11340,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         var seriesSvg = '';
         activeIndicators.forEach(function (ind) {
-            var def = CHART_SERIES_DEFS[ind];
+            var def = seriesDefs[ind];
             if (!def) {
                 return;
             }
@@ -11187,7 +11364,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         var legend = makeEl('div', 'dashboard-chart-legend');
         activeIndicators.forEach(function (ind) {
-            var def = CHART_SERIES_DEFS[ind];
+            var def = seriesDefs[ind];
             if (!def) {
                 return;
             }
@@ -11207,9 +11384,9 @@ document.addEventListener('DOMContentLoaded', function () {
         function showTooltip(circleEl, monthIndex) {
             var mth = monthly[monthIndex];
             tooltipEl.innerHTML = '';
-            tooltipEl.appendChild(makeEl('p', 'tresorerie-chart-tooltip-date', mth.label));
+            tooltipEl.appendChild(makeEl('p', 'tresorerie-chart-tooltip-date', mth.label + ' ' + mth.year));
             activeIndicators.forEach(function (ind) {
-                var def = CHART_SERIES_DEFS[ind];
+                var def = seriesDefs[ind];
                 if (!def) {
                     return;
                 }
@@ -11217,7 +11394,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 var dot = makeEl('span', 'donut-legend-dot');
                 dot.style.backgroundColor = def.color;
                 line.appendChild(dot);
-                line.appendChild(document.createTextNode(def.label + ' : ' + devisCalc.formatMoney(mth[ind])));
+                line.appendChild(document.createTextNode(def.label + ' : ' + formatValue(mth[ind])));
                 tooltipEl.appendChild(line);
             });
 
@@ -11236,6 +11413,16 @@ document.addEventListener('DOMContentLoaded', function () {
             circleEl.addEventListener('mouseenter', function () { showTooltip(circleEl, idx); });
             circleEl.addEventListener('mouseleave', hideTooltip);
         });
+    }
+
+    function renderPerformanceChart() {
+        var containerEl = document.getElementById('dashboard-chart-container');
+        var summaryEl = document.getElementById('dashboard-chart-summary');
+
+        var monthly = computeMonthlySeries(state.chartPeriodMonths);
+        var activeIndicators = state.chartIndicators.length > 0 ? state.chartIndicators : ['ca_facture'];
+
+        renderMonthlyLineChart(containerEl, monthly, activeIndicators, CHART_SERIES_DEFS, devisCalc.formatMoney);
 
         var totalCa = monthly.reduce(function (s, mth) { return devisCalc.roundMoney(s + mth.ca_facture); }, 0);
         var totalEnc = monthly.reduce(function (s, mth) { return devisCalc.roundMoney(s + mth.encaisse); }, 0);
@@ -11249,57 +11436,108 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    var chartIndicatorsToggle = document.getElementById('dashboard-chart-indicators-toggle');
-    var chartIndicatorsDropdown = document.getElementById('dashboard-chart-indicators-dropdown');
-    var chartIndicatorsMenu = document.getElementById('dashboard-chart-indicators-menu');
+    function renderActivityChart() {
+        var containerEl = document.getElementById('dashboard-activity-chart-container');
+        var summaryEl = document.getElementById('dashboard-activity-chart-summary');
+        if (!containerEl) {
+            return;
+        }
 
-    function closeIndicatorsMenu() {
-        chartIndicatorsDropdown.style.display = 'none';
-        chartIndicatorsToggle.setAttribute('aria-expanded', 'false');
-    }
-    chartIndicatorsToggle.addEventListener('click', function (evt) {
-        evt.stopPropagation();
-        var isOpen = chartIndicatorsDropdown.style.display !== 'none';
-        if (isOpen) {
-            closeIndicatorsMenu();
-        } else {
-            chartIndicatorsDropdown.style.display = '';
-            chartIndicatorsToggle.setAttribute('aria-expanded', 'true');
-        }
-    });
-    document.addEventListener('click', function (evt) {
-        if (!chartIndicatorsMenu.contains(evt.target)) {
-            closeIndicatorsMenu();
-        }
-    });
-    document.addEventListener('keydown', function (evt) {
-        if (evt.key === 'Escape') {
-            closeIndicatorsMenu();
-        }
-    });
+        var monthly = computeActivityMonthlySeries(state.chartPeriodMonths);
+        var activeIndicators = state.activityIndicators.length > 0 ? state.activityIndicators : ['nouveaux_clients'];
 
-    Array.prototype.forEach.call(chartIndicatorsDropdown.querySelectorAll('input[type="checkbox"]'), function (cb) {
-        cb.checked = state.chartIndicators.indexOf(cb.value) !== -1;
-        cb.addEventListener('change', function () {
-            var checked = Array.prototype.filter.call(chartIndicatorsDropdown.querySelectorAll('input[type="checkbox"]'), function (c) { return c.checked; });
-            if (checked.length > 3) {
-                cb.checked = false;
+        renderMonthlyLineChart(containerEl, monthly, activeIndicators, ACTIVITY_SERIES_DEFS, function (v) { return String(v); });
+
+        summaryEl.innerHTML = '';
+        activeIndicators.forEach(function (ind) {
+            var def = ACTIVITY_SERIES_DEFS[ind];
+            if (!def) {
                 return;
             }
-            if (checked.length === 0) {
-                cb.checked = true;
-                return;
-            }
-            state.chartIndicators = checked.map(function (c) { return c.value; });
-            renderPerformanceChart();
+            var total = monthly.reduce(function (s, mth) { return s + mth[ind]; }, 0);
+            var item = makeEl('div', 'dashboard-chart-summary-item');
+            item.appendChild(makeEl('span', null, def.label + ' sur la période'));
+            item.appendChild(makeEl('strong', null, String(total)));
+            summaryEl.appendChild(item);
         });
-    });
+    }
+
+    // ---- Bascule des indicateurs, partagée par les deux graphiques ----
+
+    function wireIndicatorsDropdown(toggleId, dropdownId, menuId, getActive, setActive, onChange, maxCount) {
+        var toggle = document.getElementById(toggleId);
+        var dropdown = document.getElementById(dropdownId);
+        var menu = document.getElementById(menuId);
+        if (!toggle || !dropdown || !menu) {
+            return;
+        }
+
+        function close() {
+            dropdown.style.display = 'none';
+            toggle.setAttribute('aria-expanded', 'false');
+        }
+        toggle.addEventListener('click', function (evt) {
+            evt.stopPropagation();
+            var isOpen = dropdown.style.display !== 'none';
+            if (isOpen) {
+                close();
+            } else {
+                dropdown.style.display = '';
+                toggle.setAttribute('aria-expanded', 'true');
+            }
+        });
+        document.addEventListener('click', function (evt) {
+            if (!menu.contains(evt.target)) {
+                close();
+            }
+        });
+        document.addEventListener('keydown', function (evt) {
+            if (evt.key === 'Escape') {
+                close();
+            }
+        });
+
+        var checkboxes = dropdown.querySelectorAll('input[type="checkbox"]');
+        Array.prototype.forEach.call(checkboxes, function (cb) {
+            cb.checked = getActive().indexOf(cb.value) !== -1;
+            cb.addEventListener('change', function () {
+                var checked = Array.prototype.filter.call(checkboxes, function (c) { return c.checked; });
+                if (maxCount && checked.length > maxCount) {
+                    cb.checked = false;
+                    return;
+                }
+                if (checked.length === 0) {
+                    cb.checked = true;
+                    return;
+                }
+                setActive(checked.map(function (c) { return c.value; }));
+                onChange();
+            });
+        });
+    }
+
+    wireIndicatorsDropdown(
+        'dashboard-chart-indicators-toggle', 'dashboard-chart-indicators-dropdown', 'dashboard-chart-indicators-menu',
+        function () { return state.chartIndicators; },
+        function (values) { state.chartIndicators = values; },
+        renderPerformanceChart,
+        3
+    );
+
+    wireIndicatorsDropdown(
+        'dashboard-activity-indicators-toggle', 'dashboard-activity-indicators-dropdown', 'dashboard-activity-indicators-menu',
+        function () { return state.activityIndicators; },
+        function (values) { state.activityIndicators = values; },
+        renderActivityChart,
+        0
+    );
 
     var chartPeriodSelectEl = document.getElementById('dashboard-chart-period-select');
     chartPeriodSelectEl.value = String(state.chartPeriodMonths);
     chartPeriodSelectEl.addEventListener('change', function (evt) {
         state.chartPeriodMonths = parseInt(evt.target.value, 10);
         renderPerformanceChart();
+        renderActivityChart();
     });
 
     // ================= Niveau 3 — Dynamique commerciale =================
@@ -11344,15 +11582,19 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
+        // Chaque taux est rapporté à sa propre base (RDV ou factures émises),
+        // jamais à l'étape visuelle précédente : un devis accepté ne devient
+        // pas mécaniquement une facture, un rapprochement direct devis →
+        // facture serait donc artificiel (V0.12.1).
         var steps = [
             { label: 'Rendez-vous', volume: rdvTotal, montant: null },
-            { label: 'Devis acceptés', volume: devisAcceptesCount, montant: devisAcceptesMontant },
-            { label: 'Factures émises', volume: facturesEmisesCount, montant: facturesEmisesMontant },
-            { label: 'Factures payées', volume: facturesPayeesCount, montant: facturesPayeesMontant }
+            { label: 'Devis acceptés', volume: devisAcceptesCount, montant: devisAcceptesMontant, basisLabel: 'des RDV' },
+            { label: 'Factures émises', volume: facturesEmisesCount, montant: facturesEmisesMontant, basisLabel: 'des RDV' },
+            { label: 'Factures payées', volume: facturesPayeesCount, montant: facturesPayeesMontant, basisLabel: 'des factures émises' }
         ];
-        for (var i = 1; i < steps.length; i++) {
-            steps[i].taux = steps[i - 1].volume > 0 ? Math.round((steps[i].volume / steps[i - 1].volume) * 100) : 0;
-        }
+        steps[1].taux = rdvTotal > 0 ? Math.round((steps[1].volume / rdvTotal) * 100) : 0;
+        steps[2].taux = rdvTotal > 0 ? Math.round((steps[2].volume / rdvTotal) * 100) : 0;
+        steps[3].taux = facturesEmisesCount > 0 ? Math.round((steps[3].volume / facturesEmisesCount) * 100) : 0;
 
         return {
             steps: steps,
@@ -11380,7 +11622,7 @@ document.addEventListener('DOMContentLoaded', function () {
             left.appendChild(makeEl('div', 'analyses-funnel-label', step.label + (step.montant !== null ? ' — ' + devisCalc.formatMoney(step.montant) : '')));
             stepEl.appendChild(left);
             if (step.taux !== undefined) {
-                stepEl.appendChild(makeEl('div', 'analyses-funnel-percent', step.taux + ' %'));
+                stepEl.appendChild(makeEl('div', 'analyses-funnel-percent', step.taux + ' % ' + step.basisLabel));
             }
             funnelEl.appendChild(stepEl);
         });
@@ -11398,67 +11640,15 @@ document.addEventListener('DOMContentLoaded', function () {
             item.appendChild(makeEl('span', 'info-value', pair[1]));
             extraEl.appendChild(item);
         });
-
-        renderInsights(funnel);
-    }
-
-    var TONE_CLASS = { info: 'insight-card-info', warning: 'insight-card-warning', neutral: 'insight-card-primary' };
-    var TONE_ICON = {
-        info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>',
-        warning: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>',
-        neutral: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="m19 9-5 5-4-4-3 3"></path></svg>'
-    };
-
-    // Constats automatiques calculés depuis les données réelles du tunnel —
-    // simples règles de lecture ("Lecture commerciale"), pas une
-    // intelligence artificielle.
-    function renderInsights(funnel) {
-        var insightsEl = document.getElementById('dashboard-insights');
-        insightsEl.innerHTML = '';
-
-        var insights = [];
-
-        if (funnel.devisEnvoyesCount > 0) {
-            insights.push({ tonalite: 'info', titre: funnel.devisEnvoyesCount + ' devis en attente de réponse', sousTexte: 'Montant potentiel : ' + devisCalc.formatMoney(funnel.montantEnAttente) });
-        }
-        if (funnel.facturesImpayeesCount > 0) {
-            insights.push({ tonalite: 'warning', titre: funnel.facturesImpayeesCount + ' facture(s) impayée(s)', sousTexte: 'À suivre dans la Facturation' });
-        }
-        var weakestStep = null;
-        for (var i = 1; i < funnel.steps.length; i++) {
-            if (weakestStep === null || funnel.steps[i].taux < weakestStep.taux) {
-                weakestStep = funnel.steps[i];
-            }
-        }
-        if (weakestStep) {
-            insights.push({ tonalite: 'neutral', titre: 'Étape la plus sélective : ' + weakestStep.label, sousTexte: weakestStep.taux + ' % de passage depuis l\'étape précédente' });
-        }
-
-        insights = insights.slice(0, 3);
-
-        if (insights.length === 0) {
-            insightsEl.appendChild(makeEl('p', 'empty-state-inline', 'Aucun constat particulier pour l\'instant.'));
-            return;
-        }
-
-        insights.forEach(function (insight) {
-            var card = makeEl('div', 'insight-card ' + (TONE_CLASS[insight.tonalite] || 'insight-card-info'));
-            var icon = makeEl('span', 'insight-card-icon');
-            icon.innerHTML = TONE_ICON[insight.tonalite] || TONE_ICON.info;
-            var body = makeEl('div', 'insight-card-body');
-            body.appendChild(makeEl('p', 'insight-card-title', insight.titre));
-            body.appendChild(makeEl('p', 'insight-card-subtext', insight.sousTexte));
-            card.appendChild(icon);
-            card.appendChild(body);
-            insightsEl.appendChild(card);
-        });
     }
 
     // ---------- Rendu initial ----------
 
     renderSituation();
     renderMiniAgenda();
+    renderTodoListTabs();
     renderTodos();
     renderPerformanceChart();
+    renderActivityChart();
     renderTunnel();
 })();

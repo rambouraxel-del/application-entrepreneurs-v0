@@ -62,11 +62,6 @@
                     <a href="settings.html" class="topbar-icon-btn" aria-label="Paramètres">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.32 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                     </a>
-                    <button type="button" class="topbar-date btn-wip">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></svg>
-                        <span id="topbar-today-date"></span>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                    </button>
                 </div>
             </header>
 
@@ -119,10 +114,7 @@
                                     <h3>Ma to-do list</h3>
                                     <button type="button" class="btn-secondary" id="todo-add-btn">Ajouter une tâche</button>
                                 </div>
-                                <div class="page-tabs" id="todo-filter-tabs">
-                                    <button type="button" class="page-tab page-tab-active" data-filter="a-faire">À faire</button>
-                                    <button type="button" class="page-tab" data-filter="terminees">Terminées</button>
-                                </div>
+                                <div class="page-tabs" id="todo-list-tabs"></div>
                                 <ul class="todo-list dashboard-todo-list" id="todo-list"></ul>
                                 <p class="empty-state-inline" id="todo-empty" style="display: none;">Aucune tâche.</p>
                             </div>
@@ -130,7 +122,7 @@
                                 <div class="dashboard-block-header">
                                     <h3>Alertes</h3>
                                 </div>
-                                <ul class="alert-list" id="dashboard-alerts-list"></ul>
+                                <ul class="alert-list dashboard-alerts-list" id="dashboard-alerts-list"></ul>
                                 <p class="empty-state-inline" id="dashboard-alerts-empty" style="display: none;">Aucune alerte pour l'instant.</p>
                             </div>
                         </div>
@@ -143,29 +135,54 @@
                         <h2>Performance</h2>
                     </div>
                     <div class="dashboard-performance-grid">
-                        <div class="dashboard-block dashboard-chart-block">
-                            <div class="dashboard-block-header">
-                                <h3>Performance financière</h3>
-                                <div class="dashboard-chart-controls">
-                                    <select id="dashboard-chart-period-select" class="table-select" aria-label="Période du graphique">
-                                        <option value="6">6 mois</option>
-                                        <option value="12">12 mois</option>
-                                    </select>
-                                    <div class="save-menu" id="dashboard-chart-indicators-menu">
-                                        <button type="button" class="btn-secondary save-menu-toggle" id="dashboard-chart-indicators-toggle" aria-haspopup="true" aria-expanded="false">
-                                            Indicateurs
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>
-                                        </button>
-                                        <div class="save-menu-dropdown" id="dashboard-chart-indicators-dropdown" style="display: none;">
-                                            <label class="modal-checkbox-item"><input type="checkbox" value="ca_facture" checked> CA facturé</label>
-                                            <label class="modal-checkbox-item"><input type="checkbox" value="encaisse"> Encaissé</label>
-                                            <label class="modal-checkbox-item"><input type="checkbox" value="solde_net"> Solde net (facturé − encaissé)</label>
+                        <div class="dashboard-performance-left">
+                            <div class="dashboard-block dashboard-chart-block">
+                                <div class="dashboard-block-header">
+                                    <h3>Performance financière</h3>
+                                    <div class="dashboard-chart-controls">
+                                        <select id="dashboard-chart-period-select" class="table-select" aria-label="Période du graphique">
+                                            <option value="6">6 mois</option>
+                                            <option value="12">12 mois</option>
+                                        </select>
+                                        <div class="save-menu" id="dashboard-chart-indicators-menu">
+                                            <button type="button" class="btn-secondary save-menu-toggle" id="dashboard-chart-indicators-toggle" aria-haspopup="true" aria-expanded="false">
+                                                Indicateurs
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>
+                                            </button>
+                                            <div class="save-menu-dropdown" id="dashboard-chart-indicators-dropdown" style="display: none;">
+                                                <label class="modal-checkbox-item"><input type="checkbox" value="ca_facture" checked> CA facturé</label>
+                                                <label class="modal-checkbox-item"><input type="checkbox" value="encaisse"> Encaissé</label>
+                                                <label class="modal-checkbox-item"><input type="checkbox" value="solde_net"> Solde net (facturé − encaissé)</label>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
+                                <div id="dashboard-chart-container"></div>
+                                <div class="dashboard-chart-summary" id="dashboard-chart-summary"></div>
                             </div>
-                            <div id="dashboard-chart-container"></div>
-                            <div class="dashboard-chart-summary" id="dashboard-chart-summary"></div>
+
+                            <div class="dashboard-block dashboard-chart-block">
+                                <div class="dashboard-block-header">
+                                    <h3>Activité commerciale</h3>
+                                    <div class="dashboard-chart-controls">
+                                        <div class="save-menu" id="dashboard-activity-indicators-menu">
+                                            <button type="button" class="btn-secondary save-menu-toggle" id="dashboard-activity-indicators-toggle" aria-haspopup="true" aria-expanded="false">
+                                                Indicateurs
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>
+                                            </button>
+                                            <div class="save-menu-dropdown" id="dashboard-activity-indicators-dropdown" style="display: none;">
+                                                <label class="modal-checkbox-item"><input type="checkbox" value="nouveaux_clients" checked> Nouveaux clients</label>
+                                                <label class="modal-checkbox-item"><input type="checkbox" value="rdv_effectues" checked> Rendez-vous effectués</label>
+                                                <label class="modal-checkbox-item"><input type="checkbox" value="devis_crees" checked> Devis créés</label>
+                                                <label class="modal-checkbox-item"><input type="checkbox" value="devis_acceptes" checked> Devis acceptés</label>
+                                                <label class="modal-checkbox-item"><input type="checkbox" value="factures_emises" checked> Factures émises</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="dashboard-activity-chart-container"></div>
+                                <div class="dashboard-chart-summary" id="dashboard-activity-chart-summary"></div>
+                            </div>
                         </div>
 
                         <div class="dashboard-block dashboard-tunnel-block">
@@ -174,10 +191,6 @@
                             </div>
                             <div class="analyses-funnel" id="dashboard-funnel"></div>
                             <div class="info-grid dashboard-tunnel-extra" id="dashboard-tunnel-extra"></div>
-                            <div class="dashboard-block-header dashboard-insights-header">
-                                <h3>Lecture commerciale</h3>
-                            </div>
-                            <div class="insight-cards" id="dashboard-insights"></div>
                         </div>
                     </div>
                 </section>

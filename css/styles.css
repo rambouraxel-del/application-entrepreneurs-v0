@@ -347,33 +347,9 @@ svg {
     height: 18px;
 }
 
-.topbar-date {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background-color: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-btn);
-    padding: 0 14px;
-    height: 40px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--color-text);
-    cursor: pointer;
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-
-.topbar-date:hover {
-    border-color: var(--color-primary);
-    color: var(--color-primary);
-}
-
-.topbar-date svg {
-    width: 16px;
-    height: 16px;
-    color: var(--color-text-secondary);
-    flex-shrink: 0;
+.topbar-greeting {
+    flex: 1 1 auto;
+    min-width: 0;
 }
 
 .topbar-badge {
@@ -3467,6 +3443,40 @@ a.tresorerie-timeline-item:hover {
     flex-shrink: 0;
 }
 
+#todo-list-tabs.page-tabs {
+    flex-wrap: wrap;
+    row-gap: 6px;
+}
+
+.todo-list-add-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    margin-bottom: 6px;
+    border-radius: 50%;
+    border: 1px dashed var(--color-border-strong);
+    background: none;
+    color: var(--color-text-secondary);
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.todo-list-add-btn:hover {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+/* Alertes (V0.12.1) : cadre à hauteur fixe, contenu défilant plutôt que de
+   pousser la hauteur de la carte au gré du nombre d'alertes actives. */
+.dashboard-alerts-list {
+    max-height: 260px;
+    overflow-y: auto;
+}
+
 /* Niveau 3 : Performance */
 
 .dashboard-performance-grid {
@@ -3476,8 +3486,30 @@ a.tresorerie-timeline-item:hover {
     align-items: stretch;
 }
 
-.dashboard-performance-grid > .dashboard-block {
+.dashboard-performance-grid > .dashboard-block,
+.dashboard-performance-grid > .dashboard-performance-left {
     min-width: 0;
+}
+
+.dashboard-performance-left {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.dashboard-performance-left .dashboard-block {
+    margin-top: 0;
+}
+
+.dashboard-tunnel-block {
+    display: flex;
+    flex-direction: column;
+    margin-top: 0;
+}
+
+.dashboard-tunnel-block .analyses-funnel {
+    flex: 1;
+    justify-content: space-evenly;
 }
 
 .dashboard-chart-controls {
@@ -3540,10 +3572,6 @@ a.tresorerie-timeline-item:hover {
     padding-top: 14px;
     border-top: 1px solid var(--color-border);
     grid-template-columns: repeat(2, 1fr);
-}
-
-.dashboard-insights-header {
-    margin-top: 18px;
 }
 
 /* Responsive : tablette et mobile */

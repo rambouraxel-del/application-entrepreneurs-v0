@@ -6,7 +6,11 @@
     function parseFr(value){var p=String(value||'').split('/');if(p.length!==3)return null;var d=new Date(Number(p[2]),Number(p[1])-1,Number(p[0]));d.setHours(0,0,0,0);return isNaN(d)?null:d;}
     function days(a,b){return Math.round((b-a)/86400000);}
     function money(value){return window.COCKPIT_DEVIS_CALC?window.COCKPIT_DEVIS_CALC.formatMoney(value):String(value)+' €';}
-    function computeGoalPercent(){var card=document.querySelector('#dashboard-kpis-situation .kpi-card:nth-child(4) .kpi-value');if(card){var n=parseFloat(card.textContent);if(Number.isFinite(n))return n;}var goal=Number(store.getSection('dashboard').revenueGoal||0),total=0,calc=window.COCKPIT_DEVIS_CALC;Object.keys(window.COCKPIT_FACTURE_DETAILS||{}).forEach(function(key){var f=window.COCKPIT_FACTURE_DETAILS[key];if(f.statutEmission==='emise'&&calc)total+=calc.computeDevisTotals(f.lignes||[]).totalTTC;});return goal?Math.round(total/goal*100):100;}
+    // V0.12.1 : la carte KPI "Objectif" a été retirée du Dashboard (remplacée
+    // par "Nombre de clients"), donc ce calcul ne peut plus lire un
+    // pourcentage déjà affiché dans le DOM — il recalcule directement CA
+    // facturé (toutes factures émises) / objectif de CA configuré.
+    function computeGoalPercent(){var goal=Number(store.getSection('dashboard').revenueGoal||0),total=0,calc=window.COCKPIT_DEVIS_CALC;Object.keys(window.COCKPIT_FACTURE_DETAILS||{}).forEach(function(key){var f=window.COCKPIT_FACTURE_DETAILS[key];if(f.statutEmission==='emise'&&calc)total+=calc.computeDevisTotals(f.lignes||[]).totalTTC;});return goal?Math.round(total/goal*100):100;}
     function compute(){
         var cfg=store.getSection('alerts'),d=store.getSection('dashboard'),today=new Date();today.setHours(0,0,0,0);var result=[],seen={};
         function push(key,gravity,title,sub,href,css){if(seen[key])return;seen[key]=true;result.push({key:key,gravite:gravity,titre:title,sousTexte:sub,lien:href,classe:css||'alert-info'});}
