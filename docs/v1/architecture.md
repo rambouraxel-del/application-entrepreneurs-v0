@@ -2,7 +2,9 @@
 
 > **Source de vérité technique de la V1.** Périmètre fonctionnel de référence : `docs/mvp-commercial.md`. Vision produit : `docs/positionnement-produit.md`. Règles décisionnelles : `docs/insights-engine.md`.
 >
-> Documents liés : [`data-model.md`](data-model.md) · [`security.md`](security.md) · [`migration-v0-v1.md`](migration-v0-v1.md)
+> Documents liés : [`data-model.md`](data-model.md) · [`security.md`](security.md) · [`migration-v0-v1.md`](migration-v0-v1.md) · [`lot-0-validation.md`](lot-0-validation.md)
+>
+> **Éprouvée par le Lot 0** : les décisions marquées ⚑ ont été modifiées à la suite de tests réellement exécutés (voir `lot-0-validation.md`).
 >
 > **Statut : conception validée à relire — aucune ligne de V1 n'est écrite.** Ce document doit permettre à un développeur qui n'a pas participé à la V0 de savoir quoi construire, comment, pourquoi, et quelles règles ne jamais violer.
 
@@ -172,10 +174,13 @@ Si un besoin réellement asynchrone apparaît (relances automatiques, transmissi
    - **échoue bruyamment** si aucun contexte tenant n'est présent.
    Le client Prisma brut n'est accessible que depuis un module `db/system.ts` nommé explicitement (migrations, tâches système, webhooks Stripe qui résolvent l'organisation par l'identifiant client Stripe). Toute importation de `db/system.ts` hors de ces chemins est signalée par une règle de lint.
 
-4. **Vérification d'appartenance** — l'`organizationId` ne provient **jamais** d'un paramètre de requête, d'un champ de formulaire ou d'une URL. Il est dérivé de la session côté serveur. Un utilisateur ne peut pas « demander » une autre organisation.
+   ⚑ **Trois rôles PostgreSQL, pas deux** (Lot 0) : `FORCE ROW LEVEL SECURITY` — indispensable, sans quoi le propriétaire des tables échappe aux policies — bloque aussi le propriétaire. Or l'inscription crée une organisation *avant* qu'un contexte tenant existe. Il faut donc un **rôle système `BYPASSRLS`** distinct du propriétaire (DDL) et du rôle applicatif. C'est l'unique porte de sortie de la RLS ; elle reste confinée à `db/system.ts`.
 
-5. **Row Level Security — défense en profondeur, activation conditionnelle.** Le schéma est conçu compatible RLS dès le départ (colonne présente partout, politiques écrites dans les migrations). L'activation réelle suppose de se connecter avec un rôle restreint et de positionner `SET LOCAL app.organization_id` dans chaque transaction, ce qui alourdit chaque requête avec Prisma.
-   **Décision : mécanisme applicatif (points 1 à 4) en primaire pour le MVP ; RLS activée avant l'ouverture au-delà d'une bêta fermée, ou immédiatement si du SQL brut apparaît dans le code.** C'est un arbitrage assumé : une équipe qui met RLS à moitié en place se donne une fausse sécurité plus dangereuse qu'un filtrage applicatif rigoureux et testé.
+4. **Vérification d'appartenance, aux deux bouts** — l'`organizationId` ne provient **jamais** d'un paramètre de requête, d'un champ de formulaire ou d'une URL : il est dérivé de la session côté serveur. ⚑ Le Lot 0 a montré que cela ne suffit pas : un contexte tenant **fabriqué en code** (utilisateur de A, organisation de B) traversait extension *et* RLS, parce qu'une policy « `organization_id = organisation courante` » **confine** la requête sans **autoriser** l'utilisateur. Deux corrections, testées : la policy exige aussi une appartenance réelle (`AND app_is_member(organization_id)`), et `TenantContext` est un **type marqué** dont le seul producteur est le résolveur qui vérifie l'appartenance — un contexte fabriqué à la main ne compile pas.
+
+5. ⚑ **Row Level Security — active dès le premier jour, pas un durcissement.** *Décision révisée par le Lot 0.* L'architecture initiale la reportait ; les tests ont montré que l'extension Prisma **n'intercepte ni le SQL brut, ni les relations imbriquées (`include`), ni les modèles hors de son périmètre** — trois cas parfaitement ordinaires où la RLS est la **seule** protection. La reporter aurait laissé ces trous ouverts en production.
+   **Décision : RLS activée en même temps que la première table métier du Lot 1**, avec `ENABLE` + `FORCE ROW LEVEL SECURITY` et une policy exigeant **concordance d'organisation ET appartenance**.
+   Le contexte est transmis par `set_config('app.organization_id', $1, true)` — portée **transaction**, donc annulée au COMMIT comme au ROLLBACK : impossible à faire fuiter entre deux requêtes via une connexion recyclée par le pool. `SET` de portée session est **proscrit** pour cette raison exacte, et `SET LOCAL x = '…'` l'est aussi car il n'accepte pas de paramètre lié (concaténation = injection SQL). Coût mesuré : deux `set_config` par transaction et des policies de trois lignes.
 
 ### 6.2 Conséquences sur les tests — non négociable
 
@@ -215,9 +220,9 @@ Détails de sécurité (durcissement, en-têtes, limitation de débit, RGPD) : [
 | Règle | Détail |
 |---|---|
 | **Stockage** | Tous les montants sont des **entiers en centimes** (`Int` en base, `number` entier en TypeScript). Aucune colonne monétaire en `float`/`double`. Les colonnes portent le suffixe `_cents` (`unit_price_cents`, `total_ttc_cents`) pour rendre toute confusion visible à la lecture. |
-| **Quantités** | `Decimal(12,3)` en base (une prestation peut valoir 1,5 jour). Manipulées avec une bibliothèque décimale, jamais avec l'arithmétique flottante native. |
+| **Quantités** | `Decimal(12,3)` en base (une prestation peut valoir 1,5 jour), manipulées en **millièmes entiers** dans le code (1,5 → 1500). |
 | **Taux de TVA** | Stockés en points de base entiers (2000 = 20,00 %) pour éviter tout flottant dans le chemin de calcul. |
-| **Calcul** | Effectué avec `decimal.js` (ou équivalent) puis **arrondi une seule fois par étape documentée**, dans cet ordre — repris de la sémantique validée en V0 : `brut = round(qté × PU)` → `remise = round(brut × taux)` → `net = brut − remise` → `TVA = round(net × taux)` → `TTC = net + TVA`. |
+| **Calcul** | ⚑ **Arithmétique entière exacte, sans bibliothèque décimale** (validé au Lot 0) : montants en centimes, quantités en millièmes et taux en points de base étant tous entiers, `BigInt` suffit — `decimal.js`, initialement prévu, est retiré. **Arrondi une seule fois par étape documentée**, dans cet ordre repris de la sémantique validée en V0 : `brut = round(qté × PU)` → `remise = round(brut × taux)` → `net = brut − remise` → `TVA = round(net × taux)` → `TTC = net + TVA`. |
 | **Arrondi** | Au centime, **arithmétique (half-up)**. Une seule fonction `roundToCents()` dans tout le code. |
 | **Totaux de document** | **Somme des montants de lignes stockés** — jamais recalculés par une formule au niveau document. Garantit que le PDF, l'écran et la base affichent le même chiffre au centime près. |
 | **TVA** | Récapitulée **par taux** (la V0 le fait déjà), pas globalement : obligation de présentation sur une facture française. |
@@ -563,7 +568,7 @@ Principe : **chaque lot produit quelque chose de vérifiable à l'écran.** Pas 
 
 | Lot | Contenu | Vérifiable par |
 |---|---|---|
-| **Lot 0 — Réduction des risques** | Trois prototypes jetables : génération PDF sur l'hébergeur cible, numérotation sous concurrence, boucle webhook Stripe | Trois preuves techniques, aucune UI |
+| **Lot 0 — Réduction des risques** | ✅ **Réalisé** : isolation multi-tenant (Prisma + RLS), numérotation concurrente, PDF et immutabilité documentaire — 60 tests sur PostgreSQL réel. Reste à couvrir : boucle webhook Stripe, PDF sur l'hébergeur cible | [`lot-0-validation.md`](lot-0-validation.md) |
 | **Lot 1 — Socle** | Projet, TypeScript, lint, CI · Postgres + Prisma · authentification · organisation + appartenance · **contexte tenant + tests d'isolation** · shell applicatif | Se connecter, créer son organisation, voir un écran vide mais réel |
 | **Lot 2 — Clients + Dashboard minimal** | CRUD clients · Dashboard niveau 1 (situation) sur données réelles | Première donnée saisie visible dans le cockpit |
 | **Lot 3 — Devis** | Devis, lignes, calculs en centimes, statuts, PDF devis | Émettre un devis et télécharger son PDF |
@@ -610,8 +615,9 @@ L'ordre n'est pas négociable sur un point : **le lot 1 livre l'isolation multi-
 | ADR-03 | Next.js + TypeScript en full-stack | Actée | §3 |
 | ADR-04 | PostgreSQL + Prisma | Actée | §3 |
 | ADR-05 | Authentification déléguée (Supabase Auth) | Actée | §7 |
-| ADR-06 | Isolation tenant applicative automatique ; RLS en durcissement | Actée avec condition de revue | §6 |
-| ADR-07 | Argent en entiers de centimes, arrondi unique documenté | Actée — **règle inviolable** | §8 |
+| ADR-06 | ⚑ Isolation tenant : filtrage applicatif **et** RLS active dès le Lot 1, policy exigeant organisation **et** appartenance | **Révisée au Lot 0** | §6, `lot-0-validation.md` §8.1-8.2 |
+| ADR-06b | ⚑ Trois rôles PostgreSQL : propriétaire (DDL), applicatif (`NOBYPASSRLS`), système (`BYPASSRLS`) confiné | Ajoutée au Lot 0 | §6.1, `lot-0-validation.md` §8.3 |
+| ADR-07 | ⚑ Argent en entiers (centimes, millièmes, points de base), arithmétique entière **sans bibliothèque décimale** | Actée — **règle inviolable**, simplifiée au Lot 0 | §8, `lot-0-validation.md` §6 |
 | ADR-08 | Immutabilité des documents émis par snapshots + trigger | Actée — **règle inviolable** | §9.2 |
 | ADR-09 | Numérotation par compteur transactionnel, allouée à l'émission | Actée | §10 |
 | ADR-10 | Insights calculés à la demande, moteur pur, IA jamais nécessaire | Actée | §11 |

@@ -39,12 +39,13 @@ application-entrepreneurs-v0/
 │   ├── settings-paths.test.js
 │   ├── settings-agenda-statuses.test.js
 │   └── insights-engine.test.js
+├── v1-spike/                    TEMPORAIRE — Lot 0 : preuve des fondations V1 (supprimable)
 ├── package.json                 Script "test" (npm test), sans dépendance externe
 └── docs/
     ├── positionnement-produit.md Source de vérité produit (vision, cible, promesse)
     ├── insights-engine.md        Architecture et règles du moteur d'insights (V0.13)
     ├── mvp-commercial.md         Périmètre de la première version commercialisable (P0/P1/P2, socle SaaS)
-    ├── v1/                       Architecture technique V1 (architecture, data-model, security, migration)
+    ├── v1/                       Architecture technique V1 (architecture, data-model, security, migration, lot-0-validation)
     ├── changelog.md
     ├── decisions.md
     ├── roadmap-v0bis.md
@@ -69,7 +70,8 @@ application-entrepreneurs-v0/
 - `docs/positionnement-produit.md` : positionnement produit, source de vérité pour les futures itérations.
 - `docs/insights-engine.md` : règles et limites du moteur d'insights du Dashboard (V0.13).
 - `docs/mvp-commercial.md` : périmètre P0/P1/P2/hors périmètre de la première version commercialisable, socle SaaS, modèle de données conceptuel — cadrage, aucune donnée utilisateur (voir son registre d'hypothèses).
-- `docs/v1/architecture.md` : source de vérité technique de la V1 (stack, monolithe modulaire, multi-tenant, argent, insights, roadmap technique) et ses documents liés `data-model.md`, `security.md`, `migration-v0-v1.md`.
+- `docs/v1/architecture.md` : source de vérité technique de la V1 (stack, monolithe modulaire, multi-tenant, argent, insights, roadmap technique) et ses documents liés `data-model.md`, `security.md`, `migration-v0-v1.md`, `lot-0-validation.md`.
+- `v1-spike/` : code temporaire du Lot 0, preuve exécutable des fondations. Ne fait pas partie de la V0 et peut être supprimé sans impact.
 - `docs/changelog.md`, `docs/roadmap-v0bis.md`, `docs/backlog.md`, `docs/versioning.md`, `docs/decisions.md` : suivi de version courant.
 - `docs/settings-v0.11.md` : architecture et checklist du Centre de paramètres.
 - `docs/archive/` : documents historiques ou de revue clôturée, conservés pour traçabilité mais non tenus à jour.

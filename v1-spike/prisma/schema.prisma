@@ -1,0 +1,108 @@
+// Spike Lot 0 — modèle MINIMAL, strictement limité à ce qui permet de valider
+// l'isolation multi-tenant, la numérotation concurrente et l'immutabilité
+// documentaire. Ce n'est PAS le modèle V1 : voir docs/v1/data-model.md.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL_OWNER")
+}
+
+/// Identité applicative. En V1 l'authentification est déléguée : cette table
+/// miroite l'utilisateur du fournisseur d'auth et ne stocke aucun mot de passe.
+model User {
+  id          String       @id @default(uuid()) @db.Uuid
+  email       String       @unique
+  createdAt   DateTime     @default(now()) @map("created_at")
+  memberships Membership[]
+
+  @@map("users")
+}
+
+/// Le tenant.
+model Organization {
+  id          String            @id @default(uuid()) @db.Uuid
+  name        String
+  legalName   String            @map("legal_name")
+  createdAt   DateTime          @default(now()) @map("created_at")
+  memberships Membership[]
+  clients     Client[]
+  documents   IssuedDocument[]
+  counters    DocumentCounter[]
+
+  @@map("organizations")
+}
+
+/// Lien utilisateur <-> organisation. Présent dès le Lot 0 : c'est lui qui
+/// autorise un organizationId, jamais le navigateur.
+model Membership {
+  id             String       @id @default(uuid()) @db.Uuid
+  userId         String       @map("user_id") @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  role           String       @default("owner")
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+  @@map("memberships")
+}
+
+/// Donnée métier scopée tenant — support des tests d'isolation.
+model Client {
+  id             String           @id @default(uuid()) @db.Uuid
+  organizationId String           @map("organization_id") @db.Uuid
+  name           String
+  email          String?
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  documents      IssuedDocument[]
+
+  @@index([organizationId])
+  @@map("clients")
+}
+
+/// Compteur de numérotation. Clé primaire composite (organisation, type,
+/// exercice) — l'incrément se fait par UPDATE ... RETURNING dans la
+/// transaction d'émission (jamais MAX+1 ni COUNT+1).
+model DocumentCounter {
+  organizationId String       @map("organization_id") @db.Uuid
+  docType        String       @map("doc_type")
+  year           Int
+  lastValue      Int          @default(0) @map("last_value")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@id([organizationId, docType, year])
+  @@map("document_counters")
+}
+
+/// Document émis (facture du spike). Porte les SNAPSHOTS figés à l'émission :
+/// c'est ce qui garantit qu'une modification ultérieure du client ne réécrit
+/// pas l'histoire.
+model IssuedDocument {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  clientId       String       @map("client_id") @db.Uuid
+  docType        String       @map("doc_type")
+  year           Int
+  sequence       Int
+  number         String
+  issuedAt       DateTime     @default(now()) @map("issued_at")
+  clientSnapshot Json         @map("client_snapshot")
+  sellerSnapshot Json         @map("seller_snapshot")
+  totalHtCents   Int          @map("total_ht_cents")
+  totalVatCents  Int          @map("total_vat_cents")
+  totalTtcCents  Int          @map("total_ttc_cents")
+  pdfPath        String?      @map("pdf_path")
+  pdfSha256      String?      @map("pdf_sha256")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client         Client       @relation(fields: [clientId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, number])
+  @@index([organizationId, issuedAt])
+  @@map("issued_documents")
+}

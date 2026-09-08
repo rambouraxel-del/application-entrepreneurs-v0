@@ -10,6 +10,7 @@
 | V0.13.1 | Préparation aux tests utilisateurs : dates de démonstration relatives, re-diagnostic du topbar mobile, suppression de `js/settings-alerts.js` | Validée |
 | Étape 4 | Définition du MVP commercial : périmètre P0/P1/P2, socle SaaS, modèle de données conceptuel (`docs/mvp-commercial.md`) | Cadrage réalisé, aucune donnée utilisateur — voir le registre d'hypothèses |
 | Étape 5 | Conception de l'architecture technique V1 : stack, monolithe modulaire, multi-tenant, modèle de données, workflow financier, roadmap technique (`docs/v1/`) | Conception réalisée, à relire et valider |
+| Lot 0 | Validation technique des fondations V1 : isolation multi-tenant (Prisma + RLS), numérotation concurrente, PDF et immutabilité — 60 tests sur PostgreSQL réel (`docs/v1/lot-0-validation.md`, code dans `v1-spike/`) | Réalisé — fondations validées, Lot 1 autorisé |
 | V1 | Version fonctionnelle stable : backend, données persistantes, authentification et synchronisation, construite sur le périmètre P0 de `docs/mvp-commercial.md` et l'architecture de `docs/v1/architecture.md` | À venir |
 
 ## Prochaines priorités
@@ -59,6 +60,10 @@ Les tests utilisateurs initialement prévus après la V0.13.1 sont temporairemen
 ## Étape 5 — Conception de l'architecture technique V1
 
 Conception uniquement, sans aucune implémentation : `docs/v1/architecture.md` devient la source de vérité technique de la V1, complétée par `data-model.md`, `security.md` et `migration-v0-v1.md`. Décisions structurantes : monolithe modulaire Next.js/TypeScript sur PostgreSQL, authentification déléguée, isolation multi-tenant garantie par un filtrage automatique et des tests bloquants, argent en centimes entiers, immutabilité des documents émis par snapshots, numérotation par compteur transactionnel, moteur d'insights calculé à la demande et resté déterministe. La V1 est construite comme une nouvelle application reprenant les concepts validés de la V0, et non par refactoring progressif de `js/app.js`. La roadmap technique est découpée en six lots verticaux livrant chacun quelque chose de vérifiable.
+
+## Lot 0 — Validation technique des fondations
+
+Spike contrôlé, temporaire, isolé dans `v1-spike/` : du code minimal écrit pour éprouver les trois décisions les plus risquées de l'architecture. Résultat : les trois fondations tiennent (isolation multi-tenant à deux couches, numérotation concurrente sans collision ni trou, PDF sans Chromium avec immutabilité documentaire prouvée), et **quatre corrections d'architecture** ont été apportées à la suite des tests — dont deux failles sérieuses qui n'auraient pas été visibles sans exécution réelle : la RLS ne peut pas être reportée, et une policy d'organisation ne suffit pas sans vérification d'appartenance. Détail et verdicts : `docs/v1/lot-0-validation.md`. Restent à confirmer en environnement connecté : Supabase Auth et Storage réels, intégration Next.js, PDF sur l'hébergeur cible.
 
 ## V1
 

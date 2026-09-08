@@ -31,9 +31,10 @@ Le mécanisme complet est décrit dans `architecture.md` §6. Rappel des points 
 4. Client de base non filtré isolé dans `lib/db/system.ts`, importation surveillée par règle de lint et par test.
 5. **Identifiants UUID** : une URL devinée ne révèle rien, et même connue, elle reste filtrée.
 6. **Tests d'isolation bloquants en CI** sur tous les modèles, plus une garde de schéma qui interdit d'ajouter une table métier non scopée.
-7. **RLS PostgreSQL** : schéma conçu compatible dès le départ ; activation avant l'ouverture au-delà d'une bêta fermée, ou immédiatement si du SQL brut apparaît (`architecture.md` ADR-06).
+7. **RLS PostgreSQL active dès le Lot 1** (décision révisée par le Lot 0) : `ENABLE` + `FORCE ROW LEVEL SECURITY`, policy exigeant **concordance d'organisation ET appartenance de l'utilisateur**. Le Lot 0 a démontré qu'une policy limitée à l'organisation confine sans autoriser, et que le filtrage applicatif ne couvre ni le SQL brut, ni les relations imbriquées. Voir `lot-0-validation.md` §8.1-8.2.
+8. **Trois rôles PostgreSQL** : propriétaire (DDL), applicatif (`NOBYPASSRLS`, non propriétaire), système (`BYPASSRLS`, confiné à `lib/db/system.ts` pour l'inscription et les webhooks). Un rôle superuser ou propriétaire sans `FORCE` traverserait toutes les policies.
 
-**Ce qu'un développeur ne doit jamais faire**, et qui doit être refusé en revue : écrire une requête avec un `where` tenant à la main, exposer un identifiant d'organisation dans une URL ou un formulaire, importer le client de base brut hors des chemins autorisés, ajouter une table métier sans `organization_id`.
+**Ce qu'un développeur ne doit jamais faire**, et qui doit être refusé en revue : écrire une requête avec un `where` tenant à la main, exposer un identifiant d'organisation dans une URL ou un formulaire, importer le client de base brut hors des chemins autorisés, ajouter une table métier sans `organization_id`, **fabriquer un `TenantContext` sans passer par le résolveur qui vérifie l'appartenance**, **utiliser `SET` de portée session** au lieu de `set_config(…, is_local => true)` pour transmettre le tenant.
 
 ---
 

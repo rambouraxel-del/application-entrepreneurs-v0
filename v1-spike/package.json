@@ -1,0 +1,29 @@
+{
+  "name": "cockpit-v1-spike",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Lot 0 — spike de validation des fondations V1. TEMPORAIRE : supprimable sans impact sur la V0.",
+  "scripts": {
+    "db:setup": "node scripts/setup-db.mjs",
+    "prisma:generate": "prisma generate",
+    "test": "vitest run",
+    "test:isolation": "vitest run tests/isolation.test.ts",
+    "test:numbering": "vitest run tests/numbering.test.ts",
+    "test:money": "vitest run tests/money.test.ts",
+    "test:documents": "vitest run tests/documents.test.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.3",
+    "@react-pdf/renderer": "^4.9.0",
+    "prisma": "^6.19.3",
+    "react": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.1",
+    "@types/react": "^18.3.31",
+    "tsx": "^4.23.13",
+    "typescript": "^5.9.3",
+    "vitest": "^2.1.9"
+  }
+}
