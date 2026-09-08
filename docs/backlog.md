@@ -1,9 +1,12 @@
 # Backlog produit
 
+## Après le cadrage du MVP commercial (`docs/mvp-commercial.md`)
+
+- Tests utilisateurs auprès d'indépendants et TPE de services ciblés, pour valider le registre d'hypothèses (H1 à H10) du MVP commercial, en particulier le périmètre volontairement réduit (agenda en liste, Analyses repoussée, mono-utilisateur, entité légale unique).
+- V1 technique construite sur le périmètre P0 défini, pas sur une reproduction complète de la V0.
+
 ## Après la V0.13 (prototype décisionnel)
 
-- Tests utilisateurs auprès d'indépendants et TPE de services ciblés, pour valider le positionnement, le moteur d'insights et la lisibilité du Dashboard.
-- Définition du MVP à partir des retours utilisateurs, avant la V1 technique.
 - Règles d'insights envisageables pour une itération ultérieure : voir `docs/insights-engine.md` (rendez-vous reportés plusieurs fois, objectif en retard, type `info`, priorisation des opportunités par valeur).
 
 ## Après la V0.12.1 (recentrage produit)

@@ -6,6 +6,7 @@ Ce dossier contient la documentation interne du projet : suivi des évolutions e
 ## Contenu
 - `positionnement-produit.md` — source de vérité produit : vision, cible, promesse, piliers Centraliser → Comprendre → Agir et ce que le produit n'est pas.
 - `insights-engine.md` — architecture et règles du moteur d'insights du Dashboard (V0.13) : alertes, priorités du jour, opportunités.
+- `mvp-commercial.md` — source de vérité du périmètre de la première version commercialisable : parcours cœur, P0/P1/P2/hors périmètre, socle SaaS, réglementaire, modèle de données conceptuel, écrans, registre d'hypothèses non validées.
 - `changelog.md` — résumé des grandes étapes réalisées, version par version.
 - `decisions.md` — trace des décisions importantes prises pendant le développement.
 - `roadmap-v0bis.md` — phases prévues après la V0 initiale, avec leur statut (Validée / En cours / À venir).
