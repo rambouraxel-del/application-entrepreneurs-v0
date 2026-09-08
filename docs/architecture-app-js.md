@@ -30,7 +30,7 @@ Le fichier est une suite d'environ 34 IIFE `(function () { ... })();` séquentie
 | 29 | Impression RDV | Vue imprimable |
 | 30 | Page Trésorerie | KPIs, mouvements, charges, alertes, graphique |
 | 31 | Page Analyses | Onglets, KPI, donuts, insights |
-| 32-34 | Dashboard | Salutation démo, Paramètres > Compte/Pilotage, cockpit quotidien (Situation générale, mini-agenda, to-do, Performance, Dynamique commerciale) — alertes pilotées uniquement par `js/settings-alerts.js` depuis V0.12 |
+| 32-34 | Dashboard | Salutation démo, Paramètres > Compte/Pilotage, cockpit décisionnel en 5 niveaux (Ma situation, À surveiller, Mes priorités du jour, Opportunités, Performance) — alertes/priorités/opportunités calculées par `js/insights-engine.js` depuis V0.13 |
 
 Pas de section dédiée pour `login.html`/`database.html` (supprimée en V0.12) : elles ne chargent que les composants globaux.
 

@@ -22,7 +22,6 @@ assert.strictEqual(window.COCKPIT_DEVIS_DETAILS.OLD.versions[0].companySnapshot.
 let treasury=store.getSection('treasury');treasury.showForecast=false;treasury.includeIssuedInvoices=false;store.updateSection('treasury',treasury);
 window.COCKPIT_TRESORERIE_CALC={labelForCategorie:v=>'legacy '+v,computeSnapshot:()=>({soldePrevisionnel:500,facturesAEncaisser:[{statut:'en-retard',resteAPayer:100}],aEncaisser:100,mouvements:[{statut:'prevu',lien:{type:'facture'}},{statut:'realise'}],chargesPrevues:[{statut:'prevu'}],alertes:[{titre:'old'}]})};
 let snap=window.COCKPIT_TRESORERIE_CALC.computeSnapshot(30);assert.strictEqual(snap.facturesAEncaisser.length,0);assert(snap.mouvements.every(m=>m.statut==='realise'));assert(!snap.alertes.some(a=>a.titre==='old'));
-load('settings-alerts.js');const alerts=window.COCKPIT_SETTINGS_ALERTS.compute();assert.strictEqual(new Set(alerts.map(a=>a.key)).size,alerts.length,'duplicate alerts');
 window.COCKPIT_CLIENT_STATUSES=[{value:'old'}];assert(window.COCKPIT_CLIENT_STATUSES.some(x=>x.value==='prospect'));
 window.COCKPIT_PRODUCT_TYPES=[{value:'old'}];assert(window.COCKPIT_PRODUCT_TYPES.some(x=>x.value==='service'));
 window.COCKPIT_RDV_STATUSES=[{value:'old'}];assert(window.COCKPIT_RDV_STATUSES.some(x=>x.value==='prevu'));

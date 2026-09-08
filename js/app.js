@@ -9,6 +9,36 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 
+// Dates de démonstration relatives (V0.13.1)
+// Quelques données fictives (un rendez-vous, une facture, un devis, un
+// dernier contact client...) ont besoin d'être crédibles quel que soit le
+// jour réel d'ouverture de l'application, pour que le Dashboard décisionnel
+// montre naturellement une situation, des points d'attention et une
+// opportunité dès l'ouverture. Ce petit module centralise les calculs de
+// date nécessaires à cela, pour éviter de disperser des `new Date()` dans
+// tout `app.js`. Il ne concerne QUE la construction du jeu de données de
+// démonstration : les moteurs de calcul (COCKPIT_*_CALC, COCKPIT_INSIGHTS_ENGINE)
+// ne sont pas modifiés et continuent de fonctionner avec des dates fixes en
+// paramètre (voir tests/insights-engine.test.js).
+window.COCKPIT_DEMO_DATES = (function () {
+    'use strict';
+    function pad2(n) {
+        return (n < 10 ? '0' : '') + n;
+    }
+    function toFr(date) {
+        return pad2(date.getDate()) + '/' + pad2(date.getMonth() + 1) + '/' + date.getFullYear();
+    }
+    // 'DD/MM/YYYY' à J+offsetDays par rapport à aujourd'hui (jours
+    // calendaires ; un offset négatif donne une date passée).
+    function relative(offsetDays) {
+        var d = new Date();
+        d.setHours(0, 0, 0, 0);
+        d.setDate(d.getDate() + offsetDays);
+        return toFr(d);
+    }
+    return { relative: relative };
+})();
+
 // Pop-up centralisé "Work in progress" (étape 7)
 // Le contenu et le comportement du pop-up sont définis une seule fois ici.
 // Tout élément portant la classe "btn-wip", sur n'importe quelle page, déclenche ce même pop-up.
@@ -439,7 +469,7 @@ document.addEventListener('DOMContentLoaded', function () {
             statut: 'fidele',
             telephone: '02 34 56 78 90',
             email: 'sophie.bernard@example.com',
-            dernierContact: '28/06/2026',
+            dernierContact: window.COCKPIT_DEMO_DATES.relative(-20), // V0.13.1 : client fidèle sans contact récent, pour l'opportunité correspondante
             adresse: '8 avenue des Tilleuls, 69003 Lyon',
             clientDepuis: '14/01/2024',
             kpis: {
@@ -741,8 +771,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 {
                     version: 1,
                     statut: 'envoye',
-                    dateCreation: '22/06/2026',
-                    dateModification: '22/06/2026',
+                    // V0.13.1 : devis envoyé il y a 10 jours (> seuil de
+                    // relance par défaut de 7 jours), pour l'alerte
+                    // "devis en attente" et l'opportunité "devis ouvert".
+                    dateCreation: window.COCKPIT_DEMO_DATES.relative(-10),
+                    dateModification: window.COCKPIT_DEMO_DATES.relative(-10),
                     clientSlug: 'atelier-leroy',
                     clientSnapshot: snapshotClient('atelier-leroy'),
                     companySnapshot: snapshotCompany(),
@@ -1046,9 +1079,11 @@ document.addEventListener('DOMContentLoaded', function () {
         'FAC-2026-00001': {
             numero: 'FAC-2026-00001',
             statutEmission: 'emise',
-            dateCreation: '01/07/2026',
-            dateEmission: '01/07/2026',
-            dateEcheance: '31/07/2026',
+            // V0.13.1 : facture à 30 jours, échéance dépassée de 5 jours,
+            // pour l'alerte "factures en retard" (voir insights-engine.js).
+            dateCreation: window.COCKPIT_DEMO_DATES.relative(-35),
+            dateEmission: window.COCKPIT_DEMO_DATES.relative(-35),
+            dateEcheance: window.COCKPIT_DEMO_DATES.relative(-5),
             clientSlug: 'sophie-bernard',
             clientSnapshot: devisCalc.snapshotClient('sophie-bernard'),
             companySnapshot: devisCalc.snapshotCompany(),
@@ -1373,7 +1408,7 @@ document.addEventListener('DOMContentLoaded', function () {
         'rdv-0001': {
             id: 'rdv-0001',
             titre: 'Point de suivi mensuel',
-            date: '09/07/2026',
+            date: window.COCKPIT_DEMO_DATES.relative(0), // V0.13.1 : rendez-vous du jour, pour "Mes priorités du jour"
             heureDebut: '09:30',
             heureFin: '10:15',
             clientSlug: 'julien-petit',
@@ -1410,7 +1445,7 @@ document.addEventListener('DOMContentLoaded', function () {
         'rdv-0002': {
             id: 'rdv-0002',
             titre: 'Présentation site vitrine',
-            date: '11/07/2026',
+            date: window.COCKPIT_DEMO_DATES.relative(3), // V0.13.1 : rendez-vous à venir, pour l'opportunité "RDV à fort potentiel"
             heureDebut: '14:00',
             heureFin: '15:00',
             clientSlug: 'atelier-leroy',

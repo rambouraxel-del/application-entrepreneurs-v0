@@ -20,7 +20,6 @@ application-entrepreneurs-v0/
 │   ├── settings-catalog.js     Métadonnées, capacités et recherche
 │   ├── settings-consumers.js   Raccordements aux modules
 │   ├── settings-referentials.js Référentiels configurables
-│   ├── settings-alerts.js      Ancienne source d'alertes Dashboard (V0.11, dépréciée V0.13)
 │   ├── settings-ui.js          Interface du Centre de paramètres
 │   └── insights-engine.js      Moteur d'insights Dashboard (V0.13) — alertes/priorités/opportunités
 ├── pages/

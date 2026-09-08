@@ -68,11 +68,11 @@ Les alertes du niveau 2 ne sont volontairement pas reprises ici, pour éviter de
 
 ## Limites connues de la V0.13
 
-- **Dates de la démonstration.** Les rendez-vous et devis de démonstration portent des dates fixes (février à juillet 2026). Selon la date système réelle, les règles « rendez-vous du jour », « rendez-vous non confirmés » (fenêtre à venir) peuvent ne rien remonter alors que les mêmes règles fonctionneraient normalement sur des données réelles à jour. Ce n'est pas une limite du moteur mais du jeu de données figé de la V0 (déjà signalée pour le mini-agenda, voir `docs/backlog.md`).
+- **Dates de la démonstration.** La plupart des rendez-vous et devis de démonstration portent encore des dates fixes (février à juillet 2026) ; selon la date système réelle, les règles « rendez-vous du jour » ou « rendez-vous non confirmés » peuvent ne rien remonter pour ces entrées-là, alors qu'elles fonctionneraient normalement sur des données réelles à jour. Depuis la V0.13.1, un petit nombre d'entrées clés (un rendez-vous du jour, un devis en attente, une facture en retard, un dernier contact client) sont calculées par rapport à la date réelle du jour (`window.COCKPIT_DEMO_DATES`, voir `js/app.js`) pour garantir une démonstration cohérente du Dashboard ; le reste du jeu de données n'a pas été converti (voir `docs/decisions.md`). Ce n'est pas une limite du moteur mais du jeu de données de la V0.
 - **Pas de persistance.** Comme le reste de la V0, les tâches de la to-do list restent en mémoire de page.
 - **Opportunités volontairement limitées à 4 règles** simples et directement justifiées par une donnée déjà saisie. Pas de score de potentiel commercial global, pas de recommandation combinée.
 - **Le type `info`** de la structure d'insight est prévu mais non utilisé en V0.13 : aucun constat purement informatif (hors attention/priorité/opportunité) n'a été jugé nécessaire pour cette itération.
-- **`js/settings-alerts.js`** (V0.11) reste dans le dépôt mais n'est plus chargé pour le Dashboard depuis la V0.13 (voir `docs/decisions.md`) : ses règles ont été reprises, agrégées et enrichies (montants) dans `insights-engine.js`.
+- **`js/settings-alerts.js`** (V0.11, ancienne source d'alertes du Dashboard) a été supprimé en V0.13.1 : ses règles avaient déjà été reprises, agrégées et enrichies (montants) dans `insights-engine.js` en V0.13, et il n'était plus chargé ni utilisé nulle part (voir `docs/decisions.md`).
 
 ## Règles envisageables pour une itération ultérieure
 

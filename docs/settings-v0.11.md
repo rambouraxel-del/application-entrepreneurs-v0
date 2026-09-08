@@ -8,7 +8,7 @@
 - Store local strict dans `settings-store.js`.
 - Catalogue fonctionnel/recherche dans `settings-catalog.js`.
 - Raccordements dans `settings-consumers.js` et `settings-referentials.js`.
-- Source unique d'alertes dans `settings-alerts.js`.
+- Source unique d'alertes dans `settings-alerts.js` (V0.11 ; supprimé en V0.13.1, remplacé par `js/insights-engine.js` — voir `docs/decisions.md`).
 - Apparence globale dans `css/preferences.css`.
 
 ## Persistance

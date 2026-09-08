@@ -267,6 +267,15 @@ svg {
     padding: 28px 40px 0;
 }
 
+.topbar-greeting {
+    /* Filet de sécurité flex (V0.13.1) : sans min-width:0, un enfant flex
+       texte ne peut pas se réduire sous la largeur de son mot le plus long,
+       ce qui provoquerait un débordement horizontal si la salutation ou le
+       nom d'entreprise (personnalisable, voir docs/README.md) devenait
+       inhabituellement long sur mobile. */
+    min-width: 0;
+}
+
 .topbar-greeting h1 {
     margin: 0 0 4px;
     font-size: 24px;

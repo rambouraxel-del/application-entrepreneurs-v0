@@ -14,8 +14,7 @@ assert(settingsCss.includes('.settings-modal-overlay[hidden]'),'hidden modal rul
 assert(/\.settings-modal-overlay\[hidden\][\s\S]*?display:\s*none\s*!important/.test(settingsCss),'hidden modal must not be forced visible');
 const referentials=fs.readFileSync(path.join(ROOT,'js/settings-referentials.js'),'utf8');
 assert(!referentials.includes('settings-generated-alert'),'referentials must not inject alerts');
-const alerts=fs.readFileSync(path.join(ROOT,'js/settings-alerts.js'),'utf8');
-assert(alerts.includes("list.innerHTML=''"),'single alert list replacement');
+assert(!fs.existsSync(path.join(ROOT,'js/settings-alerts.js')),'settings-alerts.js should stay removed (superseded by insights-engine.js, V0.13.1)');
 const consumer=fs.readFileSync(path.join(ROOT,'js/settings-consumers.js'),'utf8');
 for(const hook of ['COCKPIT_DEVIS_CALC','COCKPIT_FACTURE_CALC','COCKPIT_TRESORERIE_CALC','COCKPIT_LIST_PAGINATION','applyAgenda','applyClients','applyAnalytics']) assert(consumer.includes(hook),hook+' propagation missing');
 console.log('settings-paths.test.js: OK');
