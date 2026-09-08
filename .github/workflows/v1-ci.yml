@@ -1,0 +1,78 @@
+name: V1 — CI
+
+# Portée strictement au dossier v1/ (nouvelle application). Ne touche jamais
+# à la V0 (js/app.js, pages HTML, CSS), qui reste indépendante.
+on:
+  push:
+    branches: [main]
+    paths: ['v1/**', '.github/workflows/v1-ci.yml']
+  pull_request:
+    paths: ['v1/**', '.github/workflows/v1-ci.yml']
+
+defaults:
+  run:
+    working-directory: v1
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      DATABASE_URL_OWNER: postgresql://cockpit_owner:cockpit@localhost:5432/cockpit_v1
+      DATABASE_URL_APP: postgresql://cockpit_app:cockpit@localhost:5432/cockpit_v1
+      DATABASE_URL_SYSTEM: postgresql://cockpit_system:cockpit@localhost:5432/cockpit_v1
+      # Volontairement vides : aucune vérification cloud dans cette CI (voir
+      # docs/v1/lot-1-socle.md, "VALIDATION CLOUD REQUISE"). Le fallback de
+      # stockage local est utilisé à la place.
+      NEXT_PUBLIC_SUPABASE_URL: ''
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ''
+      SUPABASE_SERVICE_ROLE_KEY: ''
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: v1/package-lock.json
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Créer les rôles et la base (trois rôles, voir prisma/bootstrap.sql)
+        run: psql "postgresql://postgres:postgres@localhost:5432/postgres" -f prisma/bootstrap.sql
+
+      - name: Générer le client Prisma
+        run: npm run db:generate
+
+      - name: Appliquer les migrations (schéma + RLS)
+        run: npm run db:migrate
+
+      - name: Tests (isolation tenant bloquante, CRUD, résolution de session)
+        run: npm test
+
+      - name: Build
+        run: npm run build

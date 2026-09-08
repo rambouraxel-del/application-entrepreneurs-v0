@@ -44,6 +44,8 @@ activities      quotes ──1:1──> invoices ──< payments
 ## Identité et organisation
 
 ### `users`
+> ⚑ **Reportée au Lot 1** (`docs/v1/lot-1-socle.md`, ADR-15) : `Membership.userId` porte directement l'UUID Supabase Auth, sans table miroir. Réversible — cette table pourra être ajoutée dès qu'un champ propre à l'utilisateur (nom, préférences) sera nécessaire, sans rien casser. Description ci-dessous conservée comme cible si/quand elle est réintroduite.
+
 Personne physique disposant d'un accès. L'authentification est déléguée (Supabase Auth) : cette table **miroite** l'utilisateur d'authentification et porte ce qui nous appartient.
 
 | Champ | Type | Notes |

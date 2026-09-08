@@ -625,6 +625,7 @@ L'ordre n'est pas négociable sur un point : **le lot 1 livre l'isolation multi-
 | ADR-12 | Frontière `einvoicing` par port + adaptateur, sans couplage fournisseur | Actée (intégration en P1) | §13.2 |
 | ADR-13 | Aucune file d'attente ni ordonnanceur au MVP | Actée | §5.2 |
 | ADR-14 | PDF généré côté serveur puis stocké, URL signée | Actée | §13.1 |
+| ADR-15 | Pas de table `users` locale au Lot 1 : `Membership.userId` porte directement l'UUID Supabase Auth, sans miroir | **Révisée au Lot 1** — `data-model.md` prévoyait une table `users` miroir ; reportée, réversible (ajoutable sans casser `Membership.userId`) tant qu'aucun champ propre à l'utilisateur (nom, préférences) n'est requis | `lot-1-socle.md` |
 
 ---
 

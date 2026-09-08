@@ -1,0 +1,88 @@
+// Cockpit Entrepreneur V1 — schéma minimal du Lot 1.
+//
+// Périmètre volontairement réduit : seules les tables nécessaires pour
+// prouver auth + tenant + DB + UI + CRUD réel sur une première donnée
+// métier (Client). Le modèle complet du MVP est dans docs/v1/data-model.md ;
+// il sera étendu lot par lot, pas reproduit ici d'un coup.
+//
+// Décision Lot 1 : PAS de table `users` applicative (voir docs/v1/lot-1-socle.md
+// §Identité). L'authentification est entièrement déléguée à Supabase Auth
+// (schéma `auth`, géré par Supabase, hors de ce fichier Prisma). Membership.userId
+// stocke l'identifiant Supabase (uuid) sans clé étrangère Prisma vers `auth.users` :
+// Prisma ne modélise pas les schémas gérés par l'extension GoTrue de Supabase.
+// Rien, dans le Lot 1, n'a besoin d'un champ applicatif propre à l'utilisateur
+// (nom, préférences...) : le jour où ce sera nécessaire, une table `users`
+// pourra être ajoutée sans rien casser (Membership.userId reste valide).
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL_OWNER")
+}
+
+/// Le tenant. Une organisation = une entreprise cliente.
+model Organization {
+  id          String       @id @default(uuid()) @db.Uuid
+  name        String
+  logoPath    String?      @map("logo_path")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+  memberships Membership[]
+  clients     Client[]
+
+  @@map("organizations")
+}
+
+/// Lien utilisateur (Supabase Auth) <-> organisation.
+/// C'est lui, et lui seul, qui autorise un organizationId — jamais le navigateur.
+/// `role` existe dès maintenant pour qu'un futur RBAC n'exige pas de migration
+/// de schéma, même si le Lot 1 ne l'exploite pas (un seul rôle possible : owner).
+model Membership {
+  id             String       @id @default(uuid()) @db.Uuid
+  /// Identifiant Supabase Auth (auth.users.id). Pas de FK Prisma : ce schéma
+  /// est géré par Supabase, hors du périmètre de nos migrations.
+  userId         String       @map("user_id") @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  role           String       @default("owner")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+  @@index([userId])
+  @@map("memberships")
+}
+
+/// Statut minimal du MVP réduit (docs/mvp-commercial.md) — pas le CRM avancé de la V0.
+enum ClientKind {
+  individual
+  company
+}
+
+enum ClientStatus {
+  prospect
+  active
+  archived
+}
+
+/// Premier objet métier réel. Volontairement pauvre : pas d'historique, pas de
+/// documents liés, pas de KPI — cela viendra avec les lots qui en ont besoin.
+model Client {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  kind           ClientKind   @default(individual)
+  name           String
+  companyName    String?      @map("company_name")
+  email          String?
+  phone          String?
+  status         ClientStatus @default(prospect)
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@map("clients")
+}
