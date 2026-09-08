@@ -135,6 +135,8 @@ Idempotence des webhooks — sans elle, un rejeu Stripe corrompt l'état d'accè
 ### `clients`
 Volontairement **plus pauvre que la fiche V0** : le CRM avancé est hors MVP.
 
+> ⚑ **Lot 2** (`docs/v1/lot-2-clients-dashboard.md`, ADR-16) : le statut implémenté est `prospect | active | to_follow_up | inactive | loyal` — **sans `litige`**, absent de la V0 et sans utilité identifiée pour le Dashboard actuel (ajoutable plus tard si un besoin réel apparaît). L'archivage (`archived_at`) est un champ **séparé** du statut CRM, pas une valeur de `status` : un client peut être "fidèle" et archivé. `address_*`, `siret`, `vat_number` ne sont pas encore implémentés (nécessaires à la facturation, pas au Lot 2).
+
 | Champ | Type | Notes |
 |---|---|---|
 | `id` | UUID PK | |
@@ -153,6 +155,8 @@ Volontairement **plus pauvre que la fiche V0** : le CRM avancé est hors MVP.
 
 ### `activities`
 Rendez-vous **et** tâches dans une seule table, discriminée par `kind` : les deux alimentent la même lecture (« mes priorités du jour »), partagent les mêmes champs utiles et ne justifient pas deux modèles.
+
+> ⚑ **Lot 2** (ADR-16) : implémenté pour l'instant comme un modèle `Task` **autonome**, pas cette table `activities` fusionnée. Le Lot 2 exclut explicitement l'agenda/calendrier (pas de `scheduled_at`/`duration_minutes`/`location`/RDV) : les ajouter aurait été de la fausse fonctionnalité. `Task` porte uniquement `id, organizationId, clientId?, title, dueDate, completedAt, priority, createdAt, updatedAt`. Quand l'agenda sera construit, `activities` remplacera `Task` ou `Task` y sera fusionné — décision reportée, pas perdue. Voir `docs/v1/lot-2-clients-dashboard.md`.
 
 | Champ | Type | Notes |
 |---|---|---|

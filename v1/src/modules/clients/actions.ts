@@ -2,8 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { requireSession } from '@/modules/auth/session';
-import { resolveDefaultTenantContext } from '@/modules/organizations/service';
+import { requireTenantContext } from '@/modules/auth/requireTenantContext';
 import * as clientService from './service';
 import { clientFormShouldNotContainOrganizationId } from './validation';
 import { ZodError } from 'zod';
@@ -17,13 +16,6 @@ import { ZodError } from 'zod';
 
 export type FormState = { error: string | null };
 
-async function requireTenantContext() {
-  const session = await requireSession();
-  const ctx = await resolveDefaultTenantContext(session);
-  if (!ctx) redirect('/app/onboarding');
-  return ctx;
-}
-
 function readClientForm(formData: FormData) {
   clientFormShouldNotContainOrganizationId(formData); // organizationId ne vient JAMAIS du navigateur
   return {
@@ -32,6 +24,9 @@ function readClientForm(formData: FormData) {
     companyName: formData.get('companyName') ?? undefined,
     email: formData.get('email') ?? undefined,
     phone: formData.get('phone') ?? undefined,
+    status: formData.get('status') ?? 'prospect',
+    notes: formData.get('notes') ?? undefined,
+    lastContactAt: formData.get('lastContactAt') ?? undefined,
   };
 }
 
@@ -76,4 +71,24 @@ export async function restoreClientAction(id: string): Promise<void> {
   await clientService.restoreClient(ctx, id);
   revalidatePath('/app/clients');
   revalidatePath(`/app/clients/${id}`);
+}
+
+/** Raccourci "Marquer comme contacté aujourd'hui" — utilisé au Dashboard et sur la fiche. */
+export async function markContactedTodayAction(id: string): Promise<void> {
+  const ctx = await requireTenantContext();
+  const client = await clientService.getClient(ctx, id);
+  if (!client) throw new Error('Client introuvable.');
+  await clientService.updateClient(ctx, id, {
+    kind: client.kind,
+    name: client.name,
+    companyName: client.companyName ?? undefined,
+    email: client.email ?? undefined,
+    phone: client.phone ?? undefined,
+    status: client.status,
+    notes: client.notes ?? undefined,
+    lastContactAt: new Date().toISOString().slice(0, 10),
+  });
+  revalidatePath('/app/clients');
+  revalidatePath(`/app/clients/${id}`);
+  revalidatePath('/app');
 }

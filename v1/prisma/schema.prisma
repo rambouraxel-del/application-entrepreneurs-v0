@@ -1,18 +1,20 @@
-// Cockpit Entrepreneur V1 — schéma minimal du Lot 1.
+// Cockpit Entrepreneur V1 — schéma étendu au Lot 2.
 //
-// Périmètre volontairement réduit : seules les tables nécessaires pour
-// prouver auth + tenant + DB + UI + CRUD réel sur une première donnée
-// métier (Client). Le modèle complet du MVP est dans docs/v1/data-model.md ;
-// il sera étendu lot par lot, pas reproduit ici d'un coup.
+// Lot 1 avait prouvé auth + tenant + DB + UI + CRUD sur un premier objet
+// métier (Client) volontairement pauvre. Le Lot 2 enrichit Client au strict
+// nécessaire pour le Dashboard et ajoute Task (relance/priorité), toujours
+// sans reproduire le modèle complet de docs/v1/data-model.md.
 //
-// Décision Lot 1 : PAS de table `users` applicative (voir docs/v1/lot-1-socle.md
-// §Identité). L'authentification est entièrement déléguée à Supabase Auth
-// (schéma `auth`, géré par Supabase, hors de ce fichier Prisma). Membership.userId
-// stocke l'identifiant Supabase (uuid) sans clé étrangère Prisma vers `auth.users` :
-// Prisma ne modélise pas les schémas gérés par l'extension GoTrue de Supabase.
-// Rien, dans le Lot 1, n'a besoin d'un champ applicatif propre à l'utilisateur
-// (nom, préférences...) : le jour où ce sera nécessaire, une table `users`
-// pourra être ajoutée sans rien casser (Membership.userId reste valide).
+// Décision Lot 1 (inchangée) : PAS de table `users` applicative — voir
+// docs/v1/lot-1-socle.md §Identité. Membership.userId stocke l'identifiant
+// Supabase Auth sans FK Prisma.
+//
+// Décision Lot 2 (ADR-16, voir docs/v1/lot-2-clients-dashboard.md) : Task est
+// un modèle autonome, PAS la table `activities` (RDV + tâches fusionnés)
+// prévue par data-model.md. Le Lot 2 exclut explicitement l'agenda/calendrier
+// (rendez-vous, créneaux, durée, lieu) : ajouter ces champs maintenant serait
+// de la fausse fonctionnalité. Quand l'agenda sera construit, `activities`
+// remplacera Task ou Task y sera fusionné — décision reportée, pas perdue.
 
 generator client {
   provider = "prisma-client-js"
@@ -29,10 +31,16 @@ model Organization {
   id          String       @id @default(uuid()) @db.Uuid
   name        String
   logoPath    String?      @map("logo_path")
+  /// Seuil (en jours) au-delà duquel un client actif/prospect sans contact
+  /// récent devient une opportunité "sans contact récent" au Dashboard
+  /// (règle d'insight, docs/v1/lot-2-clients-dashboard.md). Réglage minimal
+  /// exposé dans Settings — pas de page de configuration étendue au Lot 2.
+  clientFollowUpDays Int    @default(30) @map("client_follow_up_days")
   createdAt   DateTime     @default(now()) @map("created_at")
   updatedAt   DateTime     @updatedAt @map("updated_at")
   memberships Membership[]
   clients     Client[]
+  tasks       Task[]
 
   @@map("organizations")
 }
@@ -56,20 +64,29 @@ model Membership {
   @@map("memberships")
 }
 
-/// Statut minimal du MVP réduit (docs/mvp-commercial.md) — pas le CRM avancé de la V0.
 enum ClientKind {
   individual
   company
 }
 
+/// Statuts CRM minimaux (Lot 2) — repris tels quels de la V0 (seule référence
+/// UX disponible), PAS réinventés : ce sont les 5 statuts déjà consommés par
+/// le moteur d'insights V0 et compris des utilisateurs actuels. `litige`
+/// n'existe pas en V0 et n'est pas ajouté ici par excès de zèle — aucune
+/// utilité identifiée pour le Dashboard du Lot 2.
+/// ⚑ Hypothèse réversible (aucun test utilisateur V1 conduit) — voir
+/// docs/v1/lot-2-clients-dashboard.md §13.
 enum ClientStatus {
   prospect
-  active
-  archived
+  active     /// "Client actif"
+  to_follow_up /// "À relancer"
+  inactive
+  loyal      /// "Fidèle"
 }
 
-/// Premier objet métier réel. Volontairement pauvre : pas d'historique, pas de
-/// documents liés, pas de KPI — cela viendra avec les lots qui en ont besoin.
+/// Objet métier Client, étendu au strict nécessaire au Lot 2 (Dashboard +
+/// relances). Toujours pas d'historique exhaustif, pas de documents liés,
+/// pas de champs personnalisés — ce n'est pas un CRM.
 model Client {
   id             String       @id @default(uuid()) @db.Uuid
   organizationId String       @map("organization_id") @db.Uuid
@@ -79,10 +96,54 @@ model Client {
   email          String?
   phone          String?
   status         ClientStatus @default(prospect)
+  /// Notes libres courtes — pas d'historique typé/horodaté (hors périmètre).
+  notes          String?
+  /// Dernier contact connu. Alimente la règle "sans contact récent"
+  /// (docs/v1/lot-2-clients-dashboard.md §10). Renseigné manuellement au
+  /// Lot 2 (pas encore déduit d'un devis/RDV, qui n'existent pas).
+  lastContactAt  DateTime?    @map("last_contact_at")
+  /// Archivage = seule forme de "suppression" (décision Lot 1, inchangée).
+  /// Séparé de `status` : un client peut être "fidèle" ET archivé (ancien
+  /// client fidèle qu'on ne veut plus voir dans les listes actives).
+  archivedAt     DateTime?    @map("archived_at")
   createdAt      DateTime     @default(now()) @map("created_at")
   updatedAt      DateTime     @updatedAt @map("updated_at")
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  tasks          Task[]
 
-  @@index([organizationId])
+  @@index([organizationId, status])
+  @@index([organizationId, lastContactAt])
   @@map("clients")
+}
+
+enum TaskPriority {
+  low
+  normal
+  high
+}
+
+/// Action/relance minimale — PAS un gestionnaire de projet : pas de
+/// sous-tâches, pas de projets, pas de récurrence, pas de collaboration.
+/// Objectif unique : que "Relancer Martin Dupont aujourd'hui" existe quelque
+/// part et apparaisse au Dashboard (docs/v1/lot-2-clients-dashboard.md §3).
+model Task {
+  id             String        @id @default(uuid()) @db.Uuid
+  organizationId String        @map("organization_id") @db.Uuid
+  /// Nullable : une tâche n'a pas toujours de client (ex. tâche administrative).
+  /// Vérifié côté service que le client, s'il est fourni, appartient à la
+  /// même organisation — jamais une simple FK db sans contrôle applicatif
+  /// explicite, voir src/modules/tasks/service.ts.
+  clientId       String?       @map("client_id") @db.Uuid
+  title          String
+  dueDate        DateTime?     @map("due_date") @db.Date
+  completedAt    DateTime?     @map("completed_at")
+  priority       TaskPriority  @default(normal)
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client         Client?       @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, dueDate])
+  @@index([organizationId, completedAt])
+  @@map("tasks")
 }

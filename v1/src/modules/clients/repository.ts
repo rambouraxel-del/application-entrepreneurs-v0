@@ -11,8 +11,31 @@ export function createClient(db: TenantScopedClient, input: ClientInput) {
   return db.client.create({ data: input as never });
 }
 
-export function listClients(db: TenantScopedClient) {
-  return db.client.findMany({ orderBy: { createdAt: 'desc' } });
+export type ClientListFilter = {
+  /** Recherche libre sur nom/entreprise/e-mail — insensible à la casse. */
+  search?: string;
+  status?: ClientStatus;
+  /** Par défaut, les clients archivés sont exclus des listes. */
+  includeArchived?: boolean;
+};
+
+export function listClients(db: TenantScopedClient, filter: ClientListFilter = {}) {
+  return db.client.findMany({
+    where: {
+      archivedAt: filter.includeArchived ? undefined : null,
+      status: filter.status,
+      ...(filter.search
+        ? {
+            OR: [
+              { name: { contains: filter.search, mode: 'insensitive' } },
+              { companyName: { contains: filter.search, mode: 'insensitive' } },
+              { email: { contains: filter.search, mode: 'insensitive' } },
+            ],
+          }
+        : {}),
+    },
+    orderBy: { createdAt: 'desc' },
+  });
 }
 
 export function getClient(db: TenantScopedClient, id: string) {
@@ -23,6 +46,11 @@ export function updateClient(db: TenantScopedClient, id: string, input: ClientIn
   return db.client.update({ where: { id }, data: input as never });
 }
 
-export function setClientStatus(db: TenantScopedClient, id: string, status: ClientStatus) {
-  return db.client.update({ where: { id }, data: { status } });
+export function setClientArchived(db: TenantScopedClient, id: string, archived: boolean) {
+  return db.client.update({ where: { id }, data: { archivedAt: archived ? new Date() : null } });
+}
+
+/** Existence + appartenance à l'organisation courante — utilisé par tasks/service.ts. */
+export function clientExists(db: TenantScopedClient, id: string) {
+  return db.client.findUnique({ where: { id }, select: { id: true } });
 }

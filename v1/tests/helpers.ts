@@ -11,6 +11,7 @@ import { systemDb } from '../src/lib/db/system';
  * simule avec un UUID aléatoire — aucune FK ne l'exige.
  */
 export async function resetDatabase() {
+  await systemDb.task.deleteMany();
   await systemDb.client.deleteMany();
   await systemDb.membership.deleteMany();
   await systemDb.organization.deleteMany();
@@ -20,9 +21,10 @@ export type Fixture = {
   orgA: string; orgB: string;
   userA: string; userB: string;
   clientA: string; clientB: string;
+  taskA: string; taskB: string;
 };
 
-/** Deux organisations étanches, un utilisateur et un client chacune. */
+/** Deux organisations étanches, un utilisateur, un client et une tâche chacune. */
 export async function seedTwoOrganizations(): Promise<Fixture> {
   const orgA = await systemDb.organization.create({ data: { name: 'Org A' } });
   const orgB = await systemDb.organization.create({ data: { name: 'Org B' } });
@@ -36,10 +38,17 @@ export async function seedTwoOrganizations(): Promise<Fixture> {
   const clientB = await systemDb.client.create({
     data: { organizationId: orgB.id, name: 'Client B', email: 'client-b@test.local' },
   });
+  const taskA = await systemDb.task.create({
+    data: { organizationId: orgA.id, clientId: clientA.id, title: 'Tâche A' },
+  });
+  const taskB = await systemDb.task.create({
+    data: { organizationId: orgB.id, clientId: clientB.id, title: 'Tâche B' },
+  });
 
   return {
     orgA: orgA.id, orgB: orgB.id,
     userA, userB,
     clientA: clientA.id, clientB: clientB.id,
+    taskA: taskA.id, taskB: taskB.id,
   };
 }

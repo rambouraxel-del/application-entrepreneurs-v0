@@ -2,6 +2,10 @@
 
 import { useActionState } from 'react';
 import type { FormState } from './actions';
+import { CLIENT_STATUSES, CLIENT_STATUS_LABELS } from './validation';
+import { Field, Input, Textarea } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
+import { Button } from '@/components/ui/Button';
 
 type ClientFormProps = {
   action: (prev: FormState, formData: FormData) => Promise<FormState>;
@@ -12,83 +16,69 @@ type ClientFormProps = {
     companyName?: string | null;
     email?: string | null;
     phone?: string | null;
+    status?: string;
+    notes?: string | null;
+    lastContactAt?: Date | null;
   };
 };
 
 const initialState: FormState = { error: null };
+
+function toDateInputValue(date?: Date | null): string {
+  if (!date) return '';
+  return date.toISOString().slice(0, 10);
+}
 
 export function ClientForm({ action, submitLabel, defaultValues }: ClientFormProps) {
   const [state, formAction, pending] = useActionState(action, initialState);
 
   return (
     <form action={formAction} className="max-w-md space-y-4" noValidate>
-      <div>
-        <label htmlFor="kind" className="block text-sm font-medium text-slate-700">
-          Type
-        </label>
-        <select
-          id="kind"
-          name="kind"
-          defaultValue={defaultValues?.kind ?? 'individual'}
-          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-600 focus:outline-none focus:ring-1 focus:ring-indigo-600"
-        >
+      <Field label="Type" htmlFor="kind">
+        <Select id="kind" name="kind" defaultValue={defaultValues?.kind ?? 'individual'}>
           <option value="individual">Particulier</option>
           <option value="company">Entreprise</option>
-        </select>
-      </div>
+        </Select>
+      </Field>
 
-      <div>
-        <label htmlFor="name" className="block text-sm font-medium text-slate-700">
-          Nom *
-        </label>
-        <input
-          id="name"
-          name="name"
-          required
-          maxLength={200}
-          defaultValue={defaultValues?.name}
-          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-600 focus:outline-none focus:ring-1 focus:ring-indigo-600"
-        />
-      </div>
+      <Field label="Nom *" htmlFor="name">
+        <Input id="name" name="name" required maxLength={200} defaultValue={defaultValues?.name} />
+      </Field>
 
-      <div>
-        <label htmlFor="companyName" className="block text-sm font-medium text-slate-700">
-          Entreprise (optionnel)
-        </label>
-        <input
-          id="companyName"
-          name="companyName"
-          maxLength={200}
-          defaultValue={defaultValues?.companyName ?? ''}
-          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-600 focus:outline-none focus:ring-1 focus:ring-indigo-600"
-        />
-      </div>
+      <Field label="Entreprise (optionnel)" htmlFor="companyName">
+        <Input id="companyName" name="companyName" maxLength={200} defaultValue={defaultValues?.companyName ?? ''} />
+      </Field>
 
-      <div>
-        <label htmlFor="email" className="block text-sm font-medium text-slate-700">
-          E-mail (optionnel)
-        </label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          defaultValue={defaultValues?.email ?? ''}
-          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-600 focus:outline-none focus:ring-1 focus:ring-indigo-600"
-        />
-      </div>
+      <Field label="E-mail (optionnel)" htmlFor="email">
+        <Input id="email" name="email" type="email" defaultValue={defaultValues?.email ?? ''} />
+      </Field>
 
-      <div>
-        <label htmlFor="phone" className="block text-sm font-medium text-slate-700">
-          Téléphone (optionnel)
-        </label>
-        <input
-          id="phone"
-          name="phone"
-          type="tel"
-          defaultValue={defaultValues?.phone ?? ''}
-          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-600 focus:outline-none focus:ring-1 focus:ring-indigo-600"
+      <Field label="Téléphone (optionnel)" htmlFor="phone">
+        <Input id="phone" name="phone" type="tel" defaultValue={defaultValues?.phone ?? ''} />
+      </Field>
+
+      <Field label="Statut" htmlFor="status">
+        <Select id="status" name="status" defaultValue={defaultValues?.status ?? 'prospect'}>
+          {CLIENT_STATUSES.map((s) => (
+            <option key={s} value={s}>
+              {CLIENT_STATUS_LABELS[s]}
+            </option>
+          ))}
+        </Select>
+      </Field>
+
+      <Field label="Dernier contact (optionnel)" htmlFor="lastContactAt">
+        <Input
+          id="lastContactAt"
+          name="lastContactAt"
+          type="date"
+          defaultValue={toDateInputValue(defaultValues?.lastContactAt)}
         />
-      </div>
+      </Field>
+
+      <Field label="Notes (optionnel)" htmlFor="notes">
+        <Textarea id="notes" name="notes" rows={3} maxLength={2000} defaultValue={defaultValues?.notes ?? ''} />
+      </Field>
 
       {state.error && (
         <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -96,13 +86,9 @@ export function ClientForm({ action, submitLabel, defaultValues }: ClientFormPro
         </p>
       )}
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
-      >
+      <Button type="submit" disabled={pending}>
         {pending ? 'Enregistrement…' : submitLabel}
-      </button>
+      </Button>
     </form>
   );
 }

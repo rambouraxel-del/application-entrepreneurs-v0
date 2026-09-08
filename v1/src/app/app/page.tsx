@@ -1,29 +1,112 @@
 import Link from 'next/link';
-import { requireSession } from '@/modules/auth/session';
-import { resolveDefaultTenantContext } from '@/modules/organizations/service';
-import { listClients } from '@/modules/clients/service';
+import { requireTenantContext } from '@/modules/auth/requireTenantContext';
+import { getDashboardSnapshot } from '@/modules/dashboard/service';
+import { Card, CardTitle } from '@/components/ui/Card';
+import { Badge } from '@/components/ui/Badge';
+import { EmptyState } from '@/components/ui/EmptyState';
+import type { Insight } from '@/modules/insights/types';
 
-export default async function AppHomePage() {
-  const session = await requireSession();
-  const ctx = await resolveDefaultTenantContext(session);
-  const clients = ctx ? await listClients(ctx) : [];
+/**
+ * Premier Dashboard réel (Lot 2) — 100% données PostgreSQL, aucune donnée
+ * financière (devis/factures n'existent pas encore). Hiérarchie reprise du
+ * positionnement produit : Ma situation / À surveiller / Mes priorités /
+ * Opportunités. Pas de section Performance financière — elle viendra avec
+ * les lots qui la rendent réelle.
+ *
+ * Server Component par défaut : une seule fonction serveur
+ * (getDashboardSnapshot) agrège tout, pas de requêtes séparées côté client.
+ */
+export default async function DashboardPage() {
+  const ctx = await requireTenantContext();
+  const snapshot = await getDashboardSnapshot(ctx);
+  const { situation, insights } = snapshot;
+  const hasAnyInsight = insights.alerts.length + insights.priorities.length + insights.opportunities.length > 0;
 
   return (
-    <div className="max-w-2xl">
-      <h2 className="text-base font-semibold text-slate-900">Socle Lot 1</h2>
-      <p className="mt-1 text-sm text-slate-500">
-        Cette page confirme que l’authentification, l’organisation et l’isolation des données
-        fonctionnent. Le Dashboard décisionnel (5 niveaux) sera connecté à de vraies données dans
-        le Lot 2.
-      </p>
-
-      <div className="mt-6 rounded-lg border border-slate-200 bg-white p-4">
-        <p className="text-sm text-slate-500">Clients enregistrés</p>
-        <p className="text-2xl font-bold text-slate-900">{clients.length}</p>
-        <Link href="/app/clients" className="mt-2 inline-block text-sm text-indigo-600 hover:underline">
-          Voir les clients →
-        </Link>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-xl font-bold text-slate-900">Dashboard</h1>
+        <p className="text-sm text-slate-500">Situation réelle, calculée à partir de vos clients et tâches.</p>
       </div>
+
+      <section aria-labelledby="situation-heading">
+        <h2 id="situation-heading" className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
+          Ma situation
+        </h2>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <StatCard label="Clients actifs" value={situation.activeClients} href="/app/clients?status=active" />
+          <StatCard label="Prospects" value={situation.prospects} href="/app/clients?status=prospect" />
+          <StatCard label="À relancer" value={situation.toFollowUp} href="/app/clients?status=to_follow_up" />
+        </div>
+      </section>
+
+      {!hasAnyInsight && (
+        <EmptyState
+          title="Rien à signaler pour le moment"
+          description="Ajoutez des clients et des tâches pour voir apparaître vos priorités et opportunités ici."
+          action={
+            <Link href="/app/clients/new" className="text-sm font-medium text-indigo-600 hover:underline">
+              Créer un client
+            </Link>
+          }
+        />
+      )}
+
+      {insights.alerts.length > 0 && (
+        <InsightSection id="watch" title="À surveiller" items={insights.alerts} />
+      )}
+
+      {insights.priorities.length > 0 && (
+        <InsightSection id="priorities" title="Mes priorités" items={insights.priorities} />
+      )}
+
+      {insights.opportunities.length > 0 && (
+        <InsightSection id="opportunities" title="Opportunités" items={insights.opportunities} />
+      )}
     </div>
+  );
+}
+
+function StatCard({ label, value, href }: { label: string; value: number; href: string }) {
+  return (
+    <Link href={href}>
+      <Card className="transition-colors hover:border-indigo-300">
+        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
+        <p className="mt-1 text-2xl font-bold text-slate-900">{value}</p>
+      </Card>
+    </Link>
+  );
+}
+
+const TONE_BY_PRIORITY = { critical: 'danger', high: 'warning', normal: 'info' } as const;
+
+function InsightSection({ id, title, items }: { id: string; title: string; items: Insight[] }) {
+  return (
+    <section aria-labelledby={`${id}-heading`}>
+      <h2 id={`${id}-heading`} className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
+        {title}
+      </h2>
+      <div className="space-y-2">
+        {items.map((insight) => (
+          <Card key={insight.id} className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="flex items-center gap-2">
+                <CardTitle>{insight.title}</CardTitle>
+                <Badge tone={TONE_BY_PRIORITY[insight.priority]}>
+                  {insight.priority === 'critical' ? 'Urgent' : insight.priority === 'high' ? 'Important' : 'Normal'}
+                </Badge>
+              </div>
+              <p className="mt-1 text-sm text-slate-500">{insight.description}</p>
+            </div>
+            <Link
+              href={insight.actionHref}
+              className="whitespace-nowrap text-sm font-medium text-indigo-600 hover:underline"
+            >
+              {insight.actionLabel}
+            </Link>
+          </Card>
+        ))}
+      </div>
+    </section>
   );
 }

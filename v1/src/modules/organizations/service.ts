@@ -88,3 +88,14 @@ export async function renameOrganization(ctx: TenantContext, name: string) {
 export async function getOrganization(ctx: TenantContext) {
   return withTenant(ctx, (db) => db.organization.findUniqueOrThrow({ where: { id: ctx.organizationId } }));
 }
+
+/**
+ * Réglage minimal exposé dans Settings (Lot 2) : le seuil de relance utilisé
+ * par la règle d'insight "sans contact récent" (modules/insights/rules.ts).
+ * Volontairement un seul champ — pas de page Settings étendue.
+ */
+export async function updateClientFollowUpDays(ctx: TenantContext, days: number) {
+  return withTenant(ctx, (db) =>
+    db.organization.update({ where: { id: ctx.organizationId }, data: { clientFollowUpDays: days } }),
+  );
+}
