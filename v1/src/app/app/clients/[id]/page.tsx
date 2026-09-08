@@ -7,15 +7,19 @@ import { CLIENT_STATUS_LABELS } from '@/modules/clients/validation';
 import { CLIENT_STATUS_TONE } from '@/modules/clients/presentation';
 import { listTasks } from '@/modules/tasks/service';
 import { completeTaskAction, reopenTaskAction } from '@/modules/tasks/actions';
+import { listQuotes } from '@/modules/quotes/service';
+import { formatCents } from '@/modules/quotes/calc';
+import { QUOTE_STATUS_LABELS } from '@/modules/quotes/validation';
+import { QUOTE_STATUS_TONE } from '@/modules/quotes/presentation';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 
 /**
- * Fiche Client (Lot 2) : identité, coordonnées, statut, dernier contact,
- * notes, actions principales, tâches liées. PAS de devis/factures/RDV/
- * documents/historique exhaustif — ces sections viendront avec les lots qui
- * les rendent réelles (docs/v1/lot-2-clients-dashboard.md §Fiche Client).
+ * Fiche Client : identité, coordonnées, statut, dernier contact, notes,
+ * actions principales, tâches et devis liés (Lot 3). PAS de
+ * factures/RDV/documents/historique exhaustif — ces sections viendront avec
+ * les lots qui les rendent réelles (docs/v1/lot-3-devis.md §Fiche Client).
  */
 export default async function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -24,6 +28,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   if (!client) notFound(); // y compris si le client appartient à une autre organisation (RLS)
 
   const tasks = await listTasks(ctx, { includeCompleted: true, clientId: id });
+  const quotes = await listQuotes(ctx, { clientId: id });
   const isArchived = client.archivedAt !== null;
   const toggleAction = isArchived ? restoreClientAction : archiveClientAction;
   const toggleLabel = isArchived ? 'Réactiver' : 'Archiver';
@@ -120,6 +125,30 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
                     {task.completedAt ? 'Réouvrir' : 'Terminer'}
                   </Button>
                 </form>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+
+      <Card>
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-slate-900">Devis</h2>
+          <Link href={`/app/quotes/new?clientId=${client.id}`} className="text-sm font-medium text-indigo-600 hover:underline">
+            + Devis
+          </Link>
+        </div>
+        {quotes.length === 0 ? (
+          <p className="mt-3 text-sm text-slate-500">Aucun devis pour ce client.</p>
+        ) : (
+          <ul className="mt-3 divide-y divide-slate-200">
+            {quotes.slice(0, 5).map((quote) => (
+              <li key={quote.id}>
+                <Link href={`/app/quotes/${quote.id}`} className="flex items-center justify-between gap-2 py-2 text-sm hover:bg-slate-50">
+                  <span className="text-slate-900">{quote.number ?? 'Brouillon'}</span>
+                  <span className="text-slate-500">{formatCents(quote.totalTtcCents)}</span>
+                  <Badge tone={QUOTE_STATUS_TONE[quote.status]}>{QUOTE_STATUS_LABELS[quote.status]}</Badge>
+                </Link>
               </li>
             ))}
           </ul>

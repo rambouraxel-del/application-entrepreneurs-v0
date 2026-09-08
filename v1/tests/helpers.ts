@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { PrismaClient } from '../generated/prisma/index';
 import { systemDb } from '../src/lib/db/system';
 
 /**
@@ -9,12 +10,21 @@ import { systemDb } from '../src/lib/db/system';
  * Pas de table `users` locale (décision Lot 1, voir prisma/schema.prisma) :
  * les identifiants utilisateur sont ceux de Supabase Auth. En test, on les
  * simule avec un UUID aléatoire — aucune FK ne l'exige.
+ *
+ * Reset : le trigger d'immutabilité (prisma/rls.sql) bloque toute
+ * suppression de ligne d'un devis émis — y compris pour le rôle système
+ * (BYPASSRLS s'applique à la RLS, jamais aux triggers : c'est la même
+ * garantie qui protège la production). `TRUNCATE` n'exécute pas les
+ * triggers ligne par ligne (contrairement à `DELETE`) et n'est pas gouverné
+ * par la RLS : on l'utilise ici, avec le rôle PROPRIÉTAIRE (seul détenteur
+ * du privilège TRUNCATE), réservé aux TESTS — jamais au code applicatif.
  */
+const ownerDb = new PrismaClient({ datasourceUrl: process.env.DATABASE_URL_OWNER });
+
 export async function resetDatabase() {
-  await systemDb.task.deleteMany();
-  await systemDb.client.deleteMany();
-  await systemDb.membership.deleteMany();
-  await systemDb.organization.deleteMany();
+  await ownerDb.$executeRawUnsafe(
+    'TRUNCATE TABLE quote_lines, quotes, document_counters, tasks, clients, memberships, organizations RESTART IDENTITY CASCADE',
+  );
 }
 
 export type Fixture = {

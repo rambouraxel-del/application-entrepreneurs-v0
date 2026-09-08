@@ -99,3 +99,13 @@ export async function updateClientFollowUpDays(ctx: TenantContext, days: number)
     db.organization.update({ where: { id: ctx.organizationId }, data: { clientFollowUpDays: days } }),
   );
 }
+
+/** Seuils devis (Lot 3) — voir prisma/schema.prisma et modules/insights/rules.ts. */
+export async function updateQuoteSettings(ctx: TenantContext, followUpDays: number, highValueCents: number) {
+  return withTenant(ctx, (db) =>
+    db.organization.update({
+      where: { id: ctx.organizationId },
+      data: { quoteFollowUpDays: followUpDays, quoteHighValueCents: highValueCents },
+    }),
+  );
+}

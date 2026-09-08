@@ -74,4 +74,52 @@ describe('getDashboardSnapshot', () => {
     const snapshot = await getDashboardSnapshot(ctxA());
     expect(snapshot.insights.opportunities.some((i) => i.entityId === client.id)).toBe(true);
   });
+
+  it('compte les devis ouverts (envoyés) et leur valeur cumulée — jamais un CA', async () => {
+    await systemDb.quote.create({
+      data: { organizationId: f.orgA, clientId: f.clientA, status: 'sent', totalTtcCents: 10000 },
+    });
+    await systemDb.quote.create({
+      data: { organizationId: f.orgA, clientId: f.clientA, status: 'sent', totalTtcCents: 5000 },
+    });
+    await systemDb.quote.create({
+      data: { organizationId: f.orgA, clientId: f.clientA, status: 'draft', totalTtcCents: 999_999 },
+    });
+    const snapshot = await getDashboardSnapshot(ctxA());
+    expect(snapshot.situation.openQuotes).toBe(2);
+    expect(snapshot.situation.openQuotesValueCents).toBe(15000);
+  });
+
+  it('remonte un devis à forte valeur dans les opportunités', async () => {
+    await systemDb.organization.update({ where: { id: f.orgA }, data: { quoteHighValueCents: 10000 } });
+    const quote = await systemDb.quote.create({
+      data: { organizationId: f.orgA, clientId: f.clientA, status: 'sent', totalTtcCents: 20000 },
+    });
+    const snapshot = await getDashboardSnapshot(ctxA());
+    expect(snapshot.insights.opportunities.some((i) => i.entityId === quote.id)).toBe(true);
+  });
+
+  it('remonte un devis sans réponse depuis trop longtemps dans les alertes', async () => {
+    await systemDb.organization.update({ where: { id: f.orgA }, data: { quoteFollowUpDays: 3 } });
+    const issuedAt = new Date(todayInTimezone().getTime() - 5 * 86_400_000);
+    const quote = await systemDb.quote.create({
+      data: { organizationId: f.orgA, clientId: f.clientA, status: 'sent', issuedAt, totalTtcCents: 1000 },
+    });
+    const snapshot = await getDashboardSnapshot(ctxA());
+    expect(snapshot.insights.alerts.some((i) => i.entityId === quote.id)).toBe(true);
+  });
+
+  it("n'affiche jamais un devis de B dans le Dashboard de A", async () => {
+    const quoteB = await systemDb.quote.create({
+      data: { organizationId: f.orgB, clientId: f.clientB, status: 'sent', totalTtcCents: 999_999_99 },
+    });
+    const snapshot = await getDashboardSnapshot(ctxA());
+    expect(snapshot.situation.openQuotesValueCents).toBe(0);
+    const allInsightIds = [
+      ...snapshot.insights.alerts,
+      ...snapshot.insights.priorities,
+      ...snapshot.insights.opportunities,
+    ].map((i) => i.entityId);
+    expect(allInsightIds).not.toContain(quoteB.id);
+  });
 });

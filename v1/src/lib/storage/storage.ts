@@ -35,6 +35,11 @@ export function sha256(content: Buffer): string {
   return createHash('sha256').update(content).digest('hex');
 }
 
+/** PDF d'un devis émis (Lot 3) — même remarque : rangement, pas une autorisation. */
+export function quoteDocumentPath(organizationId: string, quoteId: string): string {
+  return `organizations/${organizationId}/quotes/${quoteId}.pdf`;
+}
+
 // ---------------------------------------------------------------------------
 // Adaptateur RÉEL — Supabase Storage.
 // ---------------------------------------------------------------------------

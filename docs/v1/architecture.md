@@ -571,7 +571,7 @@ Principe : **chaque lot produit quelque chose de vérifiable à l'écran.** Pas 
 | **Lot 0 — Réduction des risques** | ✅ **Réalisé** : isolation multi-tenant (Prisma + RLS), numérotation concurrente, PDF et immutabilité documentaire — 60 tests sur PostgreSQL réel. Reste à couvrir : boucle webhook Stripe, PDF sur l'hébergeur cible | [`lot-0-validation.md`](lot-0-validation.md) |
 | **Lot 1 — Socle** | ✅ **Réalisé** : Projet, TypeScript, lint, CI · Postgres + Prisma · authentification (Supabase Auth, cloud non encore validé) · organisation + appartenance · **contexte tenant + tests d'isolation** · shell applicatif · Client CRUD minimal | [`lot-1-socle.md`](lot-1-socle.md) |
 | **Lot 2 — Clients + Dashboard minimal** | ✅ **Réalisé** : Client enrichi (statut CRM, notes, dernier contact) · Task (relances) · Dashboard niveaux 1-3-4 (situation, priorités, opportunités) sur données réelles · moteur d'insights V1 | [`lot-2-clients-dashboard.md`](lot-2-clients-dashboard.md) |
-| **Lot 3 — Devis** | Devis, lignes, calculs en centimes, statuts, PDF devis | Émettre un devis et télécharger son PDF |
+| **Lot 3 — Devis** | ✅ **Réalisé** : Devis, lignes, calculs en centimes, statuts, numérotation transactionnelle, immutabilité (trigger DB), PDF devis | Émettre un devis et télécharger son PDF — [`lot-3-devis.md`](lot-3-devis.md) |
 | **Lot 4 — Factures et paiements** | Transformation devis→facture · numérotation · immutabilité · paiements · PDF facture · e-mail d'envoi | Le flux financier complet, de bout en bout |
 | **Lot 5 — Cockpit décisionnel** | Activités et tâches · trésorerie · **moteur d'insights** (niveaux 2, 3, 4) · niveau 5 performance | Le Dashboard des 5 niveaux sur données réelles |
 | **Lot 6 — Exploitable** | Abonnement Stripe · RGPD (export, suppression) · sauvegardes vérifiées · observabilité · durcissement | Une bêta payante conforme au « Done » du MVP |
@@ -627,6 +627,8 @@ L'ordre n'est pas négociable sur un point : **le lot 1 livre l'isolation multi-
 | ADR-14 | PDF généré côté serveur puis stocké, URL signée | Actée | §13.1 |
 | ADR-15 | Pas de table `users` locale au Lot 1 : `Membership.userId` porte directement l'UUID Supabase Auth, sans miroir | **Révisée au Lot 1** — `data-model.md` prévoyait une table `users` miroir ; reportée, réversible (ajoutable sans casser `Membership.userId`) tant qu'aucun champ propre à l'utilisateur (nom, préférences) n'est requis | `lot-1-socle.md` |
 | ADR-16 | `Task` autonome au Lot 2, pas la table `activities` (RDV + tâches fusionnés) prévue par `data-model.md` ; statuts Client `prospect/active/to_follow_up/inactive/loyal` (sans `litige`) | **Révisée au Lot 2** — l'agenda/RDV est explicitement hors périmètre du Lot 2 ; `activities` remplacera `Task` (ou la fusionnera) quand l'agenda sera construit | `lot-2-clients-dashboard.md` |
+| ADR-17 | `QuoteLine.quantity` en `Int` (millièmes entiers) au lieu du `Decimal(12,3)` prévu par `data-model.md` | **Révisée au Lot 3** — reste dans l'arithmétique entière (BigInt) validée au Lot 0, évite le type Prisma `Decimal` (sérialisation/comparaisons plus fragiles) | `lot-3-devis.md` |
+| ADR-18 | Trigger d'immutabilité `quotes_protect_issued`/`quote_lines_protect_issued` implémenté au Lot 3 (premier document réellement "émis" de la V1) | Actée — priorité identifiée au Lot 0 (§7.3), réalisée à la première occasion utile | `lot-3-devis.md` |
 
 ---
 

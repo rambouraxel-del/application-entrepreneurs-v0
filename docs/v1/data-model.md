@@ -196,6 +196,8 @@ Catalogue de prestations réutilisables. Hors P0 : les lignes de devis sont libr
 
 ### `quotes`
 
+> ⚑ **Implémenté au Lot 3** (`docs/v1/lot-3-devis.md`) avec deux écarts mineurs : pas de `payment_terms` séparé (fondu dans `notes`, pas de besoin identifié pour un champ dédié) ; pas de `converted_invoice_id` (le Lot 4, factures, l'ajoutera). Statuts en anglais dans le code (`draft/sent/accepted/rejected/expired`), mêmes transitions.
+
 | Champ | Type | Notes |
 |---|---|---|
 | `id`, `organization_id` | UUID | |
@@ -214,12 +216,14 @@ Catalogue de prestations réutilisables. Hors P0 : les lignes de devis sont libr
 
 ### `quote_lines`
 
+> ⚑ **Lot 3** (ADR-17) : `quantity` implémenté en `Int` (millièmes entiers, 1,5 → 1500) plutôt qu'en `Decimal(12,3)` — reste dans l'arithmétique entière (BigInt) validée au Lot 0, évite le type Prisma `Decimal`. `organization_id` dénormalisé (absent ci-dessous) pour porter la même policy RLS simple que les autres tables métier.
+
 | Champ | Type | Notes |
 |---|---|---|
 | `id`, `quote_id` | UUID | |
 | `position` | int | ordre d'affichage |
 | `label`, `description` | text | **copiés**, jamais une référence vivante au catalogue |
-| `quantity` | numeric(12,3) | |
+| `quantity` | **Int (millièmes)**, pas `numeric(12,3)` — voir note ci-dessus | |
 | `unit_price_cents` | int | |
 | `vat_rate_bp` | int | |
 | `discount_bp` | int | remise en points de base |

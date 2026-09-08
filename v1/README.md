@@ -3,8 +3,9 @@
 Nouvelle application (Next.js + TypeScript + PostgreSQL/Prisma + Supabase
 Auth), distincte de la V0 (`js/app.js`, pages HTML/CSS à la racine du dépôt),
 qui continue de fonctionner indépendamment. Voir `docs/v1/lot-1-socle.md`
-(socle) et `docs/v1/lot-2-clients-dashboard.md` (Clients réels + Dashboard)
-pour les comptes rendus, et `docs/v1/architecture.md` pour la conception.
+(socle), `docs/v1/lot-2-clients-dashboard.md` (Clients réels + Dashboard) et
+`docs/v1/lot-3-devis.md` (Devis) pour les comptes rendus, et
+`docs/v1/architecture.md` pour la conception.
 
 ## Prérequis
 
@@ -31,7 +32,7 @@ cp .env.example .env
 npm run db:generate
 npm run db:migrate
 
-# 4. Peupler une base de démo (2 organisations, clients + tâches variés).
+# 4. Peupler une base de démo (2 organisations, clients + tâches + devis variés).
 npm run db:seed
 
 # 5. Lancer l'app.
@@ -46,9 +47,10 @@ Ouvrir [http://localhost:3000](http://localhost:3000).
 npm test
 ```
 
-81 tests contre une vraie base PostgreSQL locale (isolation multi-tenant
-Client + Task, CRUD, moteur d'insights, agrégats Dashboard, résolution de
-session/organisation) — voir `docs/v1/lot-2-clients-dashboard.md` §10.
+158 tests contre une vraie base PostgreSQL locale (isolation multi-tenant
+Client/Task/Quote, CRUD, calcul financier, numérotation concurrente,
+immutabilité des devis émis, moteur d'insights, agrégats Dashboard,
+résolution de session/organisation) — voir `docs/v1/lot-3-devis.md` §12.
 
 ## Autres commandes
 
@@ -64,12 +66,15 @@ npm run db:migrate:dev  # Nouvelle migration en développement (prisma migrate d
 Contient : authentification (Supabase Auth), Organizations/Memberships,
 isolation multi-tenant (extension Prisma + Row Level Security PostgreSQL),
 Client (CRUD complet, statuts CRM, notes, dernier contact), Task (relances
-liées ou non à un client), un Dashboard réel branché sur PostgreSQL (aucune
-donnée financière), un moteur d'insights V1, un branchement Supabase Storage
-(logo d'organisation, avec repli local en dev).
+liées ou non à un client), Devis (lignes, calcul financier en centimes,
+numérotation transactionnelle, immutabilité après émission, PDF), un
+Dashboard réel branché sur PostgreSQL (aucune donnée financière fictive — le
+CA n'existe pas tant qu'aucune facture n'est réelle), un moteur d'insights
+V1, un branchement Supabase Storage (logo d'organisation + PDF de devis,
+avec repli local en dev).
 
-Ne contient pas (volontairement, prochains lots) : devis, factures,
-paiements, trésorerie, numérotation, PDF, Stripe, facturation électronique,
+Ne contient pas (volontairement, prochains lots) : factures, paiements,
+trésorerie, Stripe, facturation électronique, catalogue Produits/Services,
 agenda/calendrier, moteur d'insights complet, page Analyses.
 
 ## Variables d'environnement Supabase

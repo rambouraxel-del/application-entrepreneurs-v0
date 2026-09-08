@@ -3,8 +3,8 @@ import { getOrganization } from '@/modules/organizations/service';
 import { SettingsForm } from './SettingsForm';
 
 /**
- * Réglages minimaux (Lot 2) : nom de l'organisation + seuil de relance. Pas
- * de page Settings étendue (docs/v1/lot-2-clients-dashboard.md §13).
+ * Réglages minimaux : nom de l'organisation + seuils de relance (client,
+ * devis). Pas de page Settings étendue (docs/v1/lot-3-devis.md §29).
  */
 export default async function SettingsPage() {
   const ctx = await requireTenantContext();
@@ -14,7 +14,12 @@ export default async function SettingsPage() {
     <div>
       <h1 className="text-xl font-bold text-slate-900">Réglages</h1>
       <div className="mt-4">
-        <SettingsForm name={organization.name} clientFollowUpDays={organization.clientFollowUpDays} />
+        <SettingsForm
+          name={organization.name}
+          clientFollowUpDays={organization.clientFollowUpDays}
+          quoteFollowUpDays={organization.quoteFollowUpDays}
+          quoteHighValueCents={organization.quoteHighValueCents}
+        />
       </div>
     </div>
   );

@@ -17,6 +17,7 @@ import { signOut } from '@/modules/auth/actions';
 const NAV_LINKS = [
   { href: '/app', label: 'Dashboard' },
   { href: '/app/clients', label: 'Clients' },
+  { href: '/app/quotes', label: 'Devis' },
   { href: '/app/tasks', label: 'Tâches' },
   { href: '/app/settings', label: 'Réglages' },
 ];

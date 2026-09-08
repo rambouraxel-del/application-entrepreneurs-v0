@@ -1,15 +1,21 @@
 import { daysBetween } from '@/lib/datetime';
+import { formatCents } from '@/modules/quotes/calc';
 import type { Insight, InsightContext } from './types';
 
 /**
- * Règles du Lot 2 (docs/v1/lot-2-clients-dashboard.md §10) — uniquement ce
- * qui est compatible avec les données existantes (Client, Task). Aucune
- * règle devis/facture : elles n'existent pas encore en V1.
+ * Règles du Lot 2 (docs/v1/lot-2-clients-dashboard.md §10) puis du Lot 3
+ * (docs/v1/lot-3-devis.md §Insights) — uniquement ce qui est compatible avec
+ * les données existantes (Client, Task, Quote). Aucune règle facture : elle
+ * n'existe pas encore en V1.
  *
  * Chaque règle est une fonction pure `(ctx) => Insight[]` : même entrée,
  * même sortie, aucun accès DB/horloge caché (la référence "aujourd'hui" est
  * dans `ctx.today`).
  */
+
+/** Seuil "proche expiration" — signal à court terme, volontairement fixe (pas
+ * un réglage de plus) : ⚑ hypothèse réversible, voir docs/v1/lot-3-devis.md §13. */
+const QUOTE_EXPIRY_WARNING_DAYS = 7;
 
 const notArchived = <T extends { archivedAt: Date | null }>(rows: T[]) => rows.filter((r) => r.archivedAt === null);
 
@@ -93,4 +99,70 @@ export function clientNoRecentContact(ctx: InsightContext): Insight[] {
     });
 }
 
-export const ALL_RULES = [taskOverdue, taskDueToday, clientToFollowUp, clientNoRecentContact];
+const openQuotes = (ctx: InsightContext) => ctx.quotes.filter((q) => q.status === 'sent');
+
+/** Devis envoyé, sans réponse depuis plus longtemps que le seuil de relance (Organization.quoteFollowUpDays). */
+export function quoteAwaitingResponse(ctx: InsightContext): Insight[] {
+  return openQuotes(ctx)
+    .filter((q) => q.issuedAt && daysBetween(q.issuedAt, ctx.today) >= ctx.quoteFollowUpDays)
+    .map((q) => {
+      const elapsed = daysBetween(q.issuedAt!, ctx.today);
+      return {
+        id: `alert-quote-awaiting-${q.id}`,
+        type: 'alert' as const,
+        priority: 'high' as const,
+        title: `Devis ${q.number ?? ''} sans réponse depuis ${elapsed} jours`,
+        description: `${q.clientName} · ${formatCents(q.totalTtcCents)}`,
+        actionLabel: 'Voir le devis',
+        actionHref: `/app/quotes/${q.id}`,
+        entityType: 'quote' as const,
+        entityId: q.id,
+      };
+    });
+}
+
+/** Devis envoyé dont la date de validité approche, toujours sans réponse. */
+export function quoteNearExpiry(ctx: InsightContext): Insight[] {
+  return openQuotes(ctx)
+    .filter((q) => q.validUntil !== null)
+    .map((q) => ({ ...q, daysLeft: daysBetween(ctx.today, q.validUntil!) }))
+    .filter((q) => q.daysLeft >= 0 && q.daysLeft <= QUOTE_EXPIRY_WARNING_DAYS)
+    .map((q) => ({
+      id: `alert-quote-expiry-${q.id}`,
+      type: 'alert' as const,
+      priority: 'high' as const,
+      title: q.daysLeft === 0 ? `Devis ${q.number ?? ''} expire aujourd'hui` : `Devis ${q.number ?? ''} expire dans ${q.daysLeft} jours`,
+      description: `${q.clientName} · ${formatCents(q.totalTtcCents)}`,
+      actionLabel: 'Voir le devis',
+      actionHref: `/app/quotes/${q.id}`,
+      entityType: 'quote' as const,
+      entityId: q.id,
+    }));
+}
+
+/** Devis ouvert (envoyé) d'une valeur ≥ seuil configuré (Organization.quoteHighValueCents). */
+export function quoteHighValue(ctx: InsightContext): Insight[] {
+  return openQuotes(ctx)
+    .filter((q) => q.totalTtcCents >= ctx.quoteHighValueCents)
+    .map((q) => ({
+      id: `opportunity-quote-high-value-${q.id}`,
+      type: 'opportunity' as const,
+      priority: 'normal' as const,
+      title: `Devis ${q.number ?? ''} à forte valeur — ${formatCents(q.totalTtcCents)}`,
+      description: q.clientName,
+      actionLabel: 'Voir le devis',
+      actionHref: `/app/quotes/${q.id}`,
+      entityType: 'quote' as const,
+      entityId: q.id,
+    }));
+}
+
+export const ALL_RULES = [
+  taskOverdue,
+  taskDueToday,
+  clientToFollowUp,
+  clientNoRecentContact,
+  quoteAwaitingResponse,
+  quoteNearExpiry,
+  quoteHighValue,
+];

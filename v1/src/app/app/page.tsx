@@ -4,14 +4,15 @@ import { getDashboardSnapshot } from '@/modules/dashboard/service';
 import { Card, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { formatCents } from '@/modules/quotes/calc';
 import type { Insight } from '@/modules/insights/types';
 
 /**
- * Premier Dashboard réel (Lot 2) — 100% données PostgreSQL, aucune donnée
- * financière (devis/factures n'existent pas encore). Hiérarchie reprise du
- * positionnement produit : Ma situation / À surveiller / Mes priorités /
- * Opportunités. Pas de section Performance financière — elle viendra avec
- * les lots qui la rendent réelle.
+ * Premier Dashboard réel (Lot 2), étendu au Lot 3 avec les devis réels —
+ * toujours 100% PostgreSQL, sans métrique financière fictive (pas de CA :
+ * aucune facture n'existe encore, docs/v1/lot-3-devis.md §9). Hiérarchie
+ * reprise du positionnement produit : Ma situation / À surveiller / Mes
+ * priorités / Opportunités. Pas de section Performance financière.
  *
  * Server Component par défaut : une seule fonction serveur
  * (getDashboardSnapshot) agrège tout, pas de requêtes séparées côté client.
@@ -26,17 +27,22 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-xl font-bold text-slate-900">Dashboard</h1>
-        <p className="text-sm text-slate-500">Situation réelle, calculée à partir de vos clients et tâches.</p>
+        <p className="text-sm text-slate-500">Situation réelle, calculée à partir de vos clients, tâches et devis.</p>
       </div>
 
       <section aria-labelledby="situation-heading">
         <h2 id="situation-heading" className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
           Ma situation
         </h2>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           <StatCard label="Clients actifs" value={situation.activeClients} href="/app/clients?status=active" />
           <StatCard label="Prospects" value={situation.prospects} href="/app/clients?status=prospect" />
           <StatCard label="À relancer" value={situation.toFollowUp} href="/app/clients?status=to_follow_up" />
+          <StatCard label="Devis en cours" value={situation.openQuotes} href="/app/quotes?status=sent" />
+          <Card>
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Valeur devis ouverts</p>
+            <p className="mt-1 text-2xl font-bold text-slate-900">{formatCents(situation.openQuotesValueCents)}</p>
+          </Card>
         </div>
       </section>
 

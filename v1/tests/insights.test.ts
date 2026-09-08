@@ -1,7 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import { compute } from '@/modules/insights/engine';
-import { taskOverdue, taskDueToday, clientToFollowUp, clientNoRecentContact } from '@/modules/insights/rules';
-import type { InsightClient, InsightContext, InsightTask } from '@/modules/insights/types';
+import {
+  taskOverdue,
+  taskDueToday,
+  clientToFollowUp,
+  clientNoRecentContact,
+  quoteAwaitingResponse,
+  quoteNearExpiry,
+  quoteHighValue,
+} from '@/modules/insights/rules';
+import type { InsightClient, InsightContext, InsightTask, InsightQuote } from '@/modules/insights/types';
 import { todayInTimezone, daysBetween } from '@/lib/datetime';
 
 /**
@@ -20,8 +28,31 @@ function task(overrides: Partial<InsightTask> = {}): InsightTask {
   return { id: 't1', title: 'Tâche test', clientId: null, clientName: null, dueDate: null, completedAt: null, ...overrides };
 }
 
+function quote(overrides: Partial<InsightQuote> = {}): InsightQuote {
+  return {
+    id: 'q1',
+    number: 'DEV-2026-000001',
+    clientId: 'c1',
+    clientName: 'Client Test',
+    status: 'sent',
+    issuedAt: TODAY,
+    validUntil: null,
+    totalTtcCents: 10000,
+    ...overrides,
+  };
+}
+
 function ctx(overrides: Partial<InsightContext> = {}): InsightContext {
-  return { today: TODAY, clients: [], tasks: [], clientFollowUpDays: 30, ...overrides };
+  return {
+    today: TODAY,
+    clients: [],
+    tasks: [],
+    quotes: [],
+    clientFollowUpDays: 30,
+    quoteFollowUpDays: 7,
+    quoteHighValueCents: 500_000,
+    ...overrides,
+  };
 }
 
 describe('taskOverdue', () => {
@@ -124,6 +155,75 @@ describe('clientNoRecentContact', () => {
     expect(
       clientNoRecentContact(ctx({ clients: [client({ lastContactAt: null, archivedAt: TODAY })] })),
     ).toHaveLength(0);
+  });
+});
+
+describe('quoteAwaitingResponse', () => {
+  it('se déclenche au-delà du seuil de relance devis', () => {
+    const issuedAt = new Date(TODAY.getTime() - 8 * 86_400_000);
+    const result = quoteAwaitingResponse(ctx({ quotes: [quote({ issuedAt })], quoteFollowUpDays: 7 }));
+    expect(result).toHaveLength(1);
+    expect(result[0]!.priority).toBe('high');
+  });
+
+  it('ne se déclenche pas sous le seuil', () => {
+    const issuedAt = new Date(TODAY.getTime() - 3 * 86_400_000);
+    expect(quoteAwaitingResponse(ctx({ quotes: [quote({ issuedAt })], quoteFollowUpDays: 7 }))).toHaveLength(0);
+  });
+
+  it("ne se déclenche pas pour un devis brouillon, accepté ou refusé", () => {
+    for (const status of ['draft', 'accepted', 'rejected', 'expired'] as const) {
+      const issuedAt = new Date(TODAY.getTime() - 30 * 86_400_000);
+      expect(quoteAwaitingResponse(ctx({ quotes: [quote({ status, issuedAt })] }))).toHaveLength(0);
+    }
+  });
+
+  it('aucun devis -> aucun insight', () => {
+    expect(quoteAwaitingResponse(ctx())).toHaveLength(0);
+  });
+});
+
+describe('quoteNearExpiry', () => {
+  it('se déclenche dans la fenêtre de 7 jours avant expiration', () => {
+    const validUntil = new Date(TODAY.getTime() + 5 * 86_400_000);
+    expect(quoteNearExpiry(ctx({ quotes: [quote({ validUntil })] }))).toHaveLength(1);
+  });
+
+  it("se déclenche le jour même de l'expiration (limite)", () => {
+    expect(quoteNearExpiry(ctx({ quotes: [quote({ validUntil: TODAY })] }))).toHaveLength(1);
+  });
+
+  it('ne se déclenche pas au-delà de la fenêtre', () => {
+    const validUntil = new Date(TODAY.getTime() + 8 * 86_400_000);
+    expect(quoteNearExpiry(ctx({ quotes: [quote({ validUntil })] }))).toHaveLength(0);
+  });
+
+  it('ne se déclenche pas pour une date de validité déjà passée (couverte par la relance, pas une nouvelle alerte)', () => {
+    const validUntil = new Date(TODAY.getTime() - 1 * 86_400_000);
+    expect(quoteNearExpiry(ctx({ quotes: [quote({ validUntil })] }))).toHaveLength(0);
+  });
+
+  it('ne se déclenche pas sans date de validité', () => {
+    expect(quoteNearExpiry(ctx({ quotes: [quote({ validUntil: null })] }))).toHaveLength(0);
+  });
+});
+
+describe('quoteHighValue', () => {
+  it('se déclenche au-dessus du seuil configuré', () => {
+    const result = quoteHighValue(ctx({ quotes: [quote({ totalTtcCents: 600_000 })], quoteHighValueCents: 500_000 }));
+    expect(result).toHaveLength(1);
+  });
+
+  it('se déclenche pile au seuil (limite inclusive)', () => {
+    expect(quoteHighValue(ctx({ quotes: [quote({ totalTtcCents: 500_000 })], quoteHighValueCents: 500_000 }))).toHaveLength(1);
+  });
+
+  it('ne se déclenche pas sous le seuil', () => {
+    expect(quoteHighValue(ctx({ quotes: [quote({ totalTtcCents: 100_000 })], quoteHighValueCents: 500_000 }))).toHaveLength(0);
+  });
+
+  it("ne se déclenche pas pour un devis qui n'est pas 'sent'", () => {
+    expect(quoteHighValue(ctx({ quotes: [quote({ status: 'accepted', totalTtcCents: 999_999 })] }))).toHaveLength(0);
   });
 });
 

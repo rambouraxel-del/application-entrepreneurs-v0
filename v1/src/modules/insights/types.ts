@@ -15,7 +15,7 @@ export type Insight = {
   description: string;
   actionLabel: string;
   actionHref: string;
-  entityType: 'client' | 'task';
+  entityType: 'client' | 'task' | 'quote';
   entityId: string;
 };
 
@@ -37,11 +37,26 @@ export type InsightTask = {
   completedAt: Date | null;
 };
 
+export type InsightQuote = {
+  id: string;
+  number: string | null;
+  clientId: string;
+  clientName: string;
+  status: 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired';
+  issuedAt: Date | null;
+  validUntil: Date | null;
+  totalTtcCents: number;
+};
+
 export type InsightContext = {
   /** Date de référence pour "aujourd'hui" — toujours injectable (tests, fuseau). */
   today: Date;
   clients: InsightClient[];
   tasks: InsightTask[];
+  quotes: InsightQuote[];
   /** Organization.clientFollowUpDays — voir prisma/schema.prisma. */
   clientFollowUpDays: number;
+  /** Organization.quoteFollowUpDays / quoteHighValueCents — voir prisma/schema.prisma. */
+  quoteFollowUpDays: number;
+  quoteHighValueCents: number;
 };

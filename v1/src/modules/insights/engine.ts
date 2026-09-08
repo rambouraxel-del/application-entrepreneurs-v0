@@ -14,7 +14,10 @@ export function normalizeContext(raw: Partial<InsightContext>): InsightContext {
     today: raw.today ?? todayInTimezone(),
     clients: raw.clients ?? [],
     tasks: raw.tasks ?? [],
+    quotes: raw.quotes ?? [],
     clientFollowUpDays: raw.clientFollowUpDays ?? 30,
+    quoteFollowUpDays: raw.quoteFollowUpDays ?? 7,
+    quoteHighValueCents: raw.quoteHighValueCents ?? 500_000,
   };
 }
 
