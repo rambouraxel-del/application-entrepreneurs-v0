@@ -3275,6 +3275,19 @@ a.tresorerie-timeline-item:hover {
     color: var(--color-text);
 }
 
+.dashboard-level-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.dashboard-level-subtitle {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--color-text-secondary);
+}
+
 .dashboard-period-select-wrap {
     display: flex;
     align-items: center;

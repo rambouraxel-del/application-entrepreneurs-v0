@@ -10314,7 +10314,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     titleEl.textContent = 'Bonjour, ' + demo.prenom + ' !';
-    subtitleEl.textContent = 'Voici un aperçu de l\'activité de ' + demo.entreprise + ' (' + demo.activite + ') aujourd\'hui.';
+    subtitleEl.textContent = 'Voici où en est ' + demo.entreprise + ' (' + demo.activite + ') et ce qui mérite votre attention aujourd\'hui.';
 })();
 
 // Page Paramètres : connexion à la configuration de démonstration (V0.9.2).

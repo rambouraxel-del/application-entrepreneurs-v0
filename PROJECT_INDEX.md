@@ -40,6 +40,7 @@ application-entrepreneurs-v0/
 │   └── settings-agenda-statuses.test.js
 ├── package.json                 Script "test" (npm test), sans dépendance externe
 └── docs/
+    ├── positionnement-produit.md Source de vérité produit (vision, cible, promesse)
     ├── changelog.md
     ├── decisions.md
     ├── roadmap-v0bis.md
@@ -52,6 +53,7 @@ application-entrepreneurs-v0/
 
 ## Sources de vérité
 
+- `docs/positionnement-produit.md` définit le positionnement produit (vision, cible, promesse, piliers) : toute nouvelle fonctionnalité doit y être compatible.
 - Le store V0.11 contient uniquement la configuration locale.
 - `app.js` conserve les données métier fictives et non persistantes.
 - Les paramètres marqués V1 dans le catalogue ne sont pas simulés.
@@ -60,6 +62,7 @@ application-entrepreneurs-v0/
 ## Documents actifs de référence
 
 - `README.md` et `PROJECT_INDEX.md` (racine) : état global et arborescence.
+- `docs/positionnement-produit.md` : positionnement produit, source de vérité pour les futures itérations.
 - `docs/changelog.md`, `docs/roadmap-v0bis.md`, `docs/backlog.md`, `docs/versioning.md`, `docs/decisions.md` : suivi de version courant.
 - `docs/settings-v0.11.md` : architecture et checklist du Centre de paramètres.
 - `docs/archive/` : documents historiques ou de revue clôturée, conservés pour traçabilité mais non tenus à jour.

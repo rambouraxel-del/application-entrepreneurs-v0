@@ -4,7 +4,7 @@
 
 ## Objectif
 
-Prototype HTML/CSS/JavaScript natif destiné à tester un cockpit de pilotage pour entrepreneurs et TPE : Clients, Agenda, Produits/Services, Devis/Factures, Trésorerie, Analyses et Dashboard quotidien.
+Prototype HTML/CSS/JavaScript natif d'un cockpit de pilotage pour indépendants et TPE de services (1 à 10 personnes) : comprendre rapidement où en est son entreprise et ce qu'il y a à faire, avec le Dashboard comme point d'entrée. Les modules Clients, Agenda, Produits/Services, Devis/Factures, Trésorerie et Analyses sont les sources d'information qui l'alimentent. Voir `docs/positionnement-produit.md` pour le positionnement complet (vision, cible, promesse).
 
 ## État fonctionnel de la V0
 
@@ -59,4 +59,4 @@ Lance tous les fichiers `tests/*.test.js` sans dépendance externe (voir `packag
 
 La V1 devra notamment apporter un backend, une base de données, l'authentification, les rôles, la synchronisation, le stockage sécurisé des fichiers, une numérotation comptable persistante et les notifications externes.
 
-Voir aussi : `docs/changelog.md`, `docs/roadmap-v0bis.md`, `docs/backlog.md`, `docs/versioning.md`, `docs/decisions.md`, `docs/settings-v0.11.md`, `docs/architecture-app-js.md` et `PROJECT_INDEX.md`.
+Voir aussi : `docs/positionnement-produit.md`, `docs/changelog.md`, `docs/roadmap-v0bis.md`, `docs/backlog.md`, `docs/versioning.md`, `docs/decisions.md`, `docs/settings-v0.11.md`, `docs/architecture-app-js.md` et `PROJECT_INDEX.md`.

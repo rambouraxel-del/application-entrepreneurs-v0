@@ -1,5 +1,11 @@
 # Backlog produit
 
+## Après la V0.13 (recentrage produit)
+
+- Dashboard décisionnel : retravailler la logique de mise en avant (situation / attention / actions / évolution) au-delà des seuls textes et sous-titres, en s'appuyant toujours sur les données déjà disponibles (pas de nouveau moteur de recommandations).
+- Tests utilisateurs auprès d'indépendants et TPE de services ciblés, pour valider le positionnement et la lisibilité du Dashboard.
+- Définition du MVP à partir des retours utilisateurs, avant la V1 technique.
+
 ## Après la V0.11
 
 - Backend et synchronisation multi-appareil de la configuration.

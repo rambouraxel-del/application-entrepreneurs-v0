@@ -4,6 +4,7 @@
 Ce dossier contient la documentation interne du projet : suivi des évolutions et décisions importantes prises pendant le développement.
 
 ## Contenu
+- `positionnement-produit.md` — source de vérité produit : vision, cible, promesse, piliers Centraliser → Comprendre → Agir et ce que le produit n'est pas.
 - `changelog.md` — résumé des grandes étapes réalisées, version par version.
 - `decisions.md` — trace des décisions importantes prises pendant le développement.
 - `roadmap-v0bis.md` — phases prévues après la V0 initiale, avec leur statut (Validée / En cours / À venir).
