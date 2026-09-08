@@ -9,18 +9,20 @@
 | V0.13 | Prototype décisionnel : moteur d'insights (`docs/insights-engine.md`) et Dashboard réorganisé en 5 niveaux (situation, attention, priorités du jour, opportunités, performance) | Validée |
 | V0.13.1 | Préparation aux tests utilisateurs : dates de démonstration relatives, re-diagnostic du topbar mobile, suppression de `js/settings-alerts.js` | Validée |
 | Étape 4 | Définition du MVP commercial : périmètre P0/P1/P2, socle SaaS, modèle de données conceptuel (`docs/mvp-commercial.md`) | Cadrage réalisé, aucune donnée utilisateur — voir le registre d'hypothèses |
-| V1 | Version fonctionnelle stable : backend, données persistantes, authentification et synchronisation, construite sur le périmètre P0 de `docs/mvp-commercial.md` | À venir |
+| Étape 5 | Conception de l'architecture technique V1 : stack, monolithe modulaire, multi-tenant, modèle de données, workflow financier, roadmap technique (`docs/v1/`) | Conception réalisée, à relire et valider |
+| V1 | Version fonctionnelle stable : backend, données persistantes, authentification et synchronisation, construite sur le périmètre P0 de `docs/mvp-commercial.md` et l'architecture de `docs/v1/architecture.md` | À venir |
 
 ## Prochaines priorités
 
 1. **Recentrage produit** — positionnement, vocabulaire et hiérarchie des pages alignés sur le rôle de cockpit de pilotage (V0.12.1, réalisée).
 2. **Dashboard décisionnel** — moteur d'insights (alertes, priorités du jour, opportunités) à partir des données déjà disponibles (V0.13, réalisée).
 3. **Définition du MVP commercial** — périmètre P0/P1/P2/hors périmètre, socle SaaS, réglementaire, modèle de données conceptuel (`docs/mvp-commercial.md`, réalisée). Tests utilisateurs temporairement reportés ; aucune hypothèse de ce document n'est validée (voir son registre d'hypothèses).
-4. **Tests utilisateurs** — confronter le positionnement, le Dashboard et le périmètre MVP à de vrais indépendants/TPE cibles.
-5. **V1 technique** — backend, données persistantes, authentification, synchronisation, sur le périmètre P0 défini.
-6. **Intégrations** — connexions aux outils tiers pertinents pour la cible (priorisées dans `docs/mvp-commercial.md`).
-7. **Bêta** — mise à disposition contrôlée auprès d'utilisateurs réels.
-8. **Commercialisation**.
+4. **Conception de l'architecture V1** — stack, frontières, multi-tenant, argent, documents, roadmap technique en lots verticaux (`docs/v1/`, réalisée). Aucune ligne de V1 écrite.
+5. **Tests utilisateurs** — confronter le positionnement, le Dashboard et le périmètre MVP à de vrais indépendants/TPE cibles.
+6. **V1 technique** — construction par lots verticaux, sur le périmètre P0 et l'architecture définis.
+7. **Intégrations** — connexions aux outils tiers pertinents pour la cible (priorisées dans `docs/mvp-commercial.md`).
+8. **Bêta** — mise à disposition contrôlée auprès d'utilisateurs réels.
+9. **Commercialisation**.
 
 ## V0.11
 
@@ -53,6 +55,10 @@ Version corrective courte, sans enrichissement fonctionnel, pour préparer les t
 ## Étape 4 — Définition du MVP commercial
 
 Les tests utilisateurs initialement prévus après la V0.13.1 sont temporairement reportés. À la place, cadrage du périmètre de la première version commercialisable : `docs/mvp-commercial.md` définit le parcours cœur, le périmètre P0/P1/P2/hors périmètre par domaine, le socle SaaS indispensable (comptes, isolation des données, sauvegarde, abonnement), la frontière réglementaire de la facturation électronique, le modèle de données conceptuel et les écrans du MVP. Purement un exercice de cadrage produit : aucun développement V1, aucune nouvelle fonctionnalité, aucune modification du Dashboard ou du moteur d'insights. Comme aucun test utilisateur n'a encore eu lieu, le document distingue explicitement faits observés, choix produit et hypothèses, et tient un registre des hypothèses à valider dès la reprise des tests utilisateurs.
+
+## Étape 5 — Conception de l'architecture technique V1
+
+Conception uniquement, sans aucune implémentation : `docs/v1/architecture.md` devient la source de vérité technique de la V1, complétée par `data-model.md`, `security.md` et `migration-v0-v1.md`. Décisions structurantes : monolithe modulaire Next.js/TypeScript sur PostgreSQL, authentification déléguée, isolation multi-tenant garantie par un filtrage automatique et des tests bloquants, argent en centimes entiers, immutabilité des documents émis par snapshots, numérotation par compteur transactionnel, moteur d'insights calculé à la demande et resté déterministe. La V1 est construite comme une nouvelle application reprenant les concepts validés de la V0, et non par refactoring progressif de `js/app.js`. La roadmap technique est découpée en six lots verticaux livrant chacun quelque chose de vérifiable.
 
 ## V1
 

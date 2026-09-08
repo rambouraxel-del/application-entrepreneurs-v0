@@ -59,4 +59,4 @@ Lance tous les fichiers `tests/*.test.js` sans dépendance externe (voir `packag
 
 La V1 devra notamment apporter un backend, une base de données, l'authentification, les rôles, la synchronisation, le stockage sécurisé des fichiers, une numérotation comptable persistante et les notifications externes.
 
-Voir aussi : `docs/positionnement-produit.md`, `docs/insights-engine.md`, `docs/mvp-commercial.md`, `docs/changelog.md`, `docs/roadmap-v0bis.md`, `docs/backlog.md`, `docs/versioning.md`, `docs/decisions.md`, `docs/settings-v0.11.md`, `docs/architecture-app-js.md` et `PROJECT_INDEX.md`.
+Voir aussi : `docs/positionnement-produit.md`, `docs/insights-engine.md`, `docs/mvp-commercial.md`, `docs/v1/architecture.md`, `docs/changelog.md`, `docs/roadmap-v0bis.md`, `docs/backlog.md`, `docs/versioning.md`, `docs/decisions.md`, `docs/settings-v0.11.md`, `docs/architecture-app-js.md` et `PROJECT_INDEX.md`.

@@ -44,6 +44,7 @@ application-entrepreneurs-v0/
     ├── positionnement-produit.md Source de vérité produit (vision, cible, promesse)
     ├── insights-engine.md        Architecture et règles du moteur d'insights (V0.13)
     ├── mvp-commercial.md         Périmètre de la première version commercialisable (P0/P1/P2, socle SaaS)
+    ├── v1/                       Architecture technique V1 (architecture, data-model, security, migration)
     ├── changelog.md
     ├── decisions.md
     ├── roadmap-v0bis.md
@@ -68,6 +69,7 @@ application-entrepreneurs-v0/
 - `docs/positionnement-produit.md` : positionnement produit, source de vérité pour les futures itérations.
 - `docs/insights-engine.md` : règles et limites du moteur d'insights du Dashboard (V0.13).
 - `docs/mvp-commercial.md` : périmètre P0/P1/P2/hors périmètre de la première version commercialisable, socle SaaS, modèle de données conceptuel — cadrage, aucune donnée utilisateur (voir son registre d'hypothèses).
+- `docs/v1/architecture.md` : source de vérité technique de la V1 (stack, monolithe modulaire, multi-tenant, argent, insights, roadmap technique) et ses documents liés `data-model.md`, `security.md`, `migration-v0-v1.md`.
 - `docs/changelog.md`, `docs/roadmap-v0bis.md`, `docs/backlog.md`, `docs/versioning.md`, `docs/decisions.md` : suivi de version courant.
 - `docs/settings-v0.11.md` : architecture et checklist du Centre de paramètres.
 - `docs/archive/` : documents historiques ou de revue clôturée, conservés pour traçabilité mais non tenus à jour.
