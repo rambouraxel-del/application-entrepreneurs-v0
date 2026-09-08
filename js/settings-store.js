@@ -263,7 +263,10 @@
         var raw = unwrap(data), errors = [];
         if (!isPlainObject(raw)) return { valid: false, errors: ['Le fichier doit contenir un objet JSON de configuration.'], normalized: null, summary: null };
         if (own(raw, 'schemaVersion') && !Number.isFinite(Number(raw.schemaVersion))) errors.push('schemaVersion doit être numérique.');
-        if (Number(raw.schemaVersion || 0) > Number(defaults.schemaVersion)) errors.push('Version de schéma plus récente que celle prise en charge.');
+        if (Number(raw.schemaVersion || 0) > Number(defaults.schemaVersion)) {
+            errors.push('Version de schéma plus récente que celle prise en charge.');
+            return { valid: false, errors: errors, normalized: null, summary: null };
+        }
         var normalized = sanitizeObject(migrate(raw), defaults, true, '', errors);
         normalized.schemaVersion = defaults.schemaVersion;
         normalizeCollections(normalized, true, errors);

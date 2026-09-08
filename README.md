@@ -14,7 +14,7 @@ Les modules travaillent sur un jeu de données fictif chargé dans `js/app.js`. 
 
 ## Modules disponibles
 
-- **Dashboard** : période de pilotage, KPI, objectifs, mini-agenda, tâches, source unique d'alertes, graphique et tunnel commercial.
+- **Dashboard** : cinq niveaux de lecture — ma situation (KPI, objectifs), ce qui mérite mon attention (alertes), mes priorités du jour (agenda + tâches), opportunités à saisir, et performance (graphique, tunnel commercial). Les trois premiers niveaux « décisionnels » sont calculés par le moteur d'insights (`js/insights-engine.js`, voir `docs/insights-engine.md`).
 - **Clients / CRM** : liste, statuts, recherche, pagination, fiche client et documents liés.
 - **Agenda** : vues Jour/Semaine/Mois/Liste, fiche rendez-vous, préparation commerciale et devis brouillon lié.
 - **Produits / Services** : catalogue, types, statuts, TVA, paramètres commerciaux et fiche détaillée.
@@ -59,4 +59,4 @@ Lance tous les fichiers `tests/*.test.js` sans dépendance externe (voir `packag
 
 La V1 devra notamment apporter un backend, une base de données, l'authentification, les rôles, la synchronisation, le stockage sécurisé des fichiers, une numérotation comptable persistante et les notifications externes.
 
-Voir aussi : `docs/positionnement-produit.md`, `docs/changelog.md`, `docs/roadmap-v0bis.md`, `docs/backlog.md`, `docs/versioning.md`, `docs/decisions.md`, `docs/settings-v0.11.md`, `docs/architecture-app-js.md` et `PROJECT_INDEX.md`.
+Voir aussi : `docs/positionnement-produit.md`, `docs/insights-engine.md`, `docs/changelog.md`, `docs/roadmap-v0bis.md`, `docs/backlog.md`, `docs/versioning.md`, `docs/decisions.md`, `docs/settings-v0.11.md`, `docs/architecture-app-js.md` et `PROJECT_INDEX.md`.

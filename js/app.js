@@ -10948,6 +10948,10 @@ document.addEventListener('DOMContentLoaded', function () {
             li.appendChild(actions);
             listEl.appendChild(li);
         });
+
+        // Les tâches nourrissent aussi « Mes priorités du jour » (niveau 3) :
+        // tenu à jour à chaque ajout/modification/suppression/bascule.
+        renderInsightsPanels();
     }
 
     function openTodoModal(existingTodo) {
@@ -11061,14 +11065,139 @@ document.addEventListener('DOMContentLoaded', function () {
         renderTodos();
     });
 
-    // Alertes du Dashboard : source unique js/settings-alerts.js
-    // (COCKPIT_SETTINGS_ALERTS), qui écrit directement dans
-    // #dashboard-alerts-list / #dashboard-alerts-empty. L'ancien moteur
-    // local (computeDevisARelancer/computeRdvNonConfirmesImminents/
-    // renderAlerts) a été retiré en V0.12 : il écrivait dans les mêmes
-    // éléments DOM et était systématiquement écrasé par settings-alerts.js.
+    // ================= Niveaux 2/3/4 — Moteur d'insights V0.13 =================
+    //
+    // « À surveiller », « Mes priorités du jour » et « Opportunités » sont
+    // calculés par js/insights-engine.js (window.COCKPIT_INSIGHTS_ENGINE),
+    // un module séparé du rendu et testable indépendamment (voir
+    // tests/insights-engine.test.js et docs/insights-engine.md). Ce bloc ne
+    // fait qu'assembler le contexte de données déjà chargées sur cette page
+    // et afficher le résultat : aucune règle métier n'est recalculée ici.
+    //
+    // Remplace, pour le Dashboard, l'ancien rendu par js/settings-alerts.js
+    // (V0.11) : ce fichier reste disponible mais n'écrit plus dans le DOM
+    // du Dashboard (voir docs/decisions.md, V0.13).
 
-    // ================= Niveau 3 — Performance financière =================
+    var INSIGHT_PRIORITY_CLASS = { critique: 'alert-critical', importante: 'alert-warning', normale: 'alert-info' };
+    var ICON_PRIORITY_ITEM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+    var ICON_OPPORTUNITY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>';
+
+    function renderInsightList(listEl, emptyEl, insights, iconForInsight) {
+        if (!listEl) {
+            return;
+        }
+        listEl.innerHTML = '';
+        if (insights.length === 0) {
+            if (emptyEl) {
+                emptyEl.style.display = '';
+            }
+            return;
+        }
+        if (emptyEl) {
+            emptyEl.style.display = 'none';
+        }
+        insights.forEach(function (insight) {
+            var li = document.createElement('li');
+            var wrap = document.createElement(insight.actionUrl ? 'a' : 'div');
+            if (insight.actionUrl) {
+                wrap.href = insight.actionUrl;
+            }
+            wrap.className = 'alert-item ' + (INSIGHT_PRIORITY_CLASS[insight.priority] || 'alert-info');
+            var icon = makeEl('span', 'alert-icon');
+            icon.innerHTML = iconForInsight(insight);
+            var body = makeEl('div', 'alert-item-body');
+            body.appendChild(makeEl('p', 'alert-item-title', insight.title));
+            if (insight.description) {
+                body.appendChild(makeEl('p', 'alert-item-subtext', insight.description));
+            }
+            wrap.appendChild(icon);
+            wrap.appendChild(body);
+            if (insight.actionUrl) {
+                wrap.appendChild(makeEl('span', 'alert-chevron', '›'));
+            }
+            li.appendChild(wrap);
+            listEl.appendChild(li);
+        });
+    }
+
+    function renderOpportunityCards(listEl, emptyEl, insights) {
+        if (!listEl) {
+            return;
+        }
+        listEl.innerHTML = '';
+        if (insights.length === 0) {
+            if (emptyEl) {
+                emptyEl.style.display = '';
+            }
+            return;
+        }
+        if (emptyEl) {
+            emptyEl.style.display = 'none';
+        }
+        insights.forEach(function (insight) {
+            var card = document.createElement(insight.actionUrl ? 'a' : 'div');
+            if (insight.actionUrl) {
+                card.href = insight.actionUrl;
+            }
+            card.className = 'insight-card insight-card-success';
+            var icon = makeEl('span', 'insight-card-icon');
+            icon.innerHTML = ICON_OPPORTUNITY;
+            var body = makeEl('div', 'insight-card-body');
+            body.appendChild(makeEl('p', 'insight-card-title', insight.title));
+            body.appendChild(makeEl('p', 'insight-card-subtext', insight.description));
+            card.appendChild(icon);
+            card.appendChild(body);
+            listEl.appendChild(card);
+        });
+    }
+
+    function buildInsightsContext() {
+        var settings = window.COCKPIT_SETTINGS;
+        var alertsCfg = settings ? settings.getSection('alerts') : null;
+        var clientsCfg = settings ? settings.getSection('clients') : null;
+        var dashboardCfg = settings ? settings.getSection('dashboard') : null;
+        return {
+            today: today,
+            devisCalc: devisCalc,
+            factureCalc: factureCalc,
+            agendaCalc: agendaCalc,
+            tresorerieCalc: tresorerieCalc,
+            devisDetails: DEVIS_DETAILS,
+            factureDetails: FACTURE_DETAILS,
+            rdvDetails: RDV_DETAILS,
+            clientDetails: CLIENT_DETAILS,
+            todos: TODOS,
+            horizonDays: computeHorizonDays(pilotageConfig.horizonTresorerie),
+            alertSettings: alertsCfg || undefined,
+            clientsSettings: clientsCfg || undefined,
+            maxAlerts: dashboardCfg ? dashboardCfg.maxAlerts : undefined
+        };
+    }
+
+    function renderInsightsPanels() {
+        var engine = window.COCKPIT_INSIGHTS_ENGINE;
+        var result = engine ? engine.compute(buildInsightsContext()) : { alerts: [], priorities: [], opportunities: [] };
+
+        renderInsightList(
+            document.getElementById('dashboard-attention-list'),
+            document.getElementById('dashboard-attention-empty'),
+            result.alerts,
+            function () { return ICON_ALERT; }
+        );
+        renderInsightList(
+            document.getElementById('dashboard-priorities-list'),
+            document.getElementById('dashboard-priorities-empty'),
+            result.priorities,
+            function (insight) { return insight.source === 'agenda' ? ICON_ALERT : ICON_PRIORITY_ITEM; }
+        );
+        renderOpportunityCards(
+            document.getElementById('dashboard-opportunities-list'),
+            document.getElementById('dashboard-opportunities-empty'),
+            result.opportunities
+        );
+    }
+
+    // ================= Niveau 5 — Performance financière =================
 
     var CHART_SERIES_DEFS = {
         ca_facture: { label: 'CA facturé', color: '#4f46e5' },
@@ -11409,21 +11538,19 @@ document.addEventListener('DOMContentLoaded', function () {
         neutral: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="m19 9-5 5-4-4-3 3"></path></svg>'
     };
 
-    // Constats automatiques calculés depuis les données réelles du tunnel —
-    // simples règles de lecture ("Lecture commerciale"), pas une
-    // intelligence artificielle.
+    // Constat automatique calculé depuis les données réelles du tunnel —
+    // simple règle de lecture ("Lecture commerciale"), pas une intelligence
+    // artificielle. Depuis la V0.13, ne reprend plus le nombre de devis en
+    // attente ni de factures impayées : ces constats sont déjà remontés,
+    // agrégés et actionnables, dans « Ce qui mérite mon attention »
+    // (niveau 2) — les répéter ici serait une redondance (voir
+    // docs/insights-engine.md).
     function renderInsights(funnel) {
         var insightsEl = document.getElementById('dashboard-insights');
         insightsEl.innerHTML = '';
 
         var insights = [];
 
-        if (funnel.devisEnvoyesCount > 0) {
-            insights.push({ tonalite: 'info', titre: funnel.devisEnvoyesCount + ' devis en attente de réponse', sousTexte: 'Montant potentiel : ' + devisCalc.formatMoney(funnel.montantEnAttente) });
-        }
-        if (funnel.facturesImpayeesCount > 0) {
-            insights.push({ tonalite: 'warning', titre: funnel.facturesImpayeesCount + ' facture(s) impayée(s)', sousTexte: 'À suivre dans la Facturation' });
-        }
         var weakestStep = null;
         for (var i = 1; i < funnel.steps.length; i++) {
             if (weakestStep === null || funnel.steps[i].taux < weakestStep.taux) {
@@ -11433,8 +11560,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (weakestStep) {
             insights.push({ tonalite: 'neutral', titre: 'Étape la plus sélective : ' + weakestStep.label, sousTexte: weakestStep.taux + ' % de passage depuis l\'étape précédente' });
         }
-
-        insights = insights.slice(0, 3);
 
         if (insights.length === 0) {
             insightsEl.appendChild(makeEl('p', 'empty-state-inline', 'Aucun constat particulier pour l\'instant.'));
@@ -11458,7 +11583,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     renderSituation();
     renderMiniAgenda();
-    renderTodos();
+    renderTodos(); // appelle aussi renderInsightsPanels()
     renderPerformanceChart();
     renderTunnel();
+
+    if (window.COCKPIT_SETTINGS && window.COCKPIT_SETTINGS.subscribe) {
+        window.COCKPIT_SETTINGS.subscribe(renderInsightsPanels);
+    }
 })();

@@ -93,14 +93,33 @@
                     <section class="dashboard-kpis" id="dashboard-kpis-situation"></section>
                 </section>
 
-                <!-- Niveau 2 — Ma journée -->
-                <section class="dashboard-cockpit-level">
+                <!-- Niveau 2 — À surveiller -->
+                <section class="dashboard-cockpit-level" id="level-attention">
                     <div class="dashboard-level-header">
                         <div class="dashboard-level-heading">
-                            <h2>Ce qui mérite mon attention aujourd'hui</h2>
-                            <p class="dashboard-level-subtitle">Alertes, tâches et rendez-vous du jour.</p>
+                            <h2>Ce qui mérite mon attention</h2>
+                            <p class="dashboard-level-subtitle">Les points calculés à partir de vos factures, devis, rendez-vous et trésorerie.</p>
                         </div>
                     </div>
+                    <div class="dashboard-block">
+                        <ul class="alert-list" id="dashboard-attention-list"></ul>
+                        <p class="empty-state-inline" id="dashboard-attention-empty" style="display: none;">Tout est sous contrôle — aucun point critique détecté aujourd'hui.</p>
+                    </div>
+                </section>
+
+                <!-- Niveau 3 — Mes priorités du jour -->
+                <section class="dashboard-cockpit-level" id="level-priorites">
+                    <div class="dashboard-level-header">
+                        <div class="dashboard-level-heading">
+                            <h2>Mes priorités du jour</h2>
+                            <p class="dashboard-level-subtitle">Rendez-vous du jour et tâches à faire, réunis en une seule lecture.</p>
+                        </div>
+                    </div>
+                    <div class="dashboard-block">
+                        <ul class="alert-list" id="dashboard-priorities-list"></ul>
+                        <p class="empty-state-inline" id="dashboard-priorities-empty" style="display: none;">Rien de programmé — aucun rendez-vous ni tâche en attente aujourd'hui.</p>
+                    </div>
+
                     <div class="dashboard-journee-grid">
                         <div class="dashboard-block dashboard-mini-agenda-block">
                             <div class="dashboard-block-header">
@@ -132,23 +151,30 @@
                                 <ul class="todo-list dashboard-todo-list" id="todo-list"></ul>
                                 <p class="empty-state-inline" id="todo-empty" style="display: none;">Aucune tâche.</p>
                             </div>
-                            <div class="dashboard-priorites-alertes">
-                                <div class="dashboard-block-header">
-                                    <h3>Alertes</h3>
-                                </div>
-                                <ul class="alert-list" id="dashboard-alerts-list"></ul>
-                                <p class="empty-state-inline" id="dashboard-alerts-empty" style="display: none;">Aucune alerte pour l'instant.</p>
-                            </div>
                         </div>
                     </div>
                 </section>
 
-                <!-- Niveau 3 — Performance -->
-                <section class="dashboard-cockpit-level">
+                <!-- Niveau 4 — Opportunités -->
+                <section class="dashboard-cockpit-level" id="level-opportunites">
+                    <div class="dashboard-level-header">
+                        <div class="dashboard-level-heading">
+                            <h2>Opportunités à saisir</h2>
+                            <p class="dashboard-level-subtitle">Clients et devis à relancer, rendez-vous à fort potentiel.</p>
+                        </div>
+                    </div>
+                    <div class="dashboard-block">
+                        <div class="insight-cards" id="dashboard-opportunities-list"></div>
+                        <p class="empty-state-inline" id="dashboard-opportunities-empty" style="display: none;">Aucune opportunité identifiée pour l'instant.</p>
+                    </div>
+                </section>
+
+                <!-- Niveau 5 — Performance -->
+                <section class="dashboard-cockpit-level" id="level-performance">
                     <div class="dashboard-level-header">
                         <div class="dashboard-level-heading">
                             <h2>Comment évolue mon activité</h2>
-                            <p class="dashboard-level-subtitle">Tendance financière et dynamique commerciale.</p>
+                            <p class="dashboard-level-subtitle">Tendance financière et dynamique commerciale — pour prendre du recul, en second plan.</p>
                         </div>
                     </div>
                     <div class="dashboard-performance-grid">

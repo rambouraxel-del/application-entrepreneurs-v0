@@ -1,10 +1,14 @@
 # Backlog produit
 
-## Après la V0.13 (recentrage produit)
+## Après la V0.13 (prototype décisionnel)
 
-- Dashboard décisionnel : retravailler la logique de mise en avant (situation / attention / actions / évolution) au-delà des seuls textes et sous-titres, en s'appuyant toujours sur les données déjà disponibles (pas de nouveau moteur de recommandations).
-- Tests utilisateurs auprès d'indépendants et TPE de services ciblés, pour valider le positionnement et la lisibilité du Dashboard.
+- Tests utilisateurs auprès d'indépendants et TPE de services ciblés, pour valider le positionnement, le moteur d'insights et la lisibilité du Dashboard.
 - Définition du MVP à partir des retours utilisateurs, avant la V1 technique.
+- Règles d'insights envisageables pour une itération ultérieure : voir `docs/insights-engine.md` (rendez-vous reportés plusieurs fois, objectif en retard, type `info`, priorisation des opportunités par valeur).
+
+## Après la V0.12.1 (recentrage produit)
+
+- Dashboard décisionnel : retravailler la logique de mise en avant (situation / attention / actions / évolution) au-delà des seuls textes et sous-titres, en s'appuyant toujours sur les données déjà disponibles (pas de nouveau moteur de recommandations). Réalisé en V0.13 (`docs/insights-engine.md`).
 
 ## Après la V0.11
 

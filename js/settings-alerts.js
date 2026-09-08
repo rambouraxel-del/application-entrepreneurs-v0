@@ -1,4 +1,13 @@
-// Source unique d'alertes internes V0.11 pour le Dashboard.
+// Source d'alertes internes V0.11 pour le Dashboard.
+//
+// DÉPRÉCIÉ pour le Dashboard depuis la V0.13 : js/insights-engine.js
+// (window.COCKPIT_INSIGHTS_ENGINE) calcule désormais les points d'attention
+// du niveau 2, avec des règles agrégées et une structure d'insight commune
+// aux niveaux Attention/Priorités/Opportunités (voir docs/insights-engine.md
+// et docs/decisions.md, V0.13). Ce fichier n'est plus chargé par
+// js/demo-config.js et n'écrit donc plus dans le DOM ; il est conservé tel
+// quel pour référence et retour arrière éventuel, pas comme code mort à
+// supprimer sans discussion.
 (function () {
     'use strict';
     var store=window.COCKPIT_SETTINGS;if(!store)return;

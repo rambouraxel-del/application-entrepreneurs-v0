@@ -3453,20 +3453,10 @@ a.tresorerie-timeline-item:hover {
 }
 
 .dashboard-priorites-todo {
-    flex: 3;
     display: flex;
     flex-direction: column;
     min-height: 0;
-}
-
-.dashboard-priorites-alertes {
-    flex: 2;
-    display: flex;
-    flex-direction: column;
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid var(--color-border);
-    min-height: 0;
+    height: 100%;
 }
 
 .dashboard-todo-list {

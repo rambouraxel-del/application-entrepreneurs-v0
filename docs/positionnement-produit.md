@@ -52,4 +52,4 @@ La page Analyses complète cette lecture : elle sert à comprendre le détail de
 
 ## Historique
 
-- **Étape 1 (recentrage produit, V0.13)** — reformulation des titres, sous-titres et messages du Dashboard, de la page Analyses et de la page de connexion pour exprimer la logique Centraliser → Comprendre → Agir, à périmètre fonctionnel constant. Voir `docs/roadmap-v0bis.md` et `docs/decisions.md`.
+- **Étape 1 (recentrage produit, V0.12.1)** — reformulation des titres, sous-titres et messages du Dashboard, de la page Analyses et de la page de connexion pour exprimer la logique Centraliser → Comprendre → Agir, à périmètre fonctionnel constant. Voir `docs/roadmap-v0bis.md` et `docs/decisions.md`.

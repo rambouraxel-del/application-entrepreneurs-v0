@@ -20,8 +20,9 @@ application-entrepreneurs-v0/
 │   ├── settings-catalog.js     Métadonnées, capacités et recherche
 │   ├── settings-consumers.js   Raccordements aux modules
 │   ├── settings-referentials.js Référentiels configurables
-│   ├── settings-alerts.js      Source unique d'alertes Dashboard
-│   └── settings-ui.js          Interface du Centre de paramètres
+│   ├── settings-alerts.js      Ancienne source d'alertes Dashboard (V0.11, dépréciée V0.13)
+│   ├── settings-ui.js          Interface du Centre de paramètres
+│   └── insights-engine.js      Moteur d'insights Dashboard (V0.13) — alertes/priorités/opportunités
 ├── pages/
 │   ├── settings.html           Centre de paramètres V0.11
 │   ├── dashboard.html
@@ -37,10 +38,12 @@ application-entrepreneurs-v0/
 │   ├── settings-v0.11.1.test.js
 │   ├── settings-runtime.test.js
 │   ├── settings-paths.test.js
-│   └── settings-agenda-statuses.test.js
+│   ├── settings-agenda-statuses.test.js
+│   └── insights-engine.test.js
 ├── package.json                 Script "test" (npm test), sans dépendance externe
 └── docs/
     ├── positionnement-produit.md Source de vérité produit (vision, cible, promesse)
+    ├── insights-engine.md        Architecture et règles du moteur d'insights (V0.13)
     ├── changelog.md
     ├── decisions.md
     ├── roadmap-v0bis.md
@@ -63,6 +66,7 @@ application-entrepreneurs-v0/
 
 - `README.md` et `PROJECT_INDEX.md` (racine) : état global et arborescence.
 - `docs/positionnement-produit.md` : positionnement produit, source de vérité pour les futures itérations.
+- `docs/insights-engine.md` : règles et limites du moteur d'insights du Dashboard (V0.13).
 - `docs/changelog.md`, `docs/roadmap-v0bis.md`, `docs/backlog.md`, `docs/versioning.md`, `docs/decisions.md` : suivi de version courant.
 - `docs/settings-v0.11.md` : architecture et checklist du Centre de paramètres.
 - `docs/archive/` : documents historiques ou de revue clôturée, conservés pour traçabilité mais non tenus à jour.
