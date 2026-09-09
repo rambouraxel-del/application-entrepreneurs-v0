@@ -14,7 +14,8 @@ import {
   regeneratePdfAction,
 } from '@/modules/quotes/actions';
 import { QuoteLineForm } from '@/modules/quotes/QuoteLineForm';
-import { formatCents } from '@/modules/quotes/calc';
+import { createInvoiceFromQuoteAction } from '@/modules/invoices/actions';
+import { formatCents } from '@/lib/billing/calc';
 import { QUOTE_STATUS_LABELS, VAT_RATE_LABELS } from '@/modules/quotes/validation';
 import { QUOTE_STATUS_TONE } from '@/modules/quotes/presentation';
 import { Card } from '@/components/ui/Card';
@@ -34,6 +35,7 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
 
   const isDraft = quote.status === 'draft';
   const isSent = quote.status === 'sent';
+  const isAccepted = quote.status === 'accepted';
 
   return (
     <div className="max-w-3xl space-y-6">
@@ -108,6 +110,19 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
                 </Button>
               </form>
             </>
+          )}
+          {isAccepted && (
+            quote.invoice ? (
+              <Link href={`/app/invoices/${quote.invoice.id}`}>
+                <Button type="button" variant="secondary">
+                  Voir la facture
+                </Button>
+              </Link>
+            ) : (
+              <form action={createInvoiceFromQuoteAction.bind(null, quote.id)}>
+                <Button type="submit">Créer la facture</Button>
+              </form>
+            )
           )}
           {quote.pdfPath ? (
             <a href={`/app/quotes/${quote.id}/pdf`} target="_blank" rel="noreferrer">

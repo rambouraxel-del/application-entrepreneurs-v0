@@ -15,7 +15,7 @@ export type Insight = {
   description: string;
   actionLabel: string;
   actionHref: string;
-  entityType: 'client' | 'task' | 'quote';
+  entityType: 'client' | 'task' | 'quote' | 'invoice';
   entityId: string;
 };
 
@@ -48,12 +48,26 @@ export type InsightQuote = {
   totalTtcCents: number;
 };
 
+export type InsightInvoice = {
+  id: string;
+  number: string | null;
+  clientId: string;
+  clientName: string;
+  status: 'draft' | 'issued';
+  issuedAt: Date | null;
+  dueDate: Date;
+  totalTtcCents: number;
+  /** Montant payé actif (déjà agrégé — voir modules/invoices/paymentStatus.ts) */
+  paidCents: number;
+};
+
 export type InsightContext = {
   /** Date de référence pour "aujourd'hui" — toujours injectable (tests, fuseau). */
   today: Date;
   clients: InsightClient[];
   tasks: InsightTask[];
   quotes: InsightQuote[];
+  invoices: InsightInvoice[];
   /** Organization.clientFollowUpDays — voir prisma/schema.prisma. */
   clientFollowUpDays: number;
   /** Organization.quoteFollowUpDays / quoteHighValueCents — voir prisma/schema.prisma. */

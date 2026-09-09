@@ -15,6 +15,7 @@ export function normalizeContext(raw: Partial<InsightContext>): InsightContext {
     clients: raw.clients ?? [],
     tasks: raw.tasks ?? [],
     quotes: raw.quotes ?? [],
+    invoices: raw.invoices ?? [],
     clientFollowUpDays: raw.clientFollowUpDays ?? 30,
     quoteFollowUpDays: raw.quoteFollowUpDays ?? 7,
     quoteHighValueCents: raw.quoteHighValueCents ?? 500_000,

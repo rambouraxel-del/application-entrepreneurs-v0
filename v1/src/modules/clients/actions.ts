@@ -27,6 +27,20 @@ function readClientForm(formData: FormData) {
     status: formData.get('status') ?? 'prospect',
     notes: formData.get('notes') ?? undefined,
     lastContactAt: formData.get('lastContactAt') ?? undefined,
+    billingLegalName: formData.get('billingLegalName') ?? undefined,
+    billingAddressLine1: formData.get('billingAddressLine1') ?? undefined,
+    billingAddressLine2: formData.get('billingAddressLine2') ?? undefined,
+    billingAddressPostalCode: formData.get('billingAddressPostalCode') ?? undefined,
+    billingAddressCity: formData.get('billingAddressCity') ?? undefined,
+    billingAddressCountry: formData.get('billingAddressCountry') ?? undefined,
+    billingEmail: formData.get('billingEmail') ?? undefined,
+    siren: formData.get('siren') ?? undefined,
+    vatNumber: formData.get('vatNumber') ?? undefined,
+    deliveryAddressLine1: formData.get('deliveryAddressLine1') ?? undefined,
+    deliveryAddressLine2: formData.get('deliveryAddressLine2') ?? undefined,
+    deliveryAddressPostalCode: formData.get('deliveryAddressPostalCode') ?? undefined,
+    deliveryAddressCity: formData.get('deliveryAddressCity') ?? undefined,
+    deliveryAddressCountry: formData.get('deliveryAddressCountry') ?? undefined,
   };
 }
 

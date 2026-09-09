@@ -20,7 +20,9 @@ function requireEnv(name: string): string {
 export const appDb = new PrismaClient({ datasourceUrl: requireEnv('DATABASE_URL_APP') });
 
 /** Modèles porteurs d'un organizationId : ceux que l'extension doit scoper. */
-const TENANT_SCOPED_MODELS = new Set(['Client', 'Task', 'Quote', 'QuoteLine', 'DocumentCounter']);
+const TENANT_SCOPED_MODELS = new Set([
+  'Client', 'Task', 'Quote', 'QuoteLine', 'DocumentCounter', 'Invoice', 'InvoiceLine', 'Payment',
+]);
 
 /**
  * Extension d'injection automatique du tenant.

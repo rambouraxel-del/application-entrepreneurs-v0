@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { toCents, toQuantityMilli } from './calc';
+import { toCents, toQuantityMilli, VAT_RATES_BP, VAT_RATE_LABELS } from '@/lib/billing/calc';
 
 /** Validation SERVEUR — la seule qui fasse autorité (docs/v1/architecture.md §18). */
 
@@ -12,9 +12,8 @@ export const QUOTE_STATUS_LABELS: Record<(typeof QUOTE_STATUSES)[number], string
   expired: 'Expiré',
 };
 
-/** Taux de TVA français courants — évite un champ libre source d'erreurs de saisie. */
-export const VAT_RATES_BP = [0, 550, 1000, 2000] as const;
-export const VAT_RATE_LABELS: Record<number, string> = { 0: '0 %', 550: '5,5 %', 1000: '10 %', 2000: '20 %' };
+/** Réexportés depuis lib/billing/calc.ts (Lot 4) — partagés avec Invoice, une seule liste. */
+export { VAT_RATES_BP, VAT_RATE_LABELS };
 
 const emptyToUndefined = (v: string | undefined) => (v ? v : undefined);
 

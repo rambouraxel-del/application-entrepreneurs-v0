@@ -109,3 +109,37 @@ export async function updateQuoteSettings(ctx: TenantContext, followUpDays: numb
     }),
   );
 }
+
+export type LegalIdentityInput = {
+  legalName: string;
+  tradeName?: string;
+  legalForm?: string;
+  siren?: string;
+  siret?: string;
+  vatNumber?: string;
+  addressLine1: string;
+  addressLine2?: string;
+  addressPostalCode: string;
+  addressCity: string;
+  addressCountry: string;
+  professionalEmail?: string;
+  professionalPhone?: string;
+  vatRegime: 'normal' | 'franchise_en_base';
+  vatOnDebits: boolean;
+};
+
+export type PaymentTermsInput = {
+  defaultPaymentTermDays: number;
+  latePaymentPenaltyText: string;
+  earlyPaymentDiscountText: string;
+  latePaymentRecoveryFeeCents: number;
+};
+
+/** Identité légale (Lot 4, §3/§4) — Settings minimal, pas de refonte. */
+export async function updateLegalIdentity(ctx: TenantContext, input: LegalIdentityInput) {
+  return withTenant(ctx, (db) => db.organization.update({ where: { id: ctx.organizationId }, data: input }));
+}
+
+export async function updatePaymentTerms(ctx: TenantContext, input: PaymentTermsInput) {
+  return withTenant(ctx, (db) => db.organization.update({ where: { id: ctx.organizationId }, data: input }));
+}

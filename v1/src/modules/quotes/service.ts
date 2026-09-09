@@ -4,7 +4,7 @@ import { todayInTimezone } from '@/lib/datetime';
 import { assertClientBelongsToOrg, getClient } from '@/modules/clients/service';
 import { getOrganization } from '@/modules/organizations/service';
 import { allocateSequence, formatDocumentNumber } from '@/lib/numbering/allocate';
-import { computeLine, computeDocumentTotals, type LineAmounts } from './calc';
+import { computeLine, computeDocumentTotals, type LineAmounts } from '@/lib/billing/calc';
 import { quoteInputSchema, quoteLineInputSchema, MAX_QUOTE_LINES, type QuoteInput, type QuoteLineInput } from './validation';
 import { resolveDocumentStorage, quoteDocumentPath } from '@/lib/storage/storage';
 import { renderQuotePdf } from './pdf';

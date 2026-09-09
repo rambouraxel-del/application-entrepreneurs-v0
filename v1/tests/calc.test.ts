@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { computeLine, computeDocumentTotals, formatCents, toCents, toQuantityMilli } from '@/modules/quotes/calc';
+import { computeLine, computeDocumentTotals, formatCents, toCents, toQuantityMilli } from '@/lib/billing/calc';
 
 /**
  * Calculateur financier — INVARIANT du Lot 0 (docs/v1/architecture.md §8),

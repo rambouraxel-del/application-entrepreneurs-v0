@@ -42,15 +42,73 @@ model Organization {
   /// opportunité "forte valeur".
   quoteFollowUpDays  Int    @default(7) @map("quote_follow_up_days")
   quoteHighValueCents Int  @default(500000) @map("quote_high_value_cents") // 5000,00 €
+
+  // --- Identité légale (Lot 4, docs/v1/lot-4-factures-paiements.md §3) -----
+  // Nécessaire pour émettre une vraie facture — absente jusqu'ici (Lot 1-3
+  // n'en avaient pas besoin, voir ADR-17/18 quote). Tout nullable : une
+  // organisation existe avant d'être complète, `validateInvoiceIssuerReadiness()`
+  // (modules/invoices/readiness.ts) est le vrai gardien, pas une contrainte
+  // NOT NULL prématurée qui bloquerait Lot 1-3 rétroactivement.
+  legalName        String?  @map("legal_name")
+  /// Nom commercial si différent de la raison sociale — purement d'affichage.
+  tradeName        String?  @map("trade_name")
+  /// Forme juridique (ex. "EI", "SASU", "SARL"...) — texte libre, pas d'enum :
+  /// aucune règle métier n'en dépend, seulement l'affichage sur le document.
+  legalForm        String?  @map("legal_form")
+  siren            String?  @map("siren") @db.VarChar(9)
+  siret            String?  @map("siret") @db.VarChar(14)
+  vatNumber        String?  @map("vat_number")
+  addressLine1     String?  @map("address_line1")
+  addressLine2     String?  @map("address_line2")
+  addressPostalCode String? @map("address_postal_code")
+  addressCity      String?  @map("address_city")
+  /// Code pays ISO 3166-1 alpha-2. Défaut FR : la cible initiale est la France
+  /// (docs/positionnement-produit.md) — champ réel, pas figé en dur ailleurs.
+  addressCountry   String   @default("FR") @map("address_country")
+  professionalEmail String? @map("professional_email")
+  professionalPhone String? @map("professional_phone")
+  /// Franchise en base de TVA (art. 293 B du CGI) : régime très courant chez
+  /// les indépendants/micro-entreprises ciblés (docs/positionnement-produit.md).
+  /// Si actif, les lignes de facture sont HT=TTC avec la mention légale
+  /// d'exonération plutôt qu'un taux à 0 % nu — voir modules/invoices/calc.ts.
+  vatRegime        VatRegime @default(normal) @map("vat_regime")
+  /// Option TVA sur les débits (mention obligatoire depuis le 1ᵉʳ septembre 2026
+  /// si l'option est exercée — economie.gouv.fr, voir lot-4-factures-paiements.md §16).
+  vatOnDebits      Boolean  @default(false) @map("vat_on_debits")
+  /// Délai de paiement par défaut, en jours à partir de l'émission — utilisé
+  /// pour préremplir `Invoice.dueDate`, jamais imposé.
+  defaultPaymentTermDays Int @default(30) @map("default_payment_term_days")
+  /// Texte affiché tel quel sur la facture (mention légale de pénalités de
+  /// retard, obligatoire — Code de commerce art. L441-10). ⚑ À VALIDER
+  /// JURIDIQUEMENT : valeur par défaut usuelle, pas un conseil juridique.
+  latePaymentPenaltyText String @default("Taux de pénalité : 3 fois le taux d'intérêt légal.") @map("late_payment_penalty_text")
+  /// Idem, escompte — le cas courant (aucun escompte) doit être mentionné explicitement.
+  earlyPaymentDiscountText String @default("Pas d'escompte pour paiement anticipé.") @map("early_payment_discount_text")
+  /// Indemnité forfaitaire de recouvrement B2B — 40 € par défaut (Code de
+  /// commerce art. L441-10 / D441-5, montant réglementaire au moment de la
+  /// rédaction). ⚑ À VALIDER JURIDIQUEMENT si le montant réglementaire change.
+  latePaymentRecoveryFeeCents Int @default(4000) @map("late_payment_recovery_fee_cents")
+
   createdAt   DateTime     @default(now()) @map("created_at")
   updatedAt   DateTime     @updatedAt @map("updated_at")
   memberships Membership[]
   clients     Client[]
   tasks       Task[]
   quotes      Quote[]
+  invoices    Invoice[]
+  payments    Payment[]
   documentCounters DocumentCounter[]
 
   @@map("organizations")
+}
+
+/// Régime de TVA de l'organisation — juste assez pour le moteur de facture
+/// (docs/v1/lot-4-factures-paiements.md §20), pas une modélisation complète
+/// des régimes fiscaux français.
+enum VatRegime {
+  normal
+  /// Franchise en base (art. 293 B du CGI) : TVA non applicable sur toutes les lignes.
+  franchise_en_base
 }
 
 /// Lien utilisateur (Supabase Auth) <-> organisation.
@@ -114,11 +172,41 @@ model Client {
   /// Séparé de `status` : un client peut être "fidèle" ET archivé (ancien
   /// client fidèle qu'on ne veut plus voir dans les listes actives).
   archivedAt     DateTime?    @map("archived_at")
+
+  // --- Données de facturation (Lot 4, §6) -----------------------------------
+  // Structurées séparément de l'identité commerciale (name/companyName
+  // ci-dessus, inchangés) : la donnée commerciale reste celle affichée dans
+  // les listes/Dashboard, la donnée de facturation n'est utilisée qu'à
+  // l'émission (snapshot). Tout nullable — `validateInvoiceIssuerReadiness`
+  // (côté Organization) a son pendant côté Client dans
+  // `modules/invoices/readiness.ts::assertClientBillingReady`.
+  /// Raison sociale exacte pour la facture, si différente de `companyName`
+  /// (souvent identique — champ distinct pour ne jamais réutiliser un champ
+  /// commercial comme source légale par coïncidence).
+  billingLegalName String?  @map("billing_legal_name")
+  billingAddressLine1     String? @map("billing_address_line1")
+  billingAddressLine2     String? @map("billing_address_line2")
+  billingAddressPostalCode String? @map("billing_address_postal_code")
+  billingAddressCity     String?  @map("billing_address_city")
+  billingAddressCountry  String?  @map("billing_address_country")
+  billingEmail    String?  @map("billing_email")
+  siren           String?  @map("siren") @db.VarChar(9)
+  vatNumber       String?  @map("vat_number")
+  /// Adresse de livraison — UNIQUEMENT si différente de l'adresse de
+  /// facturation (mention devenue obligatoire au 1ᵉʳ septembre 2026 dans ce
+  /// cas précis — economie.gouv.fr). Nulle = "identique à la facturation".
+  deliveryAddressLine1     String? @map("delivery_address_line1")
+  deliveryAddressLine2     String? @map("delivery_address_line2")
+  deliveryAddressPostalCode String? @map("delivery_address_postal_code")
+  deliveryAddressCity     String?  @map("delivery_address_city")
+  deliveryAddressCountry  String?  @map("delivery_address_country")
+
   createdAt      DateTime     @default(now()) @map("created_at")
   updatedAt      DateTime     @updatedAt @map("updated_at")
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   tasks          Task[]
   quotes         Quote[]
+  invoices       Invoice[]
 
   @@index([organizationId, status])
   @@index([organizationId, lastContactAt])
@@ -238,6 +326,8 @@ model Quote {
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   client         Client       @relation(fields: [clientId], references: [id], onDelete: Restrict)
   lines          QuoteLine[]
+  /// Facture issue de ce devis, s'il y en a une (Lot 4) — jamais plus d'une, voir `Invoice.sourceQuoteId @unique`.
+  invoice        Invoice?
 
   @@unique([organizationId, number])
   @@index([organizationId, status])
@@ -281,4 +371,172 @@ model QuoteLine {
 
   @@index([quoteId, position])
   @@map("quote_lines")
+}
+
+// =============================================================================
+// Lot 4 — Factures et paiements (docs/v1/lot-4-factures-paiements.md)
+// =============================================================================
+//
+// Réutilise SANS MODIFICATION le calculateur financier (src/modules/quotes/calc.ts,
+// renommé conceptuellement "modules/billing/calc.ts" en interne au Lot 4 —
+// voir §5 du compte rendu) et le mécanisme de numérotation (lib/numbering/allocate.ts,
+// docType='invoice'). Même trigger d'immutabilité que Quote, adapté.
+//
+// Décision Lot 4 (ADR-19, voir lot-4-factures-paiements.md) : `Invoice` ne
+// stocke PAS d'agrégat `amount_paid_cents` (prévu par data-model.md) — le
+// montant payé/restant dû est calculé à la lecture (SUM des Payment actifs),
+// jamais dupliqué. Volume MVP trop faible pour justifier un agrégat
+// transactionnel (règle "pas d'optimisation prématurée", consigne Lot 4 §27)
+// et ça élimine une classe entière de bugs de désynchronisation.
+//
+// Décision Lot 4 (cycle documentaire vs état de paiement, §28) : `Invoice.status`
+// ne connaît que `draft | issued` — jamais `overdue`/`partial`/`paid`, qui sont
+// un axe ORTHOGONAL dérivé à la volée (modules/invoices/paymentStatus.ts),
+// jamais stocké. Mêmes principes que le statut de devis/facture "affiché"
+// déjà spécifié par architecture.md §9.1.
+
+enum InvoiceStatus {
+  draft
+  issued
+}
+
+/// Catégorie de l'opération — mention devenue obligatoire au 1ᵉʳ septembre 2026
+/// (economie.gouv.fr : "catégorie de l'opération (vente, prestation de
+/// services ou les deux)").
+enum OperationCategory {
+  goods
+  services
+  mixed
+}
+
+/// Facture. Même principe d'immutabilité que Quote (trigger DB,
+/// prisma/rls.sql) : `issuedAt` posé = figé, hors transition de statut de
+/// paiement (qui n'existe pas ici, voir note en tête de section — le
+/// paiement vit dans `Payment`, jamais une colonne de `Invoice`) et
+/// régénération du PDF.
+model Invoice {
+  id             String        @id @default(uuid()) @db.Uuid
+  organizationId String        @map("organization_id") @db.Uuid
+  clientId       String        @map("client_id") @db.Uuid
+  /// Origine — une facture peut aussi être créée sans devis (hors parcours
+  /// principal du Lot 4, mais le modèle ne l'interdit pas inutilement).
+  /// `UNIQUE` : un devis ne produit jamais deux factures (§9 du compte rendu).
+  sourceQuoteId  String?       @unique @map("source_quote_id") @db.Uuid
+  /// Nul tant que brouillon ; alloué à l'émission (DocumentCounter, docType='invoice').
+  number         String?
+  status         InvoiceStatus @default(draft)
+  issuedAt       DateTime?     @map("issued_at")
+  /// Date de vente/livraison/réalisation de la prestation — distincte de
+  /// `issuedAt` (mention obligatoire, souvent identique mais pas toujours :
+  /// une prestation réalisée en fin de mois, facturée début du mois suivant).
+  supplyDate     DateTime      @map("supply_date") @db.Date
+  dueDate        DateTime      @map("due_date") @db.Date
+  operationCategory OperationCategory @default(services) @map("operation_category")
+  purchaseOrderNumber String? @map("purchase_order_number")
+  /// Snapshot de `Organization.vatOnDebits` au moment de l'émission — mention
+  /// figée comme le reste, jamais recalculée depuis l'Organization courante.
+  vatOnDebits    Boolean       @default(false) @map("vat_on_debits")
+  notes          String?
+  /// Identité légale complète de l'émetteur au moment de l'émission — voir
+  /// modules/invoices/snapshot.ts pour la structure exacte.
+  issuerSnapshot Json?         @map("issuer_snapshot")
+  /// Identité/adresses de facturation ET livraison du client, figées.
+  clientSnapshot Json?         @map("client_snapshot")
+  /// Conditions de paiement réellement applicables (délai, pénalités,
+  /// escompte, indemnité forfaitaire) — copiées depuis Organization à
+  /// l'émission, jamais recalculées après coup.
+  paymentTermsSnapshot Json?   @map("payment_terms_snapshot")
+  totalHtCents   Int           @default(0) @map("total_ht_cents")
+  totalVatCents  Int           @default(0) @map("total_vat_cents")
+  totalTtcCents  Int           @default(0) @map("total_ttc_cents")
+  vatBreakdown   Json          @default("[]") @map("vat_breakdown")
+  pdfPath        String?       @map("pdf_path")
+  pdfSha256      String?       @map("pdf_sha256")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client         Client        @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  sourceQuote    Quote?        @relation(fields: [sourceQuoteId], references: [id], onDelete: SetNull)
+  lines          InvoiceLine[]
+  payments       Payment[]
+
+  @@unique([organizationId, number])
+  @@index([organizationId, status])
+  @@index([organizationId, clientId])
+  @@index([organizationId, issuedAt])
+  @@index([organizationId, dueDate])
+  @@map("invoices")
+}
+
+/// Ligne de facture — donnée propre au document, copiée depuis la QuoteLine
+/// d'origine s'il y en a une (jamais partagée/référencée : voir §10 du
+/// compte rendu, "Ne réutilise pas les QuoteLine comme InvoiceLine").
+model InvoiceLine {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  invoiceId      String   @map("invoice_id") @db.Uuid
+  position       Int
+  description    String
+  unit           String?
+  quantityMilli  Int      @map("quantity_milli")
+  unitPriceCents Int      @map("unit_price_cents")
+  vatRateBp      Int      @map("vat_rate_bp")
+  discountBp     Int      @default(0) @map("discount_bp")
+  /// Motif d'exonération de TVA si `vatRateBp = 0` pour une raison légale
+  /// (franchise en base, export...) plutôt qu'un taux à 0 % nu — mention
+  /// obligatoire quand applicable (§20 du compte rendu). Nul si la ligne est
+  /// simplement taxée à 0 % sans exonération particulière (rare mais possible).
+  vatExemptionCode String? @map("vat_exemption_code")
+  vatLegalNotice String?  @map("vat_legal_notice")
+  grossHtCents   Int      @map("gross_ht_cents")
+  discountCents  Int      @map("discount_cents")
+  netHtCents     Int      @map("net_ht_cents")
+  vatCents       Int      @map("vat_cents")
+  totalTtcCents  Int      @map("total_ttc_cents")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  invoice        Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId, position])
+  @@map("invoice_lines")
+}
+
+enum PaymentMethod {
+  bank_transfer
+  card
+  cash
+  check
+  direct_debit
+  other
+}
+
+/// Encaissement — fait traçable, jamais mutable en place (§33 du compte
+/// rendu). Une facture peut recevoir plusieurs paiements (partiels).
+/// PAS de PaymentLine, pas de rapprochement bancaire, pas de Stripe (hors
+/// périmètre Lot 4).
+model Payment {
+  id             String        @id @default(uuid()) @db.Uuid
+  organizationId String        @map("organization_id") @db.Uuid
+  invoiceId      String        @map("invoice_id") @db.Uuid
+  amountCents    Int           @map("amount_cents")
+  paidAt         DateTime      @map("paid_at") @db.Date
+  method         PaymentMethod @default(bank_transfer)
+  reference      String?
+  note           String?
+  /// Empêche un double clic/retry de créer deux paiements identiques —
+  /// unique par organisation quand fourni (NULL exclu de la contrainte,
+  /// plusieurs paiements sans clé restent possibles).
+  idempotencyKey String?       @map("idempotency_key")
+  /// Annulation tracée, jamais de suppression physique (§33). Un paiement
+  /// annulé reste en base mais sort du calcul de `amountPaidCents`.
+  cancelledAt    DateTime?     @map("cancelled_at")
+  cancellationReason String?  @map("cancellation_reason")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invoice        Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, idempotencyKey])
+  @@index([organizationId, invoiceId])
+  @@index([organizationId, paidAt])
+  @@map("payments")
 }

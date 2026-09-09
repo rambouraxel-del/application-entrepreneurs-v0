@@ -76,6 +76,8 @@ Personne physique disposant d'un accès. L'authentification est déléguée (Sup
 
 *Intégrité* : `legal_name`, `siret` et l'adresse doivent être renseignés **avant** toute émission de facture — vérifié à l'émission avec un message explicite, plutôt qu'imposé à l'inscription.
 
+> ⚑ **Lot 4** (`docs/v1/lot-4-factures-paiements.md` §2) : implémenté avec `legalName, tradeName?, legalForm?, siren?, siret?, vatNumber?, addressLine1/2?, addressPostalCode?, addressCity?, addressCountry, professionalEmail?, professionalPhone?, vatRegime (normal|franchise_en_base), vatOnDebits, defaultPaymentTermDays, latePaymentPenaltyText?, earlyPaymentDiscountText?, latePaymentRecoveryFeeCents`. Pas d'IBAN/BIC/nom de banque (pas de rapprochement bancaire au Lot 4, hors périmètre — voir §60 des consignes). Le gardien d'émission (`invoices/readiness.ts`) applique la règle « avant toute émission » citée ci-dessus au niveau service, pas seulement UI.
+
 ### `memberships`
 Lien utilisateur ↔ organisation. Existe dès le premier jour bien que l'interface MVP n'en crée qu'un par utilisateur (`architecture.md` §6.3).
 
@@ -152,6 +154,8 @@ Volontairement **plus pauvre que la fiche V0** : le CRM avancé est hors MVP.
 | `created_at`, `updated_at` | | |
 
 *Intégrité* : suppression bloquée s'il existe un document émis rattaché ; le client est alors archivé (`status = inactif`). Les documents émis ne dépendent de toute façon plus de cette ligne (snapshots).
+
+> ⚑ **Lot 4** (§2) : `address_*` et `siret`/`vat_number` implémentés comme des champs de **facturation** distincts de l'adresse commerciale — `billingLegalName?, billingAddressLine1/2?, billingAddressPostalCode?, billingAddressCity?, billingAddressCountry?, billingEmail?, siren?, vatNumber?`, plus une adresse de livraison optionnelle (`deliveryAddress*`) requise par les mentions obligatoires depuis le 1er septembre 2026 quand elle diffère de l'adresse de facturation. Repliés dans une section « Facturation » du formulaire existant, pas une refonte de la fiche Client.
 
 ### `activities`
 Rendez-vous **et** tâches dans une seule table, discriminée par `kind` : les deux alimentent la même lecture (« mes priorités du jour »), partagent les mêmes champs utiles et ne justifient pas deux modèles.
@@ -233,6 +237,8 @@ Catalogue de prestations réutilisables. Hors P0 : les lignes de devis sont libr
 
 ## Factures et paiements
 
+> ⚑ **Implémenté au Lot 4** (`docs/v1/lot-4-factures-paiements.md`) avec des écarts assumés par rapport au plan ci-dessous, détaillés à chaque table. Le calculateur financier est **partagé** avec les devis (`lib/billing/calc.ts`, déplacé depuis `modules/quotes/calc.ts`) — jamais un deuxième moteur de calcul.
+
 ### `invoices`
 
 | Champ | Type | Notes |
@@ -260,8 +266,19 @@ Catalogue de prestations réutilisables. Hors P0 : les lignes de devis sont libr
 - suppression autorisée **uniquement** à l'état brouillon ;
 - **le statut affiché n'est pas une colonne** : il est dérivé (`architecture.md` §9.1).
 
+> ⚑ **Lot 4** (§3, ADR-19) — écarts :
+> - **pas de colonne `amount_paid_cents`** : le payé/restant dû est **toujours dérivé** par somme des `payments` actifs (non annulés), jamais un agrégat stocké en parallèle — évite tout risque de désynchronisation, suffisant au volume MVP.
+> - `status` implémenté en **`draft | issued` uniquement** — pas de statut « payée »/« en retard » en colonne : le statut de paiement est un axe **orthogonal**, calculé à la volée (`invoices/paymentStatus.ts`), jamais une troisième vérité stockée.
+> - `quote_id` implémenté `source_quote_id`, **`UNIQUE`** en base (protection anti double-transformation, pas seulement applicative).
+> - pas d'`issued_by`/`cancelled_*` : l'annulation d'une facture émise (avoir) est **hors périmètre Lot 4**, documentée comme limite pré-bêta plutôt que construite en façade.
+> - `operation_category (goods|services|mixed)`, `purchase_order_number?`, `vat_on_debits` ajoutés — mentions obligatoires depuis le 1er septembre 2026 (voir `lot-4-factures-paiements.md` §18).
+> - `payment_terms_snapshot` séparé de `legal_mentions`/`seller_snapshot` (nommé `issuer_snapshot`) pour figer distinctement délai/pénalités/escompte/indemnité de recouvrement.
+> - numérotation sur un **compteur séparé** des devis (`document_counters`, `docType: 'invoice'`), même mécanisme du Lot 0 sans modification.
+
 ### `invoice_lines`
 Structure identique à `quote_lines`, rattachée à `invoice_id`, avec les mêmes règles de copie et de calcul. Immuables après émission (même trigger).
+
+> ⚑ **Lot 4** : **jamais partagée** avec `quote_lines` — une transformation Devis→Facture copie les lignes, elle ne les référence jamais. Ajout `vat_exemption_code?`/`vat_legal_notice?` : un taux à 0 % exige un motif d'exonération explicite, jamais un `vat_rate_bp = 0` nu.
 
 ### `payments`
 
@@ -275,6 +292,13 @@ Structure identique à `quote_lines`, rattachée à `invoice_id`, avec les même
 | `reference`, `notes` | text | |
 
 *Intégrité* : `CHECK (amount_cents > 0)` · somme des paiements ≤ `total_ttc_cents` (règle métier, message explicite) · toute insertion met à jour `amount_paid_cents` **dans la même transaction** · paiement interdit sur une facture non émise ou annulée.
+
+> ⚑ **Lot 4** (§10-11) — écarts :
+> - pas de colonne `amount_paid_cents` à mettre à jour (voir ADR-19 ci-dessus) — le calcul se fait à la lecture.
+> - `method` implémenté `bank_transfer|card|cash|check|direct_debit|other` (anglais, cohérent avec le reste du code).
+> - `notes` implémenté `note` (singulier), plus `idempotency_key?` (**UNIQUE** avec `organization_id`) pour la protection double-clic/retry.
+> - **surpaiement refusé au niveau service+transaction**, jamais seulement une contrainte `CHECK` : le restant dû est recalculé sous un verrou `SELECT ... FOR UPDATE` sur la facture avant toute insertion, pour rester correct sous concurrence réelle (testé à 50 tentatives simultanées).
+> - **pas de suppression, jamais** (même en brouillon — un paiement enregistré est un fait) : `cancelled_at?`/`cancellation_reason?` remplacent toute idée de `DELETE`, appliqués par trigger (`payments_forbid_delete`).
 
 ---
 

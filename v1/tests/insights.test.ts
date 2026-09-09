@@ -8,8 +8,10 @@ import {
   quoteAwaitingResponse,
   quoteNearExpiry,
   quoteHighValue,
+  invoiceOverdue,
+  invoiceDueSoon,
 } from '@/modules/insights/rules';
-import type { InsightClient, InsightContext, InsightTask, InsightQuote } from '@/modules/insights/types';
+import type { InsightClient, InsightContext, InsightTask, InsightQuote, InsightInvoice } from '@/modules/insights/types';
 import { todayInTimezone, daysBetween } from '@/lib/datetime';
 
 /**
@@ -48,6 +50,7 @@ function ctx(overrides: Partial<InsightContext> = {}): InsightContext {
     clients: [],
     tasks: [],
     quotes: [],
+    invoices: [],
     clientFollowUpDays: 30,
     quoteFollowUpDays: 7,
     quoteHighValueCents: 500_000,
@@ -224,6 +227,74 @@ describe('quoteHighValue', () => {
 
   it("ne se déclenche pas pour un devis qui n'est pas 'sent'", () => {
     expect(quoteHighValue(ctx({ quotes: [quote({ status: 'accepted', totalTtcCents: 999_999 })] }))).toHaveLength(0);
+  });
+});
+
+function invoice(overrides: Partial<InsightInvoice> = {}): InsightInvoice {
+  return {
+    id: 'inv1', number: 'FAC-2026-000001', clientId: 'c1', clientName: 'Client Test', status: 'issued',
+    issuedAt: TODAY, dueDate: TODAY, totalTtcCents: 10000, paidCents: 0, ...overrides,
+  };
+}
+
+describe('invoiceOverdue', () => {
+  it("se déclenche pour une facture émise, restant dû, échéance dépassée", () => {
+    const dueDate = new Date(TODAY.getTime() - 5 * 86_400_000);
+    const result = invoiceOverdue(ctx({ invoices: [invoice({ dueDate })] }));
+    expect(result).toHaveLength(1);
+    expect(result[0]!.priority).toBe('high');
+  });
+
+  it('devient critique au-delà de 30 jours de retard', () => {
+    const dueDate = new Date(TODAY.getTime() - 31 * 86_400_000);
+    const result = invoiceOverdue(ctx({ invoices: [invoice({ dueDate })] }));
+    expect(result[0]!.priority).toBe('critical');
+  });
+
+  it("ne se déclenche pas le jour même de l'échéance (limite)", () => {
+    expect(invoiceOverdue(ctx({ invoices: [invoice({ dueDate: TODAY })] }))).toHaveLength(0);
+  });
+
+  it('ne se déclenche pas si intégralement payée', () => {
+    const dueDate = new Date(TODAY.getTime() - 5 * 86_400_000);
+    expect(invoiceOverdue(ctx({ invoices: [invoice({ dueDate, totalTtcCents: 10000, paidCents: 10000 })] }))).toHaveLength(0);
+  });
+
+  it('ne se déclenche pas pour une facture brouillon', () => {
+    const dueDate = new Date(TODAY.getTime() - 5 * 86_400_000);
+    expect(invoiceOverdue(ctx({ invoices: [invoice({ status: 'draft', dueDate })] }))).toHaveLength(0);
+  });
+
+  it('mentionne le paiement partiel dans la description quand applicable', () => {
+    const dueDate = new Date(TODAY.getTime() - 5 * 86_400_000);
+    const result = invoiceOverdue(ctx({ invoices: [invoice({ dueDate, totalTtcCents: 10000, paidCents: 4000 })] }));
+    expect(result[0]!.description).toContain('payé partiellement');
+  });
+});
+
+describe('invoiceDueSoon', () => {
+  it('se déclenche dans la fenêtre de 7 jours avant échéance', () => {
+    const dueDate = new Date(TODAY.getTime() + 3 * 86_400_000);
+    expect(invoiceDueSoon(ctx({ invoices: [invoice({ dueDate })] }))).toHaveLength(1);
+  });
+
+  it("se déclenche le jour même de l'échéance (limite)", () => {
+    expect(invoiceDueSoon(ctx({ invoices: [invoice({ dueDate: TODAY })] }))).toHaveLength(1);
+  });
+
+  it('ne se déclenche pas au-delà de la fenêtre', () => {
+    const dueDate = new Date(TODAY.getTime() + 8 * 86_400_000);
+    expect(invoiceDueSoon(ctx({ invoices: [invoice({ dueDate })] }))).toHaveLength(0);
+  });
+
+  it('ne se déclenche pas pour une échéance déjà dépassée (couverte par invoiceOverdue)', () => {
+    const dueDate = new Date(TODAY.getTime() - 1 * 86_400_000);
+    expect(invoiceDueSoon(ctx({ invoices: [invoice({ dueDate })] }))).toHaveLength(0);
+  });
+
+  it('ne se déclenche pas si intégralement payée', () => {
+    const dueDate = new Date(TODAY.getTime() + 3 * 86_400_000);
+    expect(invoiceDueSoon(ctx({ invoices: [invoice({ dueDate, totalTtcCents: 10000, paidCents: 10000 })] }))).toHaveLength(0);
   });
 });
 

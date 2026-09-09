@@ -8,9 +8,13 @@ import { CLIENT_STATUS_TONE } from '@/modules/clients/presentation';
 import { listTasks } from '@/modules/tasks/service';
 import { completeTaskAction, reopenTaskAction } from '@/modules/tasks/actions';
 import { listQuotes } from '@/modules/quotes/service';
-import { formatCents } from '@/modules/quotes/calc';
+import { listInvoices } from '@/modules/invoices/service';
+import { formatCents } from '@/lib/billing/calc';
 import { QUOTE_STATUS_LABELS } from '@/modules/quotes/validation';
 import { QUOTE_STATUS_TONE } from '@/modules/quotes/presentation';
+import { INVOICE_STATUS_TONE, PAYMENT_STATUS_TONE } from '@/modules/invoices/presentation';
+import { derivePaymentStatus, computePaymentAmounts, PAYMENT_STATUS_LABELS } from '@/modules/invoices/paymentStatus';
+import { todayInTimezone } from '@/lib/datetime';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -29,6 +33,8 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
 
   const tasks = await listTasks(ctx, { includeCompleted: true, clientId: id });
   const quotes = await listQuotes(ctx, { clientId: id });
+  const invoices = await listInvoices(ctx, { clientId: id });
+  const today = todayInTimezone();
   const isArchived = client.archivedAt !== null;
   const toggleAction = isArchived ? restoreClientAction : archiveClientAction;
   const toggleLabel = isArchived ? 'Réactiver' : 'Archiver';
@@ -151,6 +157,37 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
                 </Link>
               </li>
             ))}
+          </ul>
+        )}
+      </Card>
+
+      <Card>
+        <h2 className="text-sm font-semibold text-slate-900">Factures</h2>
+        {invoices.length === 0 ? (
+          <p className="mt-3 text-sm text-slate-500">Aucune facture pour ce client.</p>
+        ) : (
+          <ul className="mt-3 divide-y divide-slate-200">
+            {invoices.slice(0, 5).map((invoice) => {
+              const { remainingCents } = computePaymentAmounts(invoice.totalTtcCents, invoice.payments);
+              const paymentStatus = derivePaymentStatus({
+                issuedAt: invoice.issuedAt, dueDate: invoice.dueDate, totalTtcCents: invoice.totalTtcCents, payments: invoice.payments, today,
+              });
+              return (
+                <li key={invoice.id}>
+                  <Link href={`/app/invoices/${invoice.id}`} className="flex items-center justify-between gap-2 py-2 text-sm hover:bg-slate-50">
+                    <span className="text-slate-900">{invoice.number ?? 'Brouillon'}</span>
+                    <span className="text-slate-500">
+                      {formatCents(invoice.totalTtcCents)}
+                      {remainingCents > 0 && ` · restant ${formatCents(remainingCents)}`}
+                    </span>
+                    <div className="flex gap-1">
+                      <Badge tone={INVOICE_STATUS_TONE[invoice.status]}>{invoice.status === 'draft' ? 'Brouillon' : 'Émise'}</Badge>
+                      {paymentStatus && <Badge tone={PAYMENT_STATUS_TONE[paymentStatus]}>{PAYMENT_STATUS_LABELS[paymentStatus]}</Badge>}
+                    </div>
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         )}
       </Card>

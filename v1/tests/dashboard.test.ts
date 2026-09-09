@@ -122,4 +122,55 @@ describe('getDashboardSnapshot', () => {
     ].map((i) => i.entityId);
     expect(allInsightIds).not.toContain(quoteB.id);
   });
+
+  it('calcule Facturé/À encaisser/En retard/Encaissé avec des définitions exactes (§41)', async () => {
+    const today = todayInTimezone();
+    const past = new Date(today.getTime() - 10 * 86_400_000);
+    const future = new Date(today.getTime() + 10 * 86_400_000);
+
+    // Facture émise, entièrement payée : ne doit ni être "outstanding" ni "overdue".
+    const paid = await systemDb.invoice.create({
+      data: { organizationId: f.orgA, clientId: f.clientA, status: 'issued', issuedAt: past, supplyDate: past, dueDate: future, totalHtCents: 10000, totalVatCents: 2000, totalTtcCents: 12000 },
+    });
+    await systemDb.payment.create({ data: { organizationId: f.orgA, invoiceId: paid.id, amountCents: 12000, paidAt: today, method: 'bank_transfer' } });
+
+    // Facture émise, partiellement payée, échéance future : outstanding mais pas overdue.
+    const partial = await systemDb.invoice.create({
+      data: { organizationId: f.orgA, clientId: f.clientA, status: 'issued', issuedAt: past, supplyDate: past, dueDate: future, totalHtCents: 10000, totalVatCents: 2000, totalTtcCents: 12000 },
+    });
+    await systemDb.payment.create({ data: { organizationId: f.orgA, invoiceId: partial.id, amountCents: 5000, paidAt: today, method: 'card' } });
+
+    // Facture émise, impayée, échéance dépassée : overdue.
+    const overdue = await systemDb.invoice.create({
+      data: { organizationId: f.orgA, clientId: f.clientA, status: 'issued', issuedAt: past, supplyDate: past, dueDate: past, totalHtCents: 5000, totalVatCents: 1000, totalTtcCents: 6000 },
+    });
+
+    // Paiement annulé : ne doit compter ni dans collectedCents ni réduire outstanding.
+    const cancelledPay = await systemDb.payment.create({ data: { organizationId: f.orgA, invoiceId: overdue.id, amountCents: 6000, paidAt: today, method: 'cash' } });
+    await systemDb.payment.update({ where: { id: cancelledPay.id }, data: { cancelledAt: today, cancellationReason: 'Erreur de saisie' } });
+
+    // Brouillon : ne doit apparaître dans aucun agrégat.
+    await systemDb.invoice.create({
+      data: { organizationId: f.orgA, clientId: f.clientA, status: 'draft', supplyDate: today, dueDate: future, totalHtCents: 999_999, totalVatCents: 0, totalTtcCents: 999_999 },
+    });
+
+    const snapshot = await getDashboardSnapshot(ctxA());
+    expect(snapshot.situation.billedCents).toBe(12000 + 12000 + 6000);
+    expect(snapshot.situation.outstandingCents).toBe(7000 + 6000);
+    expect(snapshot.situation.overdueCents).toBe(6000);
+    expect(snapshot.situation.overdueInvoicesCount).toBe(1);
+    expect(snapshot.situation.collectedCents).toBe(12000 + 5000);
+  });
+
+  it("n'affiche jamais les factures/paiements de B dans le Dashboard de A", async () => {
+    const today = todayInTimezone();
+    const invoiceB = await systemDb.invoice.create({
+      data: { organizationId: f.orgB, clientId: f.clientB, status: 'issued', issuedAt: today, supplyDate: today, dueDate: today, totalHtCents: 999_999, totalVatCents: 0, totalTtcCents: 999_999 },
+    });
+    await systemDb.payment.create({ data: { organizationId: f.orgB, invoiceId: invoiceB.id, amountCents: 999_999, paidAt: today, method: 'bank_transfer' } });
+
+    const snapshot = await getDashboardSnapshot(ctxA());
+    expect(snapshot.situation.billedCents).toBe(0);
+    expect(snapshot.situation.collectedCents).toBe(0);
+  });
 });

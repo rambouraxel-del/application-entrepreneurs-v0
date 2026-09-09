@@ -1,5 +1,5 @@
 import { daysBetween } from '@/lib/datetime';
-import { formatCents } from '@/modules/quotes/calc';
+import { formatCents } from '@/lib/billing/calc';
 import type { Insight, InsightContext } from './types';
 
 /**
@@ -157,6 +157,62 @@ export function quoteHighValue(ctx: InsightContext): Insight[] {
     }));
 }
 
+/** Factures émises avec un restant dû (§42 du compte rendu Lot 4) — jamais draft, jamais entièrement payées. */
+const openInvoices = (ctx: InsightContext) =>
+  ctx.invoices.filter((inv) => inv.status === 'issued' && inv.totalTtcCents - inv.paidCents > 0);
+
+const INVOICE_DUE_SOON_DAYS = 7; // ⚑ hypothèse fixe, non configurable — voir docs/v1/lot-4-factures-paiements.md §13.
+
+function invoicePartialSuffix(inv: InsightContext['invoices'][number]): string {
+  return inv.paidCents > 0 ? ` · payé partiellement (${formatCents(inv.paidCents)})` : '';
+}
+
+/** Facture en retard : émise, restant dû, échéance dépassée. */
+export function invoiceOverdue(ctx: InsightContext): Insight[] {
+  return openInvoices(ctx)
+    .filter((inv) => inv.dueDate.getTime() < ctx.today.getTime())
+    .map((inv) => {
+      const daysLate = daysBetween(inv.dueDate, ctx.today);
+      const remaining = inv.totalTtcCents - inv.paidCents;
+      return {
+        id: `alert-invoice-overdue-${inv.id}`,
+        type: 'alert' as const,
+        priority: daysLate > 30 ? ('critical' as const) : ('high' as const),
+        title: `Facture ${inv.number ?? ''} en retard de ${daysLate} jours`,
+        description: `${inv.clientName} · restant dû ${formatCents(remaining)}${invoicePartialSuffix(inv)}`,
+        actionLabel: 'Voir la facture',
+        actionHref: `/app/invoices/${inv.id}`,
+        entityType: 'invoice' as const,
+        entityId: inv.id,
+      };
+    });
+}
+
+/** Facture émise, restant dû, échéance dans les prochains jours (pas encore en retard). */
+export function invoiceDueSoon(ctx: InsightContext): Insight[] {
+  return openInvoices(ctx)
+    .map((inv) => ({ ...inv, daysLeft: daysBetween(ctx.today, inv.dueDate) }))
+    .filter((inv) => inv.daysLeft >= 0 && inv.daysLeft <= INVOICE_DUE_SOON_DAYS)
+    .map((inv) => {
+      const remaining = inv.totalTtcCents - inv.paidCents;
+      return {
+        id: `alert-invoice-due-soon-${inv.id}`,
+        type: 'alert' as const,
+        priority: 'normal' as const,
+        title: inv.daysLeft === 0 ? `Facture ${inv.number ?? ''} échoit aujourd'hui` : `Facture ${inv.number ?? ''} échoit dans ${inv.daysLeft} jours`,
+        description: `${inv.clientName} · restant dû ${formatCents(remaining)}${invoicePartialSuffix(inv)}`,
+        actionLabel: 'Voir la facture',
+        actionHref: `/app/invoices/${inv.id}`,
+        entityType: 'invoice' as const,
+        entityId: inv.id,
+      };
+    });
+}
+
+// Décision Lot 4 : pas de règle "paiement partiel" séparée — l'information
+// (payé partiellement) enrichit déjà `invoiceOverdue`/`invoiceDueSoon` ;
+// une facture payée n'a jamais d'insight (§42 : "ne pollue pas le Dashboard").
+
 export const ALL_RULES = [
   taskOverdue,
   taskDueToday,
@@ -165,4 +221,6 @@ export const ALL_RULES = [
   quoteAwaitingResponse,
   quoteNearExpiry,
   quoteHighValue,
+  invoiceOverdue,
+  invoiceDueSoon,
 ];

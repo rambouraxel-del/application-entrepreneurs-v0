@@ -1,5 +1,5 @@
 import type { TenantScopedClient } from '@/lib/db/withTenant';
-import type { LineAmounts, DocumentTotals } from './calc';
+import type { LineAmounts, DocumentTotals } from '@/lib/billing/calc';
 import type { QuoteStatus } from '../../../generated/prisma/index';
 
 /**
@@ -26,7 +26,13 @@ export function listQuotes(db: TenantScopedClient, filter: QuoteListFilter = {})
 export function getQuote(db: TenantScopedClient, id: string) {
   return db.quote.findUnique({
     where: { id },
-    include: { client: { select: { id: true, name: true } }, lines: { orderBy: { position: 'asc' } } },
+    include: {
+      client: { select: { id: true, name: true } },
+      lines: { orderBy: { position: 'asc' } },
+      // Lot 4 : savoir si ce devis a déjà une facture, pour n'afficher
+      // "Créer la facture" que si aucune n'existe (§36).
+      invoice: { select: { id: true } },
+    },
   });
 }
 

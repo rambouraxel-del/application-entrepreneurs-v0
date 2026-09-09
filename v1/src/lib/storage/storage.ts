@@ -40,6 +40,11 @@ export function quoteDocumentPath(organizationId: string, quoteId: string): stri
   return `organizations/${organizationId}/quotes/${quoteId}.pdf`;
 }
 
+/** PDF d'une facture émise (Lot 4) — idem. */
+export function invoiceDocumentPath(organizationId: string, invoiceId: string): string {
+  return `organizations/${organizationId}/invoices/${invoiceId}.pdf`;
+}
+
 // ---------------------------------------------------------------------------
 // Adaptateur RÉEL — Supabase Storage.
 // ---------------------------------------------------------------------------

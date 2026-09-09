@@ -1,6 +1,14 @@
 /**
  * Convention monétaire V1 — INVARIANT du Lot 0 (docs/v1/architecture.md §8),
- * repris SANS MODIFICATION depuis le spike validé (v1-spike/src/money/money.ts) :
+ * repris SANS MODIFICATION depuis le spike validé (v1-spike/src/money/money.ts).
+ *
+ * Déplacé de `modules/quotes/calc.ts` vers `lib/billing/calc.ts` au Lot 4
+ * (docs/v1/lot-4-factures-paiements.md §5) : Quote ET Invoice l'utilisent
+ * désormais — une seule source de vérité, jamais deux implémentations du
+ * même calcul ("ne fork pas les règles", consigne Lot 4 §19). La même ligne
+ * produit exactement le même montant dans un devis et dans la facture qui
+ * en est issue.
+ *
  *
  *   * tout montant est un ENTIER de CENTIMES ;
  *   * toute quantité est un ENTIER de MILLIÈMES (3 décimales, ex. 1,5 → 1500) ;
@@ -126,3 +134,10 @@ export const toQuantityMilli = (input: string): number => {
   const [, whole, frac = ''] = m;
   return Number(whole) * 1000 + Number(frac.padEnd(3, '0'));
 };
+
+/**
+ * Taux de TVA français courants — liste fermée plutôt qu'un champ libre,
+ * évite les erreurs de saisie de taux. Partagée entre Quote et Invoice (Lot 4).
+ */
+export const VAT_RATES_BP = [0, 550, 1000, 2000] as const;
+export const VAT_RATE_LABELS: Record<number, string> = { 0: '0 %', 550: '5,5 %', 1000: '10 %', 2000: '20 %' };

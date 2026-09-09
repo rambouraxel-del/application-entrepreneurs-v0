@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { requireTenantContext } from '@/modules/auth/requireTenantContext';
 import { listQuotes } from '@/modules/quotes/service';
-import { formatCents } from '@/modules/quotes/calc';
+import { formatCents } from '@/lib/billing/calc';
 import { QUOTE_STATUSES, QUOTE_STATUS_LABELS } from '@/modules/quotes/validation';
 import { QUOTE_STATUS_TONE } from '@/modules/quotes/presentation';
 import { Card } from '@/components/ui/Card';

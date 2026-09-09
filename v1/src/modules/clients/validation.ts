@@ -59,6 +59,23 @@ export const clientInputSchema = z.object({
     .transform(emptyToUndefined)
     .refine((v) => v === undefined || !Number.isNaN(Date.parse(v)), 'Date de dernier contact invalide')
     .transform((v) => (v ? new Date(v) : undefined)),
+
+  // --- Facturation (Lot 4, §6) — tout optionnel, requis seulement à
+  // l'émission d'une facture (assertClientBillingReady). ------------------
+  billingLegalName: z.string().trim().max(200).optional().transform(emptyToUndefined),
+  billingAddressLine1: z.string().trim().max(200).optional().transform(emptyToUndefined),
+  billingAddressLine2: z.string().trim().max(200).optional().transform(emptyToUndefined),
+  billingAddressPostalCode: z.string().trim().max(20).optional().transform(emptyToUndefined),
+  billingAddressCity: z.string().trim().max(120).optional().transform(emptyToUndefined),
+  billingAddressCountry: z.string().trim().max(2).optional().transform(emptyToUndefined),
+  billingEmail: z.string().trim().email('E-mail de facturation invalide').max(320).optional().or(z.literal('')).transform(emptyToUndefined),
+  siren: z.string().trim().regex(/^\d{9}$/, 'SIREN invalide (9 chiffres)').optional().or(z.literal('')).transform(emptyToUndefined),
+  vatNumber: z.string().trim().max(20).optional().transform(emptyToUndefined),
+  deliveryAddressLine1: z.string().trim().max(200).optional().transform(emptyToUndefined),
+  deliveryAddressLine2: z.string().trim().max(200).optional().transform(emptyToUndefined),
+  deliveryAddressPostalCode: z.string().trim().max(20).optional().transform(emptyToUndefined),
+  deliveryAddressCity: z.string().trim().max(120).optional().transform(emptyToUndefined),
+  deliveryAddressCountry: z.string().trim().max(2).optional().transform(emptyToUndefined),
 });
 
 export type ClientInput = z.infer<typeof clientInputSchema>;

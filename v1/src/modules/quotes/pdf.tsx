@@ -1,7 +1,7 @@
 import { Document, Page, Text, View, StyleSheet, renderToBuffer } from '@react-pdf/renderer';
 import type { DocumentProps } from '@react-pdf/renderer';
 import type { ReactElement } from 'react';
-import { formatCents } from './calc';
+import { formatCents } from '@/lib/billing/calc';
 
 /**
  * Gabarit PDF du devis — porté du spike Lot 0 (v1-spike/src/documents/pdf.tsx,

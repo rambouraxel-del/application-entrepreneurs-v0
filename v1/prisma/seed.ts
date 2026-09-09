@@ -1,7 +1,8 @@
 import { randomUUID } from 'node:crypto';
+import { PrismaClient } from '../generated/prisma/index';
 import { systemDb } from '../src/lib/db/system';
 import { todayInTimezone } from '../src/lib/datetime';
-import { computeLine, computeDocumentTotals, type LineInput } from '../src/modules/quotes/calc';
+import { computeLine, computeDocumentTotals, type LineInput } from '../src/lib/billing/calc';
 import { formatDocumentNumber } from '../src/lib/numbering/allocate';
 
 /**
@@ -32,15 +33,16 @@ function daysAgo(n: number): Date {
   return d;
 }
 
-async function allocateNumber(organizationId: string, year: number): Promise<string> {
+async function allocateNumber(organizationId: string, docType: 'quote' | 'invoice', year: number): Promise<string> {
   const rows = await systemDb.$queryRaw<Array<{ last_value: number }>>`
     INSERT INTO document_counters (organization_id, doc_type, year, last_value)
-    VALUES (${organizationId}::uuid, 'quote', ${year}, 1)
+    VALUES (${organizationId}::uuid, ${docType}, ${year}, 1)
     ON CONFLICT (organization_id, doc_type, year)
     DO UPDATE SET last_value = document_counters.last_value + 1
     RETURNING last_value
   `;
-  return formatDocumentNumber({ year, sequence: rows[0]!.last_value }, { prefix: 'DEV', includeYear: true, padding: 6 });
+  const prefix = docType === 'quote' ? 'DEV' : 'FAC';
+  return formatDocumentNumber({ year, sequence: rows[0]!.last_value }, { prefix, includeYear: true, padding: 6 });
 }
 
 type DemoLine = LineInput & { description: string; unit?: string };
@@ -81,10 +83,15 @@ async function seedQuote(params: {
     })),
   });
 
-  if (params.status === 'draft') return quote;
+  if (params.status === 'draft') {
+    return systemDb.quote.update({
+      where: { id: quote.id },
+      data: { totalHtCents: totals.totalHtCents, totalVatCents: totals.totalVatCents, totalTtcCents: totals.totalTtcCents, vatBreakdown: totals.vatBreakdown },
+    });
+  }
 
   const issuedAt = daysAgo(params.issuedDaysAgo ?? 0);
-  const number = await allocateNumber(params.organizationId, issuedAt.getUTCFullYear());
+  const number = await allocateNumber(params.organizationId, 'quote', issuedAt.getUTCFullYear());
   const issued = await systemDb.quote.update({
     where: { id: quote.id },
     data: {
@@ -105,19 +112,129 @@ async function seedQuote(params: {
   return issued;
 }
 
+type DemoOrganization = { id: string; legalName: string | null; tradeName: string | null; legalForm: string | null; siren: string | null; siret: string | null; vatNumber: string | null; vatRegime: string; addressLine1: string | null; addressLine2: string | null; addressPostalCode: string | null; addressCity: string | null; addressCountry: string; professionalEmail: string | null; professionalPhone: string | null; latePaymentPenaltyText: string; earlyPaymentDiscountText: string; latePaymentRecoveryFeeCents: number };
+type DemoClient = { id: string; kind: string; name: string; billingLegalName: string | null; companyName: string | null; email: string | null; billingEmail: string | null; siren: string | null; vatNumber: string | null; billingAddressLine1: string | null; billingAddressLine2: string | null; billingAddressPostalCode: string | null; billingAddressCity: string | null; billingAddressCountry: string | null; deliveryAddressLine1: string | null; deliveryAddressLine2: string | null; deliveryAddressPostalCode: string | null; deliveryAddressCity: string | null; deliveryAddressCountry: string | null };
+
+/**
+ * Reproduit les étapes réelles d'émission d'une facture (mêmes snapshots que
+ * `invoices/service.ts::emitInvoice`), avec des dates choisies pour illustrer
+ * les statuts de paiement. Voir la note "Devis émis avec des dates passées"
+ * ci-dessus — même raisonnement.
+ */
+async function seedInvoice(params: {
+  organization: DemoOrganization;
+  client: DemoClient;
+  status: 'draft' | 'issued';
+  lines: DemoLine[];
+  issuedDaysAgo?: number;
+  dueInDays?: number; // relatif à l'émission
+  payments?: Array<{ amountCents: number; daysAgo: number; method?: string }>;
+}) {
+  const { organization, client } = params;
+  const lineAmounts = params.lines.map((l) => computeLine(l));
+  const totals = computeDocumentTotals(lineAmounts);
+
+  const supplyDate = daysAgo(params.issuedDaysAgo ?? 0);
+  const dueDate = new Date(supplyDate);
+  dueDate.setUTCDate(dueDate.getUTCDate() + (params.dueInDays ?? 30));
+
+  const invoice = await systemDb.invoice.create({
+    data: { organizationId: organization.id, clientId: client.id, supplyDate, dueDate },
+  });
+  await systemDb.invoiceLine.createMany({
+    data: params.lines.map((l, i) => ({
+      organizationId: organization.id,
+      invoiceId: invoice.id,
+      position: i + 1,
+      description: l.description,
+      unit: l.unit,
+      quantityMilli: l.quantityMilli,
+      unitPriceCents: l.unitPriceCents,
+      vatRateBp: l.vatRateBp,
+      discountBp: l.discountBp ?? 0,
+      grossHtCents: lineAmounts[i]!.grossHtCents,
+      discountCents: lineAmounts[i]!.discountCents,
+      netHtCents: lineAmounts[i]!.netHtCents,
+      vatCents: lineAmounts[i]!.vatCents,
+      totalTtcCents: lineAmounts[i]!.totalTtcCents,
+    })),
+  });
+
+  if (params.status === 'draft') {
+    return systemDb.invoice.update({
+      where: { id: invoice.id },
+      data: { totalHtCents: totals.totalHtCents, totalVatCents: totals.totalVatCents, totalTtcCents: totals.totalTtcCents, vatBreakdown: totals.vatBreakdown },
+    });
+  }
+
+  const issuedAt = daysAgo(params.issuedDaysAgo ?? 0);
+  const number = await allocateNumber(organization.id, 'invoice', issuedAt.getUTCFullYear());
+  const billingName = client.kind === 'company' ? client.billingLegalName || client.companyName : client.name;
+  await systemDb.invoice.update({
+    where: { id: invoice.id },
+    data: {
+      number,
+      status: 'issued',
+      issuedAt,
+      issuerSnapshot: {
+        legalName: organization.legalName, tradeName: organization.tradeName, legalForm: organization.legalForm,
+        siren: organization.siren, siret: organization.siret, vatNumber: organization.vatNumber, vatRegime: organization.vatRegime,
+        address: { line1: organization.addressLine1, line2: organization.addressLine2, postalCode: organization.addressPostalCode, city: organization.addressCity, country: organization.addressCountry },
+        email: organization.professionalEmail, phone: organization.professionalPhone,
+      },
+      clientSnapshot: {
+        kind: client.kind, name: billingName, email: client.billingEmail || client.email, siren: client.siren, vatNumber: client.vatNumber,
+        billingAddress: { line1: client.billingAddressLine1, line2: client.billingAddressLine2, postalCode: client.billingAddressPostalCode, city: client.billingAddressCity, country: client.billingAddressCountry },
+        deliveryAddress: client.deliveryAddressLine1
+          ? { line1: client.deliveryAddressLine1, line2: client.deliveryAddressLine2, postalCode: client.deliveryAddressPostalCode, city: client.deliveryAddressCity, country: client.deliveryAddressCountry }
+          : null,
+      },
+      paymentTermsSnapshot: {
+        dueDate, latePaymentPenaltyText: organization.latePaymentPenaltyText,
+        earlyPaymentDiscountText: organization.earlyPaymentDiscountText, latePaymentRecoveryFeeCents: organization.latePaymentRecoveryFeeCents,
+      },
+      totalHtCents: totals.totalHtCents, totalVatCents: totals.totalVatCents, totalTtcCents: totals.totalTtcCents,
+      vatBreakdown: totals.vatBreakdown,
+    },
+  });
+
+  for (const p of params.payments ?? []) {
+    await systemDb.payment.create({
+      data: { organizationId: organization.id, invoiceId: invoice.id, amountCents: p.amountCents, paidAt: daysAgo(p.daysAgo), method: (p.method ?? 'bank_transfer') as never },
+    });
+  }
+
+  return systemDb.invoice.findUniqueOrThrow({ where: { id: invoice.id } });
+}
+
 async function main() {
   console.log('Réinitialisation des données de démonstration…');
-  await systemDb.quoteLine.deleteMany();
-  await systemDb.quote.deleteMany();
-  await systemDb.documentCounter.deleteMany();
-  await systemDb.task.deleteMany();
-  await systemDb.client.deleteMany();
-  await systemDb.membership.deleteMany();
-  await systemDb.organization.deleteMany();
+  // TRUNCATE plutôt que DELETE : les triggers d'immutabilité (paiements,
+  // devis/factures émis — prisma/rls.sql) bloquent toute suppression ligne
+  // par ligne, y compris pour le rôle système (BYPASSRLS s'applique à la
+  // RLS, jamais aux triggers). TRUNCATE ne déclenche pas ces triggers et
+  // nécessite le rôle PROPRIÉTAIRE (seul détenteur du privilège) — même
+  // mécanisme que tests/helpers.ts, réservé ici au reset du seed.
+  const ownerDb = new PrismaClient({ datasourceUrl: process.env.DATABASE_URL_OWNER });
+  await ownerDb.$executeRawUnsafe(
+    'TRUNCATE TABLE payments, invoice_lines, invoices, quote_lines, quotes, document_counters, tasks, clients, memberships, organizations RESTART IDENTITY CASCADE',
+  );
+  await ownerDb.$disconnect();
 
+  // --- Identité légale complète (Lot 4 §48) : Organisation A prête à facturer.
   const orgA = await systemDb.organization.create({
-    data: { name: 'Atelier Menuiserie Dupont', clientFollowUpDays: 30, quoteFollowUpDays: 7, quoteHighValueCents: 500_000 },
+    data: {
+      name: 'Atelier Menuiserie Dupont', clientFollowUpDays: 30, quoteFollowUpDays: 7, quoteHighValueCents: 500_000,
+      legalName: 'Dupont Menuiserie SARL', legalForm: 'SARL', siren: '552100554', siret: '55210055400028',
+      vatNumber: 'FR40552100554', vatRegime: 'normal',
+      addressLine1: '12 rue des Artisans', addressPostalCode: '69001', addressCity: 'Lyon', addressCountry: 'FR',
+      professionalEmail: 'contact@dupont-menuiserie.example', professionalPhone: '0472000000',
+      defaultPaymentTermDays: 30,
+    },
   });
+  // Organisation B : identité légale volontairement incomplète, pour
+  // vérifier que `validateInvoiceIssuerReadiness` refuse l'émission tant
+  // qu'elle ne l'est pas (docs/v1/lot-4-factures-paiements.md §5).
   const orgB = await systemDb.organization.create({
     data: { name: 'Studio Graphique Martin', clientFollowUpDays: 30, quoteFollowUpDays: 7, quoteHighValueCents: 500_000 },
   });
@@ -166,6 +283,16 @@ async function main() {
       companyName: 'Menuiserie du Parc SAS',
       status: 'loyal',
       lastContactAt: daysAgo(45), // > clientFollowUpDays (30) : opportunité "sans contact récent"
+      // Données de facturation complètes (Lot 4 §48) — ce client sert aux
+      // scénarios de facture du seed.
+      billingLegalName: 'Menuiserie du Parc SAS',
+      billingAddressLine1: '4 avenue du Parc',
+      billingAddressPostalCode: '69003',
+      billingAddressCity: 'Lyon',
+      billingAddressCountry: 'FR',
+      billingEmail: 'compta@menuiserie-du-parc.example',
+      siren: '482300123',
+      vatNumber: 'FR12482300123',
     },
   });
   await systemDb.client.create({
@@ -224,6 +351,29 @@ async function main() {
     organizationId: orgA.id, organizationName: orgA.name, clientId: clientProspect.id, clientName: clientProspect.name,
     status: 'rejected', issuedDaysAgo: 10, lines: uneLigne(50000),
   });
+  // Devis accepté SANS facture (§48) : la 6ᵉ ligne ci-dessus (clientActif,
+  // 'accepted') n'est volontairement jamais transformée.
+
+  // --- Factures Organisation A : un cas de chaque (§48) ---------------------
+  await seedInvoice({ organization: orgA, client: clientSansContactRecent, status: 'draft', lines: uneLigne(90000) });
+  await seedInvoice({
+    organization: orgA, client: clientSansContactRecent, status: 'issued',
+    lines: uneLigne(120000), issuedDaysAgo: 5, dueInDays: 30,
+  }); // émise, non payée
+  await seedInvoice({
+    organization: orgA, client: clientSansContactRecent, status: 'issued',
+    lines: uneLigne(200000), issuedDaysAgo: 10, dueInDays: 30,
+    payments: [{ amountCents: 80000, daysAgo: 3 }],
+  }); // partiellement payée
+  await seedInvoice({
+    organization: orgA, client: clientSansContactRecent, status: 'issued',
+    lines: uneLigne(150000), issuedDaysAgo: 20, dueInDays: 15,
+    payments: [{ amountCents: 180000, daysAgo: 5, method: 'card' }],
+  }); // intégralement payée
+  await seedInvoice({
+    organization: orgA, client: clientSansContactRecent, status: 'issued',
+    lines: uneLigne(60000), issuedDaysAgo: 45, dueInDays: 30,
+  }); // en retard (échéance il y a 15 jours), non payée
 
   // --- Organisation B : jeu différent, pour les tests d'isolation ----------
   const clientB = await systemDb.client.create({

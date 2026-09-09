@@ -4,15 +4,17 @@ import { getDashboardSnapshot } from '@/modules/dashboard/service';
 import { Card, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { formatCents } from '@/modules/quotes/calc';
+import { formatCents } from '@/lib/billing/calc';
 import type { Insight } from '@/modules/insights/types';
 
 /**
- * Premier Dashboard réel (Lot 2), étendu au Lot 3 avec les devis réels —
- * toujours 100% PostgreSQL, sans métrique financière fictive (pas de CA :
- * aucune facture n'existe encore, docs/v1/lot-3-devis.md §9). Hiérarchie
- * reprise du positionnement produit : Ma situation / À surveiller / Mes
- * priorités / Opportunités. Pas de section Performance financière.
+ * Dashboard réel — Lot 2 (Client/Task) puis Lot 3 (Devis) puis Lot 4
+ * (Factures/Paiements), toujours 100% PostgreSQL. Métriques financières
+ * nommées explicitement (Facturé/À encaisser/En retard/Encaissé) — jamais
+ * "chiffre d'affaires" (docs/v1/lot-4-factures-paiements.md §29/§41).
+ * Devis et factures ne sont jamais additionnés (pas de double-comptage).
+ * Hiérarchie reprise du positionnement produit : Ma situation / À
+ * surveiller / Mes priorités / Opportunités.
  *
  * Server Component par défaut : une seule fonction serveur
  * (getDashboardSnapshot) agrège tout, pas de requêtes séparées côté client.
@@ -27,7 +29,7 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-xl font-bold text-slate-900">Dashboard</h1>
-        <p className="text-sm text-slate-500">Situation réelle, calculée à partir de vos clients, tâches et devis.</p>
+        <p className="text-sm text-slate-500">Situation réelle, calculée à partir de vos clients, tâches, devis et factures.</p>
       </div>
 
       <section aria-labelledby="situation-heading">
@@ -43,6 +45,12 @@ export default async function DashboardPage() {
             <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Valeur devis ouverts</p>
             <p className="mt-1 text-2xl font-bold text-slate-900">{formatCents(situation.openQuotesValueCents)}</p>
           </Card>
+        </div>
+        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <MoneyCard label="Facturé" value={situation.billedCents} href="/app/invoices" />
+          <MoneyCard label="À encaisser" value={situation.outstandingCents} href="/app/invoices" />
+          <MoneyCard label="En retard" value={situation.overdueCents} href="/app/invoices" emphasis={situation.overdueCents > 0} />
+          <MoneyCard label="Encaissé" value={situation.collectedCents} href="/app/invoices" />
         </div>
       </section>
 
@@ -79,6 +87,17 @@ function StatCard({ label, value, href }: { label: string; value: number; href: 
       <Card className="transition-colors hover:border-indigo-300">
         <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
         <p className="mt-1 text-2xl font-bold text-slate-900">{value}</p>
+      </Card>
+    </Link>
+  );
+}
+
+function MoneyCard({ label, value, href, emphasis }: { label: string; value: number; href: string; emphasis?: boolean }) {
+  return (
+    <Link href={href}>
+      <Card className={`transition-colors hover:border-indigo-300 ${emphasis ? 'border-red-300 bg-red-50' : ''}`}>
+        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
+        <p className={`mt-1 text-2xl font-bold ${emphasis ? 'text-red-700' : 'text-slate-900'}`}>{formatCents(value)}</p>
       </Card>
     </Link>
   );
